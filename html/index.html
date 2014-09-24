@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+    <title></title>
+
+    <style type="text/css">
+        .vis.timeline .item.background.negative {
+            background-color: rgba(255, 120, 0, 0.2);
+        }
+        .vis.timeline .item.background.positive {
+            background-color: rgba(113, 255, 34, 0.20);
+        }
+        .vis.timeline .labelset .timelineGroup .inner {
+            height:110px !important;
+            width:90px !important;
+        }
+    </style>
+
+    <script type="text/javascript" src="vis.js"></script>
+    <script type="text/javascript" src="evejs.js"></script>
+    <script type="text/javascript" src="./arumAgents/job.js"></script>
+    <script type="text/javascript" src="./arumAgents/jobManager.js"></script>
+    <script type="text/javascript" src="./arumAgents/jobAgent.js"></script>
+
+    <script type="text/javascript">
+        'use strict';
+        var timeline;
+        var timelineItems = new vis.DataSet();
+        var timelineGroups = new vis.DataSet();
+
+        var graph2d;
+        var graph2dDataset = new vis.DataSet();
+        var graph2dGroups = new vis.DataSet();
+        function draw() {
+            // add items to the DataSet
+            var timelineContainer = document.getElementById('timeline');
+            var timelineOptions = {
+                start: vis.moment().add(-30, 'seconds'), // changed so its faster
+                end: vis.moment().add(30, 'seconds'),
+                height:'170px',
+                autoResize:false
+            }
+            timeline = new vis.Timeline(timelineContainer, timelineItems, timelineOptions, timelineGroups);
+
+//            // add items to the DataSet
+            var graph2dContainer = document.getElementById('graph2d');
+            var graph2dOptions = {
+                start: vis.moment().add(-30, 'seconds'), // changed so its faster
+                end: vis.moment().add(30, 'seconds'),
+                catmullRom: false,
+                graphHeight: "170px",
+                legend: true,
+                dataAxis: {width: '100px'}
+            }
+
+            graph2d = new vis.Graph2d(graph2dContainer, graph2dDataset, graph2dOptions, graph2dGroups);
+            renderStep();
+        }
+
+        function renderStep() {
+            // move the window (you can think of different strategies).
+            var now = vis.moment().add(10,'seconds');
+            var Trange = timeline.getWindow();
+            var Grange = graph2d.getWindow();
+            var Tinterval = Trange.end - Trange.start;
+            var Ginterval = Grange.end - Grange.start;
+            // continuously move the window
+            timeline.setWindow(now - Tinterval, now, {animate: false});
+            graph2d.setWindow(now - Tinterval, now, {animate: false});
+            requestAnimationFrame(renderStep);
+        }
+
+
+
+    </script>
+    <script type="text/javascript" src="./arumAgents/genericAgent.js"></script>
+    <script type="text/javascript" src="./arumAgents/agentGenerator.js"></script>
+    <script type="text/javascript" src="./arumAgents/eventGenerator.js"></script>
+
+    <script>
+        var agentGen = new AgentGenerator("agentGenerator");
+        var eventGen = new EventGenerator("frank");
+        eventGen.start();
+    </script>
+
+    <link href="vis.css" rel="stylesheet" type="text/css" />
+
+</head>
+<body onload="draw()">
+<div id="timeline"></div>
+<div id="graph2d"></div>
+
+<p id="selection"></p>
+<p id="stabilization"></p>
+</body>
+</html>
