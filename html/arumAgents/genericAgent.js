@@ -35,18 +35,21 @@ GenericAgent.prototype.newAssignment = function(id, type, time) {
 
   this.timelineDataset.add(addQuery);
   this.graph2dDataset.add({x:time, y:this.delay, group: this.id});
-}
+};
 
 /**
- * TODO: add support for pause.
  * @param id
  * @param time
  * @param type
- * @param finished
  */
 GenericAgent.prototype.finishAssignment = function(id, type, time) {
   this.jobs.finish(id, type, time);
-}
+};
+
+
+GenericAgent.prototype.updateAssignment = function(id, type, time, operation) {
+  this.jobs.update(id, type, time, operation);
+};
 
 GenericAgent.prototype.rpcFunctions.newEvent = function(params) {
   // handle events
@@ -57,9 +60,9 @@ GenericAgent.prototype.rpcFunctions.newEvent = function(params) {
     this.finishAssignment(params.id, params.assignment, params.time);
   }
   else {
-    //this.updateAssignment(params.id,params.time,params.assignment);
+    this.updateAssignment(params.id,params.assignment,params.time, params.operation);
   }
-}
+};
 
 if (typeof window === 'undefined') {
   module.exports = GenericAgent;

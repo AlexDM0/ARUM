@@ -1,5 +1,9 @@
 'use strict';
 
+function uuid() {
+  return (Math.random()*1e15).toString(32) + "-" + (Math.random()*1e15).toString(32);
+}
+
 /**
  * This is a local assignment, this keeps track on how long an assignment takes THIS worker.
  *
@@ -8,32 +12,90 @@
  * @param timeStart
  * @constructor
  */
-function Job(id, type, timeStart) {
+function Job(id, type, timeStart, agentId, prerequisites) {
   this.id = id;
-  this.name = name;
+  this.type = type;
+  this.agentId = agentId;
+
   this.timeStart = timeStart;
   this.timeResumed = timeStart;
   this.elapsedTime = 0;
-  this.duration = null;
-  this.totalDuration = null;
+  this.subtractionTime = 0;
+  this.endOfDayTime = 0;
+  this.endOfDayPause = false;
+
   this.paused = false;
-  this.prediction = {mean:0, std:0};
+  this.finished = false;
+
+  this.duration = new DurationData();
+  this.prediction = new DurationStats();
+  this.startupTime = new DurationData();
+  this.predictedStartupTime = new DurationStats();
+
+  this.prerequisites = prerequisites;
+}
+
+Job.prototype.prerequisiteFinished = function(params) {
+  var uuid = params.uuid;
+  for (var i = 0; i < this.prerequisites.length; i++) {
+    var prereq = this.prerequisites[i];
+    if (prereq.uuid == uuid) {
+      prereq.times.setData(params);
+      break;
+    }
+  }
+}
+
+Job.prototype.watchingPrerequisite = function(preliminaryStats, uuid) {
+  for (var i = 0; i < this.prerequisites.length; i++) {
+    var prereq = this.prerequisites[i];
+    if (prereq.uuid == uuid) {
+      prereq.stats.setData(preliminaryStats);
+      this.predictedStartupTime.useHighest(preliminaryStats)
+      break;
+    }
+  }
+}
+
+Job.prototype.finalizePrerequisites = function() {
+  for (var i = 0; i < this.prerequisites.length; i++) {
+    this.startupTime.useHighest(this.prerequisites[i].times);
+  }
 }
 
 Job.prototype.finish = function(time) {
+  console.log("finish")
+  this.finished = true;
   this.elapsedTime += time - this.timeResumed;
-  this.duration = this.elapsedTime;
-  this.totalDuration = time - this.timeStart;
+  this.finalizePrerequisites();
+
+  this.duration.calculateDuration(time, this.timeStart, this.elapsedTime, this.startupTime, this.subtractionTime);
 }
 
-Job.prototype.pause = function(time) {
+Job.prototype.pause = function(time, endOfDay) {
+  console.log("pause")
+  if (endOfDay == true) {
+    this.endOfDayTime = time;
+    this.endOfDayPause = true;
+  }
+
   this.elapsedTime += time - this.timeResumed;
   this.paused = true;
 }
 
-Job.prototype.continue = function(time) {
-  this.timeResumed = time;
-  this.paused = false;
+Job.prototype.resume = function(time, startOfDay) {
+  console.log("resuming")
+  if (this.endOfDayPause == true && startOfDay == true) {
+    if (this.endOfDayTime != 0) {
+      this.subtractionTime += time - this.endOfDayTime;
+    }
+    this.endOfDayTime = 0;
+    this.endOfDayPause = false;
+  }
+  else {
+    this.timeResumed = time;
+    this.paused = false;
+  }
 }
 
 

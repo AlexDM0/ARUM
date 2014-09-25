@@ -100,32 +100,32 @@ return /******/ (function(modules) { // webpackBootstrap
 
   // Timeline
   exports.Timeline = __webpack_require__(17);
-  exports.Graph2d = __webpack_require__(39);
+  exports.Graph2d = __webpack_require__(18);
   exports.timeline = {
     DataStep: __webpack_require__(42),
-    Range: __webpack_require__(20),
-    stack: __webpack_require__(31),
-    TimeStep: __webpack_require__(25),
+    Range: __webpack_require__(21),
+    stack: __webpack_require__(32),
+    TimeStep: __webpack_require__(26),
 
     components: {
       items: {
-        Item: __webpack_require__(33),
-        BackgroundItem: __webpack_require__(36),
-        BoxItem: __webpack_require__(34),
-        PointItem: __webpack_require__(35),
-        RangeItem: __webpack_require__(32)
+        Item: __webpack_require__(34),
+        BackgroundItem: __webpack_require__(37),
+        BoxItem: __webpack_require__(35),
+        PointItem: __webpack_require__(36),
+        RangeItem: __webpack_require__(33)
       },
 
-      Component: __webpack_require__(22),
-      CurrentTime: __webpack_require__(26),
-      CustomTime: __webpack_require__(28),
+      Component: __webpack_require__(23),
+      CurrentTime: __webpack_require__(27),
+      CustomTime: __webpack_require__(29),
       DataAxis: __webpack_require__(41),
       GraphGroup: __webpack_require__(43),
-      Group: __webpack_require__(30),
-      ItemSet: __webpack_require__(29),
+      Group: __webpack_require__(31),
+      ItemSet: __webpack_require__(30),
       Legend: __webpack_require__(44),
       LineGraph: __webpack_require__(40),
-      TimeAxis: __webpack_require__(24)
+      TimeAxis: __webpack_require__(25)
     }
   };
 
@@ -148,7 +148,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
   // bundled external libraries
   exports.moment = __webpack_require__(2);
-  exports.hammer = __webpack_require__(18);
+  exports.hammer = __webpack_require__(19);
 
 
 /***/ },
@@ -9236,16 +9236,16 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
   var Emitter = __webpack_require__(10);
-  var Hammer = __webpack_require__(18);
+  var Hammer = __webpack_require__(19);
   var util = __webpack_require__(1);
   var DataSet = __webpack_require__(7);
   var DataView = __webpack_require__(8);
-  var Range = __webpack_require__(20);
-  var Core = __webpack_require__(23);
-  var TimeAxis = __webpack_require__(24);
-  var CurrentTime = __webpack_require__(26);
-  var CustomTime = __webpack_require__(28);
-  var ItemSet = __webpack_require__(29);
+  var Range = __webpack_require__(21);
+  var Core = __webpack_require__(24);
+  var TimeAxis = __webpack_require__(25);
+  var CurrentTime = __webpack_require__(27);
+  var CustomTime = __webpack_require__(29);
+  var ItemSet = __webpack_require__(30);
 
   /**
    * Create a timeline visualization
@@ -9381,11 +9381,12 @@ return /******/ (function(modules) { // webpackBootstrap
     // set items
     this.itemsData = newDataSet;
     this.itemSet && this.itemSet.setItems(newDataSet);
+
     if (initialLoad) {
       if (this.options.start != undefined || this.options.end != undefined) {
         var start = this.options.start != undefined ? this.options.start : null;
         var end   = this.options.end != undefined   ? this.options.end : null;
-        console.log(start,end)
+
         this.setWindow(start, end, {animate: false});
       }
       else {
@@ -9548,10 +9549,259 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
+  var Emitter = __webpack_require__(10);
+  var Hammer = __webpack_require__(19);
+  var util = __webpack_require__(1);
+  var DataSet = __webpack_require__(7);
+  var DataView = __webpack_require__(8);
+  var Range = __webpack_require__(21);
+  var Core = __webpack_require__(24);
+  var TimeAxis = __webpack_require__(25);
+  var CurrentTime = __webpack_require__(27);
+  var CustomTime = __webpack_require__(29);
+  var LineGraph = __webpack_require__(40);
+
+  /**
+   * Create a timeline visualization
+   * @param {HTMLElement} container
+   * @param {vis.DataSet | Array | google.visualization.DataTable} [items]
+   * @param {Object} [options]  See Graph2d.setOptions for the available options.
+   * @constructor
+   * @extends Core
+   */
+  function Graph2d (container, items, groups, options) {
+    // if the third element is options, the forth is groups (optionally);
+    if (!(groups instanceof Array || groups instanceof vis.DataSet) && groups instanceof Object) {
+      var forthArgument = options;
+      options = groups;
+      groups = forthArgument;
+    }
+
+    var me = this;
+    this.defaultOptions = {
+      start: null,
+      end:   null,
+
+      autoResize: true,
+
+      orientation: 'bottom',
+      width: null,
+      height: null,
+      maxHeight: null,
+      minHeight: null
+    };
+    this.options = util.deepExtend({}, this.defaultOptions);
+
+    // Create the DOM, props, and emitter
+    this._create(container);
+
+    // all components listed here will be repainted automatically
+    this.components = [];
+
+    this.body = {
+      dom: this.dom,
+      domProps: this.props,
+      emitter: {
+        on: this.on.bind(this),
+        off: this.off.bind(this),
+        emit: this.emit.bind(this)
+      },
+      util: {
+        snap: null, // will be specified after TimeAxis is created
+        toScreen: me._toScreen.bind(me),
+        toGlobalScreen: me._toGlobalScreen.bind(me), // this refers to the root.width
+        toTime: me._toTime.bind(me),
+        toGlobalTime : me._toGlobalTime.bind(me)
+      }
+    };
+
+    // range
+    this.range = new Range(this.body);
+    this.components.push(this.range);
+    this.body.range = this.range;
+
+    // time axis
+    this.timeAxis = new TimeAxis(this.body);
+    this.components.push(this.timeAxis);
+    this.body.util.snap = this.timeAxis.snap.bind(this.timeAxis);
+
+    // current time bar
+    this.currentTime = new CurrentTime(this.body);
+    this.components.push(this.currentTime);
+
+    // custom time bar
+    // Note: time bar will be attached in this.setOptions when selected
+    this.customTime = new CustomTime(this.body);
+    this.components.push(this.customTime);
+
+    // item set
+    this.linegraph = new LineGraph(this.body);
+    this.components.push(this.linegraph);
+
+    this.itemsData = null;      // DataSet
+    this.groupsData = null;     // DataSet
+
+    // apply options
+    if (options) {
+      this.setOptions(options);
+    }
+
+    // IMPORTANT: THIS HAPPENS BEFORE SET ITEMS!
+    if (groups) {
+      this.setGroups(groups);
+    }
+
+    // create itemset
+    if (items) {
+      this.setItems(items);
+    }
+    else {
+      this.redraw();
+    }
+  }
+
+  // Extend the functionality from Core
+  Graph2d.prototype = new Core();
+
+  /**
+   * Set items
+   * @param {vis.DataSet | Array | google.visualization.DataTable | null} items
+   */
+  Graph2d.prototype.setItems = function(items) {
+    var initialLoad = (this.itemsData == null);
+
+    // convert to type DataSet when needed
+    var newDataSet;
+    if (!items) {
+      newDataSet = null;
+    }
+    else if (items instanceof DataSet || items instanceof DataView) {
+      newDataSet = items;
+    }
+    else {
+      // turn an array into a dataset
+      newDataSet = new DataSet(items, {
+        type: {
+          start: 'Date',
+          end: 'Date'
+        }
+      });
+    }
+
+    // set items
+    this.itemsData = newDataSet;
+    this.linegraph && this.linegraph.setItems(newDataSet);
+
+    if (initialLoad) {
+      if (this.options.start != undefined || this.options.end != undefined) {
+        var start = this.options.start != undefined ? this.options.start : null;
+        var end   = this.options.end != undefined   ? this.options.end : null;
+
+        this.setWindow(start, end, {animate: false});
+      }
+      else {
+        this.fit({animate: false});
+      }
+    }
+  };
+
+  /**
+   * Set groups
+   * @param {vis.DataSet | Array | google.visualization.DataTable} groups
+   */
+  Graph2d.prototype.setGroups = function(groups) {
+    // convert to type DataSet when needed
+    var newDataSet;
+    if (!groups) {
+      newDataSet = null;
+    }
+    else if (groups instanceof DataSet || groups instanceof DataView) {
+      newDataSet = groups;
+    }
+    else {
+      // turn an array into a dataset
+      newDataSet = new DataSet(groups);
+    }
+
+    this.groupsData = newDataSet;
+    this.linegraph.setGroups(newDataSet);
+  };
+
+  /**
+   * Returns an object containing an SVG element with the icon of the group (size determined by iconWidth and iconHeight), the label of the group (content) and the yAxisOrientation of the group (left or right).
+   * @param groupId
+   * @param width
+   * @param height
+   */
+  Graph2d.prototype.getLegend = function(groupId, width, height) {
+    if (width  === undefined) {width  = 15;}
+    if (height === undefined) {height = 15;}
+    if (this.linegraph.groups[groupId] !== undefined) {
+      return this.linegraph.groups[groupId].getLegend(width,height);
+    }
+    else {
+      return "cannot find group:" +  groupId;
+    }
+  }
+
+  /**
+   * This checks if the visible option of the supplied group (by ID) is true or false.
+   * @param groupId
+   * @returns {*}
+   */
+  Graph2d.prototype.isGroupVisible = function(groupId) {
+    if (this.linegraph.groups[groupId] !== undefined) {
+      return (this.linegraph.groups[groupId].visible && (this.linegraph.options.groups.visibility[groupId] === undefined || this.linegraph.options.groups.visibility[groupId] == true));
+    }
+    else {
+      return false;
+    }
+  }
+
+
+  /**
+   * Get the data range of the item set.
+   * @returns {{min: Date, max: Date}} range  A range with a start and end Date.
+   *                                          When no minimum is found, min==null
+   *                                          When no maximum is found, max==null
+   */
+  Graph2d.prototype.getItemRange = function() {
+    var min = null;
+    var max = null;
+
+    // calculate min from start filed
+    for (var groupId in this.linegraph.groups) {
+      if (this.linegraph.groups.hasOwnProperty(groupId)) {
+        if (this.linegraph.groups[groupId].visible == true) {
+          for (var i = 0; i < this.linegraph.groups[groupId].itemsData.length; i++) {
+            var item = this.linegraph.groups[groupId].itemsData[i];
+            var value = util.convert(item.x, 'Date').valueOf();
+            min = min == null ? value : min > value ? value : min;
+            max = max == null ? value : max < value ? value : max;
+          }
+        }
+      }
+    }
+
+    return {
+      min: (min != null) ? new Date(min) : null,
+      max: (max != null) ? new Date(max) : null
+    };
+  };
+
+
+
+  module.exports = Graph2d;
+
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
   // Only load hammer.js when in a browser environment
   // (loading hammer.js in a node.js environment gives errors)
   if (typeof window !== 'undefined') {
-    module.exports = window['Hammer'] || __webpack_require__(19);
+    module.exports = window['Hammer'] || __webpack_require__(20);
   }
   else {
     module.exports = function () {
@@ -9561,7 +9811,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
   var __WEBPACK_AMD_DEFINE_RESULT__;/*! Hammer.JS - v1.1.3 - 2014-05-20
@@ -11728,13 +11978,13 @@ return /******/ (function(modules) { // webpackBootstrap
   })(window);
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var hammerUtil = __webpack_require__(21);
+  var hammerUtil = __webpack_require__(22);
   var moment = __webpack_require__(2);
-  var Component = __webpack_require__(22);
+  var Component = __webpack_require__(23);
 
   /**
    * @constructor Range
@@ -12333,10 +12583,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(18);
+  var Hammer = __webpack_require__(19);
 
   /**
    * Fake a hammer.js gesture. Event can be a ScrollEvent or MouseMoveEvent
@@ -12367,7 +12617,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -12427,20 +12677,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
   var Emitter = __webpack_require__(10);
-  var Hammer = __webpack_require__(18);
+  var Hammer = __webpack_require__(19);
   var util = __webpack_require__(1);
   var DataSet = __webpack_require__(7);
   var DataView = __webpack_require__(8);
-  var Range = __webpack_require__(20);
-  var TimeAxis = __webpack_require__(24);
-  var CurrentTime = __webpack_require__(26);
-  var CustomTime = __webpack_require__(28);
-  var ItemSet = __webpack_require__(29);
-  var Activator = __webpack_require__(37);
+  var Range = __webpack_require__(21);
+  var TimeAxis = __webpack_require__(25);
+  var CurrentTime = __webpack_require__(27);
+  var CustomTime = __webpack_require__(29);
+  var ItemSet = __webpack_require__(30);
+  var Activator = __webpack_require__(38);
 
   /**
    * Create a timeline visualization
@@ -13256,12 +13506,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var Component = __webpack_require__(22);
-  var TimeStep = __webpack_require__(25);
+  var Component = __webpack_require__(23);
+  var TimeStep = __webpack_require__(26);
   var moment = __webpack_require__(2);
 
   /**
@@ -13670,7 +13920,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
   var moment = __webpack_require__(2);
@@ -14146,13 +14396,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var Component = __webpack_require__(22);
+  var Component = __webpack_require__(23);
   var moment = __webpack_require__(2);
-  var locales = __webpack_require__(27);
+  var locales = __webpack_require__(28);
 
   /**
    * A current time bar
@@ -14315,7 +14565,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
   // English
@@ -14336,14 +14586,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(18);
+  var Hammer = __webpack_require__(19);
   var util = __webpack_require__(1);
-  var Component = __webpack_require__(22);
+  var Component = __webpack_require__(23);
   var moment = __webpack_require__(2);
-  var locales = __webpack_require__(27);
+  var locales = __webpack_require__(28);
 
   /**
    * A custom time bar
@@ -14538,19 +14788,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(18);
+  var Hammer = __webpack_require__(19);
   var util = __webpack_require__(1);
   var DataSet = __webpack_require__(7);
   var DataView = __webpack_require__(8);
-  var Component = __webpack_require__(22);
-  var Group = __webpack_require__(30);
-  var BoxItem = __webpack_require__(34);
-  var PointItem = __webpack_require__(35);
-  var RangeItem = __webpack_require__(32);
-  var BackgroundItem = __webpack_require__(36);
+  var Component = __webpack_require__(23);
+  var Group = __webpack_require__(31);
+  var BoxItem = __webpack_require__(35);
+  var PointItem = __webpack_require__(36);
+  var RangeItem = __webpack_require__(33);
+  var BackgroundItem = __webpack_require__(37);
 
 
   var UNGROUPED = '__ungrouped__'; // reserved group id for ungrouped items
@@ -15966,12 +16216,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var stack = __webpack_require__(31);
-  var RangeItem = __webpack_require__(32);
+  var stack = __webpack_require__(32);
+  var RangeItem = __webpack_require__(33);
 
   /**
    * @constructor Group
@@ -16397,7 +16647,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
   // Utility functions for ordering and stacking of items
@@ -16511,11 +16761,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(18);
-  var Item = __webpack_require__(33);
+  var Hammer = __webpack_require__(19);
+  var Item = __webpack_require__(34);
 
   /**
    * @constructor RangeItem
@@ -16809,10 +17059,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(18);
+  var Hammer = __webpack_require__(19);
 
   /**
    * @constructor Item
@@ -17037,10 +17287,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 34 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Item = __webpack_require__(33);
+  var Item = __webpack_require__(34);
 
   /**
    * @constructor BoxItem
@@ -17265,10 +17515,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Item = __webpack_require__(33);
+  var Item = __webpack_require__(34);
 
   /**
    * @constructor PointItem
@@ -17453,12 +17703,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 36 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(18);
-  var Item = __webpack_require__(33);
-  var RangeItem = __webpack_require__(32);
+  var Hammer = __webpack_require__(19);
+  var Item = __webpack_require__(34);
+  var RangeItem = __webpack_require__(33);
 
   /**
    * @constructor BackgroundItem
@@ -17610,12 +17860,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 37 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var mousetrap = __webpack_require__(38);
+  var mousetrap = __webpack_require__(39);
   var Emitter = __webpack_require__(10);
-  var Hammer = __webpack_require__(18);
+  var Hammer = __webpack_require__(19);
   var util = __webpack_require__(1);
 
   /**
@@ -17762,7 +18012,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 38 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -18567,252 +18817,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 39 */
-/***/ function(module, exports, __webpack_require__) {
-
-  var Emitter = __webpack_require__(10);
-  var Hammer = __webpack_require__(18);
-  var util = __webpack_require__(1);
-  var DataSet = __webpack_require__(7);
-  var DataView = __webpack_require__(8);
-  var Range = __webpack_require__(20);
-  var Core = __webpack_require__(23);
-  var TimeAxis = __webpack_require__(24);
-  var CurrentTime = __webpack_require__(26);
-  var CustomTime = __webpack_require__(28);
-  var LineGraph = __webpack_require__(40);
-
-  /**
-   * Create a timeline visualization
-   * @param {HTMLElement} container
-   * @param {vis.DataSet | Array | google.visualization.DataTable} [items]
-   * @param {Object} [options]  See Graph2d.setOptions for the available options.
-   * @constructor
-   * @extends Core
-   */
-  function Graph2d (container, items, groups, options) {
-    // if the third element is options, the forth is groups (optionally);
-    if (!(groups instanceof Array || groups instanceof vis.DataSet) && groups instanceof Object) {
-      var forthArgument = options;
-      options = groups;
-      groups = forthArgument;
-    }
-
-    var me = this;
-    this.defaultOptions = {
-      start: null,
-      end:   null,
-
-      autoResize: true,
-
-      orientation: 'bottom',
-      width: null,
-      height: null,
-      maxHeight: null,
-      minHeight: null
-    };
-    this.options = util.deepExtend({}, this.defaultOptions);
-
-    // Create the DOM, props, and emitter
-    this._create(container);
-
-    // all components listed here will be repainted automatically
-    this.components = [];
-
-    this.body = {
-      dom: this.dom,
-      domProps: this.props,
-      emitter: {
-        on: this.on.bind(this),
-        off: this.off.bind(this),
-        emit: this.emit.bind(this)
-      },
-      util: {
-        snap: null, // will be specified after TimeAxis is created
-        toScreen: me._toScreen.bind(me),
-        toGlobalScreen: me._toGlobalScreen.bind(me), // this refers to the root.width
-        toTime: me._toTime.bind(me),
-        toGlobalTime : me._toGlobalTime.bind(me)
-      }
-    };
-
-    // range
-    this.range = new Range(this.body);
-    this.components.push(this.range);
-    this.body.range = this.range;
-
-    // time axis
-    this.timeAxis = new TimeAxis(this.body);
-    this.components.push(this.timeAxis);
-    this.body.util.snap = this.timeAxis.snap.bind(this.timeAxis);
-
-    // current time bar
-    this.currentTime = new CurrentTime(this.body);
-    this.components.push(this.currentTime);
-
-    // custom time bar
-    // Note: time bar will be attached in this.setOptions when selected
-    this.customTime = new CustomTime(this.body);
-    this.components.push(this.customTime);
-
-    // item set
-    this.linegraph = new LineGraph(this.body);
-    this.components.push(this.linegraph);
-
-    this.itemsData = null;      // DataSet
-    this.groupsData = null;     // DataSet
-
-    // apply options
-    if (options) {
-      this.setOptions(options);
-    }
-
-    // IMPORTANT: THIS HAPPENS BEFORE SET ITEMS!
-    if (groups) {
-      this.setGroups(groups);
-    }
-
-    // create itemset
-    if (items) {
-      this.setItems(items);
-    }
-    else {
-      this.redraw();
-    }
-  }
-
-  // Extend the functionality from Core
-  Graph2d.prototype = new Core();
-
-  /**
-   * Set items
-   * @param {vis.DataSet | Array | google.visualization.DataTable | null} items
-   */
-  Graph2d.prototype.setItems = function(items) {
-    var initialLoad = (this.itemsData == null);
-
-    // convert to type DataSet when needed
-    var newDataSet;
-    if (!items) {
-      newDataSet = null;
-    }
-    else if (items instanceof DataSet || items instanceof DataView) {
-      newDataSet = items;
-    }
-    else {
-      // turn an array into a dataset
-      newDataSet = new DataSet(items, {
-        type: {
-          start: 'Date',
-          end: 'Date'
-        }
-      });
-    }
-
-    // set items
-    this.itemsData = newDataSet;
-    this.linegraph && this.linegraph.setItems(newDataSet);
-
-    if (initialLoad && ('start' in this.options || 'end' in this.options)) {
-      this.fit();
-
-      var start = this.options.start != undefined ? this.options.start : null;
-      var end   = this.options.end != undefined   ? this.options.end : null
-      
-      this.setWindow(start, end, {animate: false});
-    }
-  };
-
-  /**
-   * Set groups
-   * @param {vis.DataSet | Array | google.visualization.DataTable} groups
-   */
-  Graph2d.prototype.setGroups = function(groups) {
-    // convert to type DataSet when needed
-    var newDataSet;
-    if (!groups) {
-      newDataSet = null;
-    }
-    else if (groups instanceof DataSet || groups instanceof DataView) {
-      newDataSet = groups;
-    }
-    else {
-      // turn an array into a dataset
-      newDataSet = new DataSet(groups);
-    }
-
-    this.groupsData = newDataSet;
-    this.linegraph.setGroups(newDataSet);
-  };
-
-  /**
-   * Returns an object containing an SVG element with the icon of the group (size determined by iconWidth and iconHeight), the label of the group (content) and the yAxisOrientation of the group (left or right).
-   * @param groupId
-   * @param width
-   * @param height
-   */
-  Graph2d.prototype.getLegend = function(groupId, width, height) {
-    if (width  === undefined) {width  = 15;}
-    if (height === undefined) {height = 15;}
-    if (this.linegraph.groups[groupId] !== undefined) {
-      return this.linegraph.groups[groupId].getLegend(width,height);
-    }
-    else {
-      return "cannot find group:" +  groupId;
-    }
-  }
-
-  /**
-   * This checks if the visible option of the supplied group (by ID) is true or false.
-   * @param groupId
-   * @returns {*}
-   */
-  Graph2d.prototype.isGroupVisible = function(groupId) {
-    if (this.linegraph.groups[groupId] !== undefined) {
-      return (this.linegraph.groups[groupId].visible && (this.linegraph.options.groups.visibility[groupId] === undefined || this.linegraph.options.groups.visibility[groupId] == true));
-    }
-    else {
-      return false;
-    }
-  }
-
-
-  /**
-   * Get the data range of the item set.
-   * @returns {{min: Date, max: Date}} range  A range with a start and end Date.
-   *                                          When no minimum is found, min==null
-   *                                          When no maximum is found, max==null
-   */
-  Graph2d.prototype.getItemRange = function() {
-    var min = null;
-    var max = null;
-
-    // calculate min from start filed
-    for (var groupId in this.linegraph.groups) {
-      if (this.linegraph.groups.hasOwnProperty(groupId)) {
-        if (this.linegraph.groups[groupId].visible == true) {
-          for (var i = 0; i < this.linegraph.groups[groupId].itemsData.length; i++) {
-            var item = this.linegraph.groups[groupId].itemsData[i];
-            var value = util.convert(item.x, 'Date').valueOf();
-            min = min == null ? value : min > value ? value : min;
-            max = max == null ? value : max < value ? value : max;
-          }
-        }
-      }
-    }
-
-    return {
-      min: (min != null) ? new Date(min) : null,
-      max: (max != null) ? new Date(max) : null
-    };
-  };
-
-
-
-  module.exports = Graph2d;
-
-
-/***/ },
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -18820,7 +18824,7 @@ return /******/ (function(modules) { // webpackBootstrap
   var DOMutil = __webpack_require__(6);
   var DataSet = __webpack_require__(7);
   var DataView = __webpack_require__(8);
-  var Component = __webpack_require__(22);
+  var Component = __webpack_require__(23);
   var DataAxis = __webpack_require__(41);
   var GraphGroup = __webpack_require__(43);
   var Legend = __webpack_require__(44);
@@ -20125,7 +20129,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
   var util = __webpack_require__(1);
   var DOMutil = __webpack_require__(6);
-  var Component = __webpack_require__(22);
+  var Component = __webpack_require__(23);
   var DataStep = __webpack_require__(42);
 
   /**
@@ -21001,7 +21005,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
   var util = __webpack_require__(1);
   var DOMutil = __webpack_require__(6);
-  var Component = __webpack_require__(22);
+  var Component = __webpack_require__(23);
 
   /**
    * Legend for Graph2d
@@ -21203,10 +21207,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
   var Emitter = __webpack_require__(10);
-  var Hammer = __webpack_require__(18);
-  var mousetrap = __webpack_require__(38);
+  var Hammer = __webpack_require__(19);
+  var mousetrap = __webpack_require__(39);
   var util = __webpack_require__(1);
-  var hammerUtil = __webpack_require__(21);
+  var hammerUtil = __webpack_require__(22);
   var DataSet = __webpack_require__(7);
   var DataView = __webpack_require__(8);
   var dotparser = __webpack_require__(46);
@@ -21217,7 +21221,7 @@ return /******/ (function(modules) { // webpackBootstrap
   var Edge = __webpack_require__(51);
   var Popup = __webpack_require__(52);
   var MixinLoader = __webpack_require__(53);
-  var Activator = __webpack_require__(37);
+  var Activator = __webpack_require__(38);
   var locales = __webpack_require__(64);
 
   // Load custom shapes into CanvasRenderingContext2D
@@ -31695,7 +31699,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var Hammer = __webpack_require__(18);
+  var Hammer = __webpack_require__(19);
 
   exports._cleanNavigation = function() {
     // clean hammer bindings

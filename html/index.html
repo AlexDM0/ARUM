@@ -19,6 +19,8 @@
     <script type="text/javascript" src="vis.js"></script>
     <script type="text/javascript" src="evejs.js"></script>
     <script type="text/javascript" src="./arumAgents/job.js"></script>
+    <script type="text/javascript" src="./arumAgents/durationStats.js"></script>
+    <script type="text/javascript" src="./arumAgents/durationData.js"></script>
     <script type="text/javascript" src="./arumAgents/jobManager.js"></script>
     <script type="text/javascript" src="./arumAgents/jobAgent.js"></script>
 
@@ -75,10 +77,14 @@
     </script>
     <script type="text/javascript" src="./arumAgents/genericAgent.js"></script>
     <script type="text/javascript" src="./arumAgents/agentGenerator.js"></script>
+    <script type="text/javascript" src="./arumAgents/jobAgentGenerator.js"></script>
     <script type="text/javascript" src="./arumAgents/eventGenerator.js"></script>
 
     <script>
+        var agentList = {};
+        var jobList = {};
         var agentGen = new AgentGenerator("agentGenerator");
+        var jobGen = new JobAgentGenerator("jobAgentGenerator");
         var eventGen = new EventGenerator("frank");
         eventGen.start();
     </script>
