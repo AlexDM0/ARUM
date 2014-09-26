@@ -40,7 +40,7 @@ Job.prototype.prerequisiteFinished = function(params) {
   for (var i = 0; i < this.prerequisites.length; i++) {
     var prereq = this.prerequisites[i];
     if (prereq.uuid == uuid) {
-      prereq.times.setData(params);
+      prereq.times.setData(params.duration);
       break;
     }
   }
@@ -71,7 +71,7 @@ Job.prototype.finish = function(time) {
   this.finalizePrerequisites();
 
   this.duration.calculateDuration(time, this.timeStart, this.elapsedTime, this.elapsedTimeWithPause, this.startupTime);
-  console.log(this.type, this.duration)
+  //console.log(this.type, this.duration, this.prerequisites)
 }
 
 Job.prototype.pause = function(time, endOfDay) {

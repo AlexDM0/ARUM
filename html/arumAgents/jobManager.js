@@ -12,7 +12,7 @@ function JobManager(agent) {
   this.openJobs = {};
 }
 
-JobManager.prototype.add = function(id, type, time) {
+JobManager.prototype.add = function(id, type, time, prerequisites) {
   var me = this;
 
   // create job agent. This agent will keep track of the global job stats. Jobs per type.
@@ -22,7 +22,8 @@ JobManager.prototype.add = function(id, type, time) {
   this.agent.rpc.request('job_' +  type, {method:'add', params:{
     agentId: this.agent.id,
     time:time,
-    jobId: id
+    jobId: id,
+    prerequisites: prerequisites
   }})
     .then(function (prediction) {
       if (prediction.duration.mean != 0) {
@@ -60,7 +61,6 @@ JobManager.prototype.add = function(id, type, time) {
 
 JobManager.prototype.finish = function(id, type, time) {
   var me = this;
-  console.log('request finish', id, time);
   // finish the job.
   this.agent.rpc.request('job_' +  type, {method:'finish', params:{
     agentId: this.agent.id,
@@ -68,13 +68,10 @@ JobManager.prototype.finish = function(id, type, time) {
     jobId: id
   }})
     .then(function (reply) {
-      console.log('finish', id, time);
       me.jobs.id[id].elapsedTime = reply.elapsedTime;
       me.jobs.id[id].elapsedTimeWithPause = reply.elapsedTimeWithPause;
       me.updateDataSetsFinish(id, type, time, me.jobs.id[id].prediction);
     });
-
-
 
   delete this.jobs.type.open[type][id];
   delete this.openJobs[id];

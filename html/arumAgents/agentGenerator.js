@@ -35,10 +35,13 @@ AgentGenerator.prototype.constructor = AgentGenerator;
 AgentGenerator.prototype.rpcFunctions = {};
 
 AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
+  console.log("event:",params)
   if (agentList[params.performedBy] === undefined) {
     agentList[params.performedBy] = new GenericAgent(params.performedBy, params.type);
   }
   this.rpc.request(params.performedBy, {method:"newEvent", params:params});
+
+  // check if we need to get another event, its done here to avoid raceconditions
   if (this.eventsToFire != 0) {
     this.eventNumber += 1;
     eventCounter.innerHTML = this.eventNumber +""; // make string so it works
@@ -51,9 +54,11 @@ AgentGenerator.prototype.getEvents = function (count, delay) {
   if (this.eventNumber + count > this.amountOfEvents) {
     count = this.amountOfEvents - this.eventNumber;
   }
-  this.eventsToFire = count;
-  this.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}});
-  this.eventNumber += 1;
-  eventCounter.innerHTML = this.eventNumber +""; // make string so it works
-  this.eventsToFire -= 1;
+  if (count != 0) {
+    this.eventsToFire = count;
+    this.rpc.request(JAVA_EVENTS_URL, {method: 'nextEvent', params: {}});
+    this.eventNumber += 1;
+    eventCounter.innerHTML = this.eventNumber + ""; // make string so it works
+    this.eventsToFire -= 1;
+  }
 }

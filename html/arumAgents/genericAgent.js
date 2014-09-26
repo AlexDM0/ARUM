@@ -29,8 +29,8 @@ GenericAgent.prototype.constructor = GenericAgent;
 // exposed functions from local functions.
 GenericAgent.prototype.rpcFunctions = {};
 
-GenericAgent.prototype.newAssignment = function(id, type, time) {
-  this.jobs.add(id, type, time, this.timelineDataset);
+GenericAgent.prototype.newAssignment = function(id, type, time, prerequisites) {
+  this.jobs.add(id, type, time, prerequisites);
 };
 
 /**
@@ -50,7 +50,7 @@ GenericAgent.prototype.updateAssignment = function(id, type, time, operation) {
 GenericAgent.prototype.rpcFunctions.newEvent = function(params) {
   // handle events
   if (params.operation == 'start') {
-    this.newAssignment(params.jobId, params.assignment, params.time)
+    this.newAssignment(params.jobId, params.assignment, params.time, params.prerequisites)
   }
   else if (params.operation == 'finish') {
     this.finishAssignment(params.jobId, params.assignment, params.time);
