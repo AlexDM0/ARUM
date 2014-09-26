@@ -7,6 +7,7 @@ function AgentGenerator(id) {
   var me = this;
   this.amountOfEvents = 0;
   this.eventNumber = 0;
+  this.eventsToFire = 0;
 
   conn = this.connect(eve.system.transports.getAll());
   conn[0].connect(JAVA_EVENTS_URL)
@@ -34,23 +35,25 @@ AgentGenerator.prototype.constructor = AgentGenerator;
 AgentGenerator.prototype.rpcFunctions = {};
 
 AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
-  console.log(params);
-
   if (agentList[params.performedBy] === undefined) {
     agentList[params.performedBy] = new GenericAgent(params.performedBy, params.type);
   }
   this.rpc.request(params.performedBy, {method:"newEvent", params:params});
+  if (this.eventsToFire != 0) {
+    this.eventNumber += 1;
+    eventCounter.innerHTML = this.eventNumber +""; // make string so it works
+    this.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}});
+    this.eventsToFire -= 1;
+  }
 }
 
 AgentGenerator.prototype.getEvents = function (count, delay) {
   if (this.eventNumber + count > this.amountOfEvents) {
     count = this.amountOfEvents - this.eventNumber;
   }
-  var timeout = 0;
-  var me = this;
-  for (var i = 0; i < count; i++) {
-    this.eventNumber += 1;
-    setTimeout(function () {me.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}});}, timeout);
-    timeout += 20;
-  }
+  this.eventsToFire = count;
+  this.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}});
+  this.eventNumber += 1;
+  eventCounter.innerHTML = this.eventNumber +""; // make string so it works
+  this.eventsToFire -= 1;
 }

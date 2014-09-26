@@ -137,18 +137,15 @@
         var eventGen = new EventGenerator("frank");
 
         setTimeout(function () {
-            agentGen.getEvents(29);
-            eventCounter.innerHTML = agentGen.eventNumber +""; // make string so it works
+            agentGen.getEvents(12);
         }, 200);
 //        eventGen.start();
         function getNewEvent() {
             agentGen.getEvents(1);
-            eventCounter.innerHTML = agentGen.eventNumber +""; // make string so it works
         }
 
         function getAllEvents() {
             agentGen.getEvents(agentGen.amountOfEvents);
-            eventCounter.innerHTML = agentGen.eventNumber +""; // make string so it works
         }
     </script>
 
