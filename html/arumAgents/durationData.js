@@ -32,16 +32,9 @@ DurationData.prototype.useHighest = function(otherData) {
   }
 }
 
-DurationData.prototype.subtract = function(subtractionTime) {
-  for (var i = 0; i < this.fields.length; i++) {
-    this[this.fields[i]] -= subtractionTime;
-  }
-}
-
-DurationData.prototype.calculateDuration = function(time, timeStart, elapsedTime, startupTime, subtractionTime) {
+DurationData.prototype.calculateDuration = function(time, timeStart, elapsedTime, elapsedTimeWithPause, startupTime) {
   this.duration            = elapsedTime;
-  this.durationWithPause   = new Date(time).getTime() - new Date(timeStart).getTime();
-  this.durationWithStartup = this.duration + startupTime.durationWithStartup;
-  this.durationWithBoth    = this.durationWithPause + startupTime.durationWithBoth;
-  this.subtract(subtractionTime)
+  this.durationWithPause   = elapsedTimeWithPause;
+  this.durationWithStartup = elapsedTime + startupTime.durationWithStartup;
+  this.durationWithBoth    = elapsedTimeWithPause + startupTime.durationWithBoth;
 }

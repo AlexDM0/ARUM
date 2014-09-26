@@ -11,12 +11,12 @@
             background-color: rgba(113, 255, 34, 0.20);
         }
         .vis.timeline .labelset .timelineGroup .inner {
-            height:110px !important;
+            height:100px !important;
             width:90px !important;
         }
 
         .vis.timeline .item.pause{
-            top:30px !important;
+            /*top:20px !important;*/
             border-color: #a6a6a6;
             background-color: #ebebeb;
         }
@@ -56,47 +56,59 @@
         var graph2d;
         var graph2dDataset = new vis.DataSet();
         var graph2dGroups = new vis.DataSet();
+        var eventCounter;
         function draw() {
+            eventCounter = document.getElementById('eventCounter');
+
             // add items to the DataSet
             var timelineContainer = document.getElementById('timeline');
             var timelineOptions = {
-                start: vis.moment().add(-30, 'seconds'), // changed so its faster
-                end: vis.moment().add(30, 'seconds'),
-                height:'170px',
+                start: '2014-09-21', // changed so its faster
+                end: '2014-09-27',
                 autoResize:false,
-                stack:false
+                stack:true
             }
             timeline = new vis.Timeline(timelineContainer, timelineItems, timelineOptions, timelineGroups);
 
 //            // add items to the DataSet
-            var graph2dContainer = document.getElementById('graph2d');
-            var graph2dOptions = {
-                start: vis.moment().add(-30, 'seconds'), // changed so its faster
-                end: vis.moment().add(30, 'seconds'),
-                catmullRom: false,
-                graphHeight: "170px",
-                legend: true,
-                dataAxis: {width: '100px'}
-            }
+//            var graph2dContainer = document.getElementById('graph2d');
+//            var graph2dOptions = {
+//                start: '2014-09-24', // changed so its faster
+//                end: '2014-10-01',
+//                catmullRom: false,
+//                graphHeight: "170px",
+//                legend: true,
+//                dataAxis: {width: '100px'}
+//            }
 
 //            graph2d = new vis.Graph2d(graph2dContainer, graph2dDataset, graph2dOptions, graph2dGroups);
            // renderStep();
         }
 
-        function renderStep() {
-            // move the window (you can think of different strategies).
-            var now = vis.moment().add(10,'seconds');
-            var Trange = timeline.getWindow();
-            var Grange = graph2d.getWindow();
-            var Tinterval = Trange.end - Trange.start;
-            var Ginterval = Grange.end - Grange.start;
-            // continuously move the window
-            timeline.setWindow(now - Tinterval, now, {animate: false});
-            graph2d.setWindow(now - Tinterval, now, {animate: false});
-            requestAnimationFrame(renderStep);
-        }
+//        function renderStep() {
+//            // move the window (you can think of different strategies).
+//            var now = vis.moment().add(10,'seconds');
+//            var Trange = timeline.getWindow();
+//            var Grange = graph2d.getWindow();
+//            var Tinterval = Trange.end - Trange.start;
+//            var Ginterval = Grange.end - Grange.start;
+//            // continuously move the window
+//            timeline.setWindow(now - Tinterval, now, {animate: false});
+//            graph2d.setWindow(now - Tinterval, now, {animate: false});
+//            requestAnimationFrame(renderStep);
+//        }
 
 
+        var JAVA_EVENTS_URL = 'ws://10.10.1.110:8082/ws/events';
+        var conn;
+
+        eve.system.init({
+            transports: [
+                {
+                    type: 'ws'
+                }
+            ]
+        });
 
     </script>
     <script type="text/javascript" src="./arumAgents/genericAgent.js"></script>
@@ -110,13 +122,29 @@
         var agentGen = new AgentGenerator("agentGenerator");
         var jobGen = new JobAgentGenerator("jobAgentGenerator");
         var eventGen = new EventGenerator("frank");
-        eventGen.start();
+
+        setTimeout(function () {
+            agentGen.getEvents(3);
+            eventCounter.innerHTML = agentGen.eventNumber +"";
+        }, 200);
+//        eventGen.start();
+        function getNewEvent() {
+            agentGen.getEvents(1);
+            eventCounter.innerHTML = agentGen.eventNumber +"";
+        }
+
+        function getAllEvents() {
+            agentGen.getEvents(agentGen.amountOfEvents);
+        }
     </script>
 
     <link href="vis.css" rel="stylesheet" type="text/css" />
 
 </head>
 <body onload="draw()">
+<input type="button" value="click me for new event!" onclick="getNewEvent()">
+eventNo:<div id="eventCounter" style="display:inline;">-1</div>
+<input type="button" value="get the rest of the events!" onclick="getAllEvents()">
 <div id="timeline"></div>
 <div id="graph2d"></div>
 

@@ -35,7 +35,7 @@ exports.system = _dereq_('./lib/system');
 
 exports.util = _dereq_('./lib/util');
 
-},{"./lib/Agent":2,"./lib/ServiceManager":3,"./lib/TransportManager":4,"./lib/module/BabbleModule":5,"./lib/module/PatternModule":6,"./lib/module/RequestModule":8,"./lib/system":9,"./lib/transport/Connection":10,"./lib/transport/Transport":11,"./lib/transport/amqp/AMQPConnection":12,"./lib/transport/amqp/AMQPTransport":13,"./lib/transport/distribus/DistribusConnection":14,"./lib/transport/distribus/DistribusTransport":15,"./lib/transport/http/HTTPConnection":16,"./lib/transport/http/HTTPTransport":17,"./lib/transport/local/LocalConnection":18,"./lib/transport/local/LocalTransport":19,"./lib/transport/pubnub/PubNubConnection":20,"./lib/transport/pubnub/PubNubTransport":21,"./lib/transport/websocket/WebSocketConnection":22,"./lib/transport/websocket/WebSocketTransport":23,"./lib/util":24,"hypertimer":107}],2:[function(_dereq_,module,exports){
+},{"./lib/Agent":2,"./lib/ServiceManager":3,"./lib/TransportManager":4,"./lib/module/BabbleModule":5,"./lib/module/PatternModule":6,"./lib/module/RequestModule":8,"./lib/system":9,"./lib/transport/Connection":10,"./lib/transport/Transport":11,"./lib/transport/amqp/AMQPConnection":12,"./lib/transport/amqp/AMQPTransport":13,"./lib/transport/distribus/DistribusConnection":14,"./lib/transport/distribus/DistribusTransport":15,"./lib/transport/http/HTTPConnection":16,"./lib/transport/http/HTTPTransport":17,"./lib/transport/local/LocalConnection":18,"./lib/transport/local/LocalTransport":19,"./lib/transport/pubnub/PubNubConnection":20,"./lib/transport/pubnub/PubNubTransport":21,"./lib/transport/websocket/WebSocketConnection":22,"./lib/transport/websocket/WebSocketTransport":23,"./lib/util":24,"hypertimer":106}],2:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('promise');
@@ -451,7 +451,7 @@ Agent.prototype._updateReady = function () {
 
 module.exports = Agent;
 
-},{"./module/BabbleModule":5,"./module/PatternModule":6,"./module/RPCModule":7,"./module/RequestModule":8,"./system":9,"./util":24,"node-uuid":110,"promise":112}],3:[function(_dereq_,module,exports){
+},{"./module/BabbleModule":5,"./module/PatternModule":6,"./module/RPCModule":7,"./module/RequestModule":8,"./system":9,"./util":24,"node-uuid":109,"promise":111}],3:[function(_dereq_,module,exports){
 'use strict';
 
 var seed = _dereq_('seed-random');
@@ -520,7 +520,7 @@ ServiceManager.prototype.clear = function () {
 
 module.exports = ServiceManager;
 
-},{"./TransportManager":4,"hypertimer":107,"seed-random":115}],4:[function(_dereq_,module,exports){
+},{"./TransportManager":4,"hypertimer":106,"seed-random":114}],4:[function(_dereq_,module,exports){
 'use strict';
 
 var AMQPTransport = _dereq_('./transport/amqp/AMQPTransport');
@@ -1008,7 +1008,7 @@ RPCModule.prototype.mixin = function () {
 };
 
 module.exports = RPCModule;
-},{"node-uuid":110,"promise":112}],8:[function(_dereq_,module,exports){
+},{"node-uuid":109,"promise":111}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var uuid = _dereq_('node-uuid');
@@ -1138,7 +1138,7 @@ Request.prototype.mixin = function () {
 
 module.exports = Request;
 
-},{"../util":24,"node-uuid":110,"promise":112}],9:[function(_dereq_,module,exports){
+},{"../util":24,"node-uuid":109,"promise":111}],9:[function(_dereq_,module,exports){
 'use strict';
 
 var ServiceManager = _dereq_('./ServiceManager');
@@ -1187,7 +1187,7 @@ Connection.prototype.close = function () {
 
 module.exports = Connection;
 
-},{"promise":112}],11:[function(_dereq_,module,exports){
+},{"promise":111}],11:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1419,7 +1419,7 @@ AMQPTransport.prototype.close = function() {
 
 module.exports = AMQPTransport;
 
-},{"./../Transport":11,"./AMQPConnection":12,"amqp":25,"promise":112}],14:[function(_dereq_,module,exports){
+},{"./../Transport":11,"./AMQPConnection":12,"amqp":25,"promise":111}],14:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('promise');
@@ -1462,7 +1462,7 @@ DistribusConnection.prototype.close = function () {
 
 module.exports = DistribusConnection;
 
-},{"../Connection":10,"promise":112}],15:[function(_dereq_,module,exports){
+},{"../Connection":10,"promise":111}],15:[function(_dereq_,module,exports){
 'use strict';
 
 var distribus = _dereq_('distribus');
@@ -1571,7 +1571,7 @@ HTTPConnection.prototype.close = function () {
 
 module.exports = HTTPConnection;
 
-},{"../Connection":10,"promise":112}],17:[function(_dereq_,module,exports){
+},{"../Connection":10,"promise":111}],17:[function(_dereq_,module,exports){
 'use strict';
 
 var http = _dereq_('http');
@@ -1851,7 +1851,7 @@ HTTPTransport.prototype.close = function() {
 module.exports = HTTPTransport;
 
 
-},{"./../Transport":11,"./HTTPConnection":16,"http":128,"promise":112}],18:[function(_dereq_,module,exports){
+},{"./../Transport":11,"./HTTPConnection":16,"http":127,"promise":111}],18:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('promise');
@@ -1902,7 +1902,7 @@ LocalConnection.prototype.close = function () {
 
 module.exports = LocalConnection;
 
-},{"../Connection":10,"promise":112}],19:[function(_dereq_,module,exports){
+},{"../Connection":10,"promise":111}],19:[function(_dereq_,module,exports){
 'use strict';
 
 var Transport = _dereq_('./../Transport');
@@ -2004,7 +2004,7 @@ PubNubConnection.prototype.close = function () {
 
 module.exports = PubNubConnection;
 
-},{"../Connection":10,"promise":112}],21:[function(_dereq_,module,exports){
+},{"../Connection":10,"promise":111}],21:[function(_dereq_,module,exports){
 'use strict';
 
 var Transport = _dereq_('./../Transport');
@@ -2067,7 +2067,7 @@ function PUBNUB() {
 
 module.exports = PubNubTransport;
 
-},{"./../Transport":11,"./PubNubConnection":20,"pubnub":114}],22:[function(_dereq_,module,exports){
+},{"./../Transport":11,"./PubNubConnection":20,"pubnub":113}],22:[function(_dereq_,module,exports){
 'use strict';
 
 var uuid = _dereq_('node-uuid');
@@ -2078,7 +2078,6 @@ var WebSocket = (typeof window !== 'undefined' && typeof window.WebSocket !== 'u
 
 var util = _dereq_('../../util');
 var Connection = _dereq_('../Connection');
-
 
 /**
  * A websocket connection.
@@ -2095,6 +2094,8 @@ function WebSocketConnection(transport, url, receive) {
   this.receive = receive;
 
   this.sockets = {};
+  this.closed = false;
+  this.reconnectTimers = {};
 
   // ready state
   this.ready = Promise.resolve(this);
@@ -2184,26 +2185,29 @@ WebSocketConnection.prototype.connect = function (to) {
 /**
  * Open a websocket connection
  * @param {String} to   Url of the remote agent
- * @param {function} callback
- * @param {function} errback
+ * @param {function} [callback]
+ * @param {function} [errback]
+ * @param {boolean} [doReconnect=false]
  * @returns {WebSocket}
  * @private
  */
-WebSocketConnection.prototype._connect = function (to, callback, errback) {
+WebSocketConnection.prototype._connect = function (to, callback, errback, doReconnect) {
   var me = this;
-
   var conn = new WebSocket(to + '?id=' + this.url);
 
   // register the new socket
   me.sockets[to] = conn;
 
   conn.onopen = function () {
+    // Change doReconnect to true as soon as we have had an open connection
+    doReconnect = true;
+
     conn.onopen.callbacks.forEach(function (cb) {
       cb(conn);
     });
     conn.onopen.callbacks = [];
   };
-  conn.onopen.callbacks = [callback];
+  conn.onopen.callbacks = callback ? [callback] : [];
 
   conn.onmessage = function (event) {
     me.receive(to, JSON.parse(event.data));
@@ -2211,18 +2215,35 @@ WebSocketConnection.prototype._connect = function (to, callback, errback) {
 
   conn.onclose = function () {
     delete me.sockets[to];
-    //console.log('Connection closed');
-    // TODO: implement auto reconnect
+    if (doReconnect) {
+      me._reconnect(to);
+    }
   };
 
   conn.onerror = function (err) {
     delete me.sockets[to];
-    //console.log('Error: ' + err);
-    // TODO: implement auto reconnect
-    errback(err);
+    if (errback) {
+      errback(err);
+    }
   };
 
   return conn;
+};
+
+/**
+ * Auto reconnect a broken connection
+ * @param {String} to   Url of the remote agent
+ * @private
+ */
+WebSocketConnection.prototype._reconnect = function (to) {
+  var me = this;
+  var doReconnect = true;
+  if (me.closed == false && me.reconnectTimers[to] == null) {
+    me.reconnectTimers[to] = setTimeout(function () {
+      delete me.reconnectTimers[to];
+      me._connect(to, null, null, doReconnect);
+    }, me.transport.reconnectDelay);
+  }
 };
 
 /**
@@ -2274,6 +2295,8 @@ WebSocketConnection.prototype.list = function () {
  * be unregistered from the WebSocketTransport.
  */
 WebSocketConnection.prototype.close = function () {
+  this.closed = true;
+
   // close all connections
   for (var id in this.sockets) {
     if (this.sockets.hasOwnProperty(id)) {
@@ -2287,7 +2310,7 @@ WebSocketConnection.prototype.close = function () {
 
 module.exports = WebSocketConnection;
 
-},{"../../util":24,"../Connection":10,"node-uuid":110,"promise":112,"ws":116}],23:[function(_dereq_,module,exports){
+},{"../../util":24,"../Connection":10,"node-uuid":109,"promise":111,"ws":115}],23:[function(_dereq_,module,exports){
 'use strict';
 
 var urlModule = _dereq_('url');
@@ -2310,6 +2333,11 @@ var WebSocketConnection = _dereq_('./WebSocketConnection');
  *                                - `localShortcut: boolean`. Optional. If true
  *                                  (default), messages to local agents are not
  *                                  send via WebSocket but delivered immediately
+ *                                - `reconnectDelay: number` Optional. Delay in
+ *                                  milliseconds for reconnecting a broken
+ *                                  connection. 10000 ms by default. Connections
+ *                                  are only automatically reconnected after
+ *                                  there has been an established connection.
  * @constructor
  */
 function WebSocketTransport(config) {
@@ -2317,6 +2345,7 @@ function WebSocketTransport(config) {
   this.networkId = this.id || null;
   this['default'] = config && config['default'] || false;
   this.localShortcut = (config && config.localShortcut === false) ? false : true;
+  this.reconnectDelay = config && config.reconnectDelay || 10000;
 
   this.url = config && config.url || null;
   this.server = null;
@@ -2453,7 +2482,7 @@ WebSocketTransport.prototype.close = function() {
 
 module.exports = WebSocketTransport;
 
-},{"../../util":24,"../Transport":11,"./WebSocketConnection":22,"node-uuid":110,"promise":112,"url":147,"ws":116}],24:[function(_dereq_,module,exports){
+},{"../../util":24,"../Transport":11,"./WebSocketConnection":22,"node-uuid":109,"promise":111,"url":146,"ws":115}],24:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -3857,7 +3886,7 @@ Channel.prototype.close = function(reason) {
                                'methodId': 0});
 };
 
-},{"./definitions":32,"./promise":36,"events":127,"fs":117,"util":149}],29:[function(_dereq_,module,exports){
+},{"./definitions":32,"./promise":36,"events":126,"fs":116,"util":148}],29:[function(_dereq_,module,exports){
 (function (process,Buffer){
 'use strict';
 var net = _dereq_('net');
@@ -4659,7 +4688,7 @@ Connection.prototype.generateChannelId = function () {
 };
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),_dereq_("buffer").Buffer)
-},{"../package":40,"./debug":31,"./definitions":32,"./exchange":33,"./parser":35,"./queue":37,"./serializer":38,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"buffer":118,"events":127,"fs":117,"lodash":39,"net":117,"tls":117,"url":147,"util":149}],30:[function(_dereq_,module,exports){
+},{"../package":40,"./debug":31,"./definitions":32,"./exchange":33,"./parser":35,"./queue":37,"./serializer":38,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133,"buffer":117,"events":126,"fs":116,"lodash":39,"net":116,"tls":116,"url":146,"util":148}],30:[function(_dereq_,module,exports){
 module.exports = {
   AMQPTypes: Object.freeze({
       STRING:       'S'.charCodeAt(0)
@@ -4710,7 +4739,7 @@ if (DEBUG) {
 
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],32:[function(_dereq_,module,exports){
+},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133}],32:[function(_dereq_,module,exports){
 'use strict';
 
 var protocol = _dereq_('./amqp-definitions-0-9-1');
@@ -5140,7 +5169,7 @@ Exchange.prototype.bind_headers = function (/* exchange, routing [, bindCallback
     });
 };
 
-},{"./channel":28,"./definitions":32,"events":127,"fs":117,"lodash":39,"net":117,"tls":117,"util":149}],34:[function(_dereq_,module,exports){
+},{"./channel":28,"./definitions":32,"events":126,"fs":116,"lodash":39,"net":116,"tls":116,"util":148}],34:[function(_dereq_,module,exports){
 'use strict';
 var events = _dereq_('events'),
     util = _dereq_('util'),
@@ -5209,7 +5238,7 @@ Message.prototype.reject = function (requeue) {
 };
 
 
-},{"./definitions":32,"events":127,"fs":117,"util":149}],35:[function(_dereq_,module,exports){
+},{"./definitions":32,"events":126,"fs":116,"util":148}],35:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -5605,7 +5634,7 @@ AMQPParser.prototype._parseHeaderFrame = function (channel, buffer) {
 };
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"../jspack":26,"./constants":30,"./debug":31,"./definitions":32,"buffer":118,"events":127,"fs":117,"net":117,"tls":117,"util":149}],36:[function(_dereq_,module,exports){
+},{"../jspack":26,"./constants":30,"./debug":31,"./definitions":32,"buffer":117,"events":126,"fs":116,"net":116,"tls":116,"util":148}],36:[function(_dereq_,module,exports){
 (function (process){
 var events = _dereq_('events');
 var inherits = _dereq_('util').inherits;
@@ -5695,7 +5724,7 @@ exports.Promise.prototype.addErrback = function (listener) {
 };
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"events":127,"util":149}],37:[function(_dereq_,module,exports){
+},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133,"events":126,"util":148}],37:[function(_dereq_,module,exports){
 (function (process,Buffer){
 'use strict';
 var util = _dereq_('util');
@@ -6237,7 +6266,7 @@ Queue.prototype.flow = function(active) {
 };
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),_dereq_("buffer").Buffer)
-},{"./channel":28,"./debug":31,"./definitions":32,"./exchange":33,"./message":34,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"buffer":118,"fs":117,"lodash":39,"util":149}],38:[function(_dereq_,module,exports){
+},{"./channel":28,"./debug":31,"./definitions":32,"./exchange":33,"./message":34,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133,"buffer":117,"fs":116,"lodash":39,"util":148}],38:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -6559,7 +6588,7 @@ var serializer = module.exports = {
 };
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"../jspack":26,"buffer":118}],39:[function(_dereq_,module,exports){
+},{"../jspack":26,"buffer":117}],39:[function(_dereq_,module,exports){
 (function (global){
 /**
  * @license
@@ -12585,7 +12614,7 @@ Babbler.prototype._process = function (block, conversation) {
 
 module.exports = Babbler;
 
-},{"./Conversation":43,"./block/Block":45,"./block/IIf":47,"./block/Listen":48,"./block/Tell":49,"./block/Then":50,"./messagebus":51,"es6-promise":53,"node-uuid":110}],43:[function(_dereq_,module,exports){
+},{"./Conversation":43,"./block/Block":45,"./block/IIf":47,"./block/Listen":48,"./block/Tell":49,"./block/Then":50,"./messagebus":51,"es6-promise":53,"node-uuid":109}],43:[function(_dereq_,module,exports){
 var uuid = _dereq_('node-uuid');
 var Promise = _dereq_('es6-promise').Promise;
 
@@ -12665,7 +12694,7 @@ Conversation.prototype.receive = function () {
 
 module.exports = Conversation;
 
-},{"es6-promise":53,"node-uuid":110}],44:[function(_dereq_,module,exports){
+},{"es6-promise":53,"node-uuid":109}],44:[function(_dereq_,module,exports){
 'use strict';
 
 var Babbler = _dereq_('./Babbler');
@@ -13661,7 +13690,7 @@ exports['pubnub'] = function (params) {
 // default interface
 exports['default'] = exports['pubsub-js'];
 
-},{"es6-promise":53,"pubnub":114,"pubsub-js":63}],52:[function(_dereq_,module,exports){
+},{"es6-promise":53,"pubnub":113,"pubsub-js":63}],52:[function(_dereq_,module,exports){
 /**
  * Test whether the provided value is a Promise.
  * A value is marked as a Promise when it is an object containing functions
@@ -13839,7 +13868,7 @@ function asap(callback, arg) {
 
 exports.asap = asap;
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],56:[function(_dereq_,module,exports){
+},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133}],56:[function(_dereq_,module,exports){
 "use strict";
 var config = {
   instrument: false
@@ -15245,7 +15274,7 @@ function _peerUnreachable(id, url) {
 
 module.exports = Host;
 
-},{"./Peer":66,"./Promise":67,"./requestify":68,"node-uuid":110,"ws":106}],66:[function(_dereq_,module,exports){
+},{"./Peer":66,"./Promise":67,"./requestify":68,"node-uuid":109,"ws":115}],66:[function(_dereq_,module,exports){
 //var Emitter = require('emitter-component');
 
 
@@ -15470,7 +15499,7 @@ function requestify (socket) {
 
 module.exports = requestify;
 
-},{"./Promise":67,"node-uuid":110}],69:[function(_dereq_,module,exports){
+},{"./Promise":67,"node-uuid":109}],69:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -18206,7 +18235,7 @@ return Promise;
 };
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"./any.js":69,"./async.js":70,"./call_get.js":72,"./cancel.js":73,"./captured_trace.js":74,"./catch_filter.js":75,"./direct_resolve.js":76,"./errors.js":77,"./errors_api_rejection":78,"./filter.js":80,"./finally.js":81,"./generators.js":82,"./global.js":83,"./map.js":84,"./nodeify.js":85,"./progress.js":86,"./promise_array.js":88,"./promise_resolver.js":89,"./promisify.js":91,"./props.js":93,"./race.js":95,"./reduce.js":96,"./settle.js":98,"./some.js":100,"./synchronous_inspection.js":102,"./thenables.js":103,"./timers.js":104,"./util.js":105,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],88:[function(_dereq_,module,exports){
+},{"./any.js":69,"./async.js":70,"./call_get.js":72,"./cancel.js":73,"./captured_trace.js":74,"./catch_filter.js":75,"./direct_resolve.js":76,"./errors.js":77,"./errors_api_rejection":78,"./filter.js":80,"./finally.js":81,"./generators.js":82,"./global.js":83,"./map.js":84,"./nodeify.js":85,"./progress.js":86,"./promise_array.js":88,"./promise_resolver.js":89,"./promisify.js":91,"./props.js":93,"./race.js":95,"./reduce.js":96,"./settle.js":98,"./some.js":100,"./synchronous_inspection.js":102,"./thenables.js":103,"./timers.js":104,"./util.js":105,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133}],88:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -19684,7 +19713,7 @@ else {
 module.exports = schedule;
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"./global.js":83,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],98:[function(_dereq_,module,exports){
+},{"./global.js":83,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133}],98:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -20505,54 +20534,9 @@ var ret = {
 module.exports = ret;
 
 },{"./es5.js":79,"./global.js":83}],106:[function(_dereq_,module,exports){
-
-/**
- * Module dependencies.
- */
-
-var global = (function() { return this; })();
-
-/**
- * WebSocket constructor.
- */
-
-var WebSocket = global.WebSocket || global.MozWebSocket;
-
-/**
- * Module exports.
- */
-
-module.exports = WebSocket ? ws : null;
-
-/**
- * WebSocket constructor.
- *
- * The third `opts` options object gets ignored in web browsers, since it's
- * non-standard, and throws a TypeError if passed to the constructor.
- * See: https://github.com/einaros/ws/issues/227
- *
- * @param {String} uri
- * @param {Array} protocols (optional)
- * @param {Object) opts (optional)
- * @api public
- */
-
-function ws(uri, protocols, opts) {
-  var instance;
-  if (protocols) {
-    instance = new WebSocket(uri, protocols);
-  } else {
-    instance = new WebSocket(uri);
-  }
-  return instance;
-}
-
-if (WebSocket) ws.prototype = WebSocket.prototype;
-
-},{}],107:[function(_dereq_,module,exports){
 module.exports = _dereq_('./lib/hypertimer');
 
-},{"./lib/hypertimer":108}],108:[function(_dereq_,module,exports){
+},{"./lib/hypertimer":107}],107:[function(_dereq_,module,exports){
 var util = _dereq_('./util');
 
 // enum for type of timeout
@@ -21074,7 +21058,7 @@ function hypertimer(options) {
 
 module.exports = hypertimer;
 
-},{"./util":109}],109:[function(_dereq_,module,exports){
+},{"./util":108}],108:[function(_dereq_,module,exports){
 
 /* istanbul ignore else */
 if (typeof Date.now === 'function') {
@@ -21110,7 +21094,7 @@ exports.shuffle = function (o){
   return o;
 };
 
-},{}],110:[function(_dereq_,module,exports){
+},{}],109:[function(_dereq_,module,exports){
 (function (Buffer){
 //     uuid.js
 //
@@ -21359,7 +21343,7 @@ exports.shuffle = function (o){
 }).call(this);
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"buffer":118,"crypto":122}],111:[function(_dereq_,module,exports){
+},{"buffer":117,"crypto":121}],110:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -21466,7 +21450,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":113}],112:[function(_dereq_,module,exports){
+},{"asap":112}],111:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -21648,7 +21632,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":111,"asap":113}],113:[function(_dereq_,module,exports){
+},{"./core.js":110,"asap":112}],112:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -21765,7 +21749,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],114:[function(_dereq_,module,exports){
+},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133}],113:[function(_dereq_,module,exports){
 (function (Buffer){
 // Version: 3.6.7
 var NOW             = 1
@@ -23441,7 +23425,7 @@ module.exports = CREATE_PUBNUB
 module.exports.PNmessage = PNmessage;
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"buffer":118,"crypto":122,"http":128,"https":132}],115:[function(_dereq_,module,exports){
+},{"buffer":117,"crypto":121,"http":127,"https":131}],114:[function(_dereq_,module,exports){
 (function (global){
 'use strict';
 
@@ -23618,11 +23602,54 @@ function tostring(a) {
 mixkey(Math.random(), pool);
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],116:[function(_dereq_,module,exports){
-module.exports=_dereq_(106)
-},{}],117:[function(_dereq_,module,exports){
+},{}],115:[function(_dereq_,module,exports){
 
-},{}],118:[function(_dereq_,module,exports){
+/**
+ * Module dependencies.
+ */
+
+var global = (function() { return this; })();
+
+/**
+ * WebSocket constructor.
+ */
+
+var WebSocket = global.WebSocket || global.MozWebSocket;
+
+/**
+ * Module exports.
+ */
+
+module.exports = WebSocket ? ws : null;
+
+/**
+ * WebSocket constructor.
+ *
+ * The third `opts` options object gets ignored in web browsers, since it's
+ * non-standard, and throws a TypeError if passed to the constructor.
+ * See: https://github.com/einaros/ws/issues/227
+ *
+ * @param {String} uri
+ * @param {Array} protocols (optional)
+ * @param {Object) opts (optional)
+ * @api public
+ */
+
+function ws(uri, protocols, opts) {
+  var instance;
+  if (protocols) {
+    instance = new WebSocket(uri, protocols);
+  } else {
+    instance = new WebSocket(uri);
+  }
+  return instance;
+}
+
+if (WebSocket) ws.prototype = WebSocket.prototype;
+
+},{}],116:[function(_dereq_,module,exports){
+
+},{}],117:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -24733,7 +24760,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":119,"ieee754":120}],119:[function(_dereq_,module,exports){
+},{"base64-js":118,"ieee754":119}],118:[function(_dereq_,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -24856,7 +24883,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	module.exports.fromByteArray = uint8ToBase64
 }())
 
-},{}],120:[function(_dereq_,module,exports){
+},{}],119:[function(_dereq_,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -24942,7 +24969,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],121:[function(_dereq_,module,exports){
+},{}],120:[function(_dereq_,module,exports){
 var Buffer = _dereq_('buffer').Buffer;
 var intSize = 4;
 var zeroBuffer = new Buffer(intSize); zeroBuffer.fill(0);
@@ -24979,7 +25006,7 @@ function hash(buf, fn, hashSize, bigEndian) {
 
 module.exports = { hash: hash };
 
-},{"buffer":118}],122:[function(_dereq_,module,exports){
+},{"buffer":117}],121:[function(_dereq_,module,exports){
 var Buffer = _dereq_('buffer').Buffer
 var sha = _dereq_('./sha')
 var sha256 = _dereq_('./sha256')
@@ -25078,7 +25105,7 @@ each(['createCredentials'
   }
 })
 
-},{"./md5":123,"./rng":124,"./sha":125,"./sha256":126,"buffer":118}],123:[function(_dereq_,module,exports){
+},{"./md5":122,"./rng":123,"./sha":124,"./sha256":125,"buffer":117}],122:[function(_dereq_,module,exports){
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
  * Digest Algorithm, as defined in RFC 1321.
@@ -25243,7 +25270,7 @@ module.exports = function md5(buf) {
   return helpers.hash(buf, core_md5, 16);
 };
 
-},{"./helpers":121}],124:[function(_dereq_,module,exports){
+},{"./helpers":120}],123:[function(_dereq_,module,exports){
 // Original code adapted from Robert Kieffer.
 // details at https://github.com/broofa/node-uuid
 (function() {
@@ -25276,7 +25303,7 @@ module.exports = function md5(buf) {
 
 }())
 
-},{}],125:[function(_dereq_,module,exports){
+},{}],124:[function(_dereq_,module,exports){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
  * in FIPS PUB 180-1
@@ -25379,7 +25406,7 @@ module.exports = function sha1(buf) {
   return helpers.hash(buf, core_sha1, 20, true);
 };
 
-},{"./helpers":121}],126:[function(_dereq_,module,exports){
+},{"./helpers":120}],125:[function(_dereq_,module,exports){
 
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -25460,7 +25487,7 @@ module.exports = function sha256(buf) {
   return helpers.hash(buf, core_sha256, 32, true);
 };
 
-},{"./helpers":121}],127:[function(_dereq_,module,exports){
+},{"./helpers":120}],126:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -25762,7 +25789,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],128:[function(_dereq_,module,exports){
+},{}],127:[function(_dereq_,module,exports){
 var http = module.exports;
 var EventEmitter = _dereq_('events').EventEmitter;
 var Request = _dereq_('./lib/request');
@@ -25901,7 +25928,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":129,"events":127,"url":147}],129:[function(_dereq_,module,exports){
+},{"./lib/request":128,"events":126,"url":146}],128:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var Response = _dereq_('./response');
 var Base64 = _dereq_('Base64');
@@ -26092,7 +26119,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":130,"Base64":131,"inherits":133,"stream":140}],130:[function(_dereq_,module,exports){
+},{"./response":129,"Base64":130,"inherits":132,"stream":139}],129:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var util = _dereq_('util');
 
@@ -26214,7 +26241,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":140,"util":149}],131:[function(_dereq_,module,exports){
+},{"stream":139,"util":148}],130:[function(_dereq_,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -26276,7 +26303,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],132:[function(_dereq_,module,exports){
+},{}],131:[function(_dereq_,module,exports){
 var http = _dereq_('http');
 
 var https = module.exports;
@@ -26291,7 +26318,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":128}],133:[function(_dereq_,module,exports){
+},{"http":127}],132:[function(_dereq_,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -26316,7 +26343,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],134:[function(_dereq_,module,exports){
+},{}],133:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -26378,7 +26405,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],135:[function(_dereq_,module,exports){
+},{}],134:[function(_dereq_,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -26889,7 +26916,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],136:[function(_dereq_,module,exports){
+},{}],135:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -26975,7 +27002,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],137:[function(_dereq_,module,exports){
+},{}],136:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27062,13 +27089,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],138:[function(_dereq_,module,exports){
+},{}],137:[function(_dereq_,module,exports){
 'use strict';
 
 exports.decode = exports.parse = _dereq_('./decode');
 exports.encode = exports.stringify = _dereq_('./encode');
 
-},{"./decode":136,"./encode":137}],139:[function(_dereq_,module,exports){
+},{"./decode":135,"./encode":136}],138:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27142,7 +27169,7 @@ function onend() {
   });
 }
 
-},{"./readable.js":143,"./writable.js":145,"inherits":133,"process/browser.js":141}],140:[function(_dereq_,module,exports){
+},{"./readable.js":142,"./writable.js":144,"inherits":132,"process/browser.js":140}],139:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27271,7 +27298,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"./duplex.js":139,"./passthrough.js":142,"./readable.js":143,"./transform.js":144,"./writable.js":145,"events":127,"inherits":133}],141:[function(_dereq_,module,exports){
+},{"./duplex.js":138,"./passthrough.js":141,"./readable.js":142,"./transform.js":143,"./writable.js":144,"events":126,"inherits":132}],140:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -27326,7 +27353,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],142:[function(_dereq_,module,exports){
+},{}],141:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27369,7 +27396,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./transform.js":144,"inherits":133}],143:[function(_dereq_,module,exports){
+},{"./transform.js":143,"inherits":132}],142:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -28306,7 +28333,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"./index.js":140,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"buffer":118,"events":127,"inherits":133,"process/browser.js":141,"string_decoder":146}],144:[function(_dereq_,module,exports){
+},{"./index.js":139,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133,"buffer":117,"events":126,"inherits":132,"process/browser.js":140,"string_decoder":145}],143:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28512,7 +28539,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./duplex.js":139,"inherits":133}],145:[function(_dereq_,module,exports){
+},{"./duplex.js":138,"inherits":132}],144:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28900,7 +28927,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./index.js":140,"buffer":118,"inherits":133,"process/browser.js":141}],146:[function(_dereq_,module,exports){
+},{"./index.js":139,"buffer":117,"inherits":132,"process/browser.js":140}],145:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29093,7 +29120,7 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":118}],147:[function(_dereq_,module,exports){
+},{"buffer":117}],146:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29802,14 +29829,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":135,"querystring":138}],148:[function(_dereq_,module,exports){
+},{"punycode":134,"querystring":137}],147:[function(_dereq_,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],149:[function(_dereq_,module,exports){
+},{}],148:[function(_dereq_,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -30399,6 +30426,6 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":148,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"inherits":133}]},{},[1])
+},{"./support/isBuffer":147,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":133,"inherits":132}]},{},[1])
 (1)
 });

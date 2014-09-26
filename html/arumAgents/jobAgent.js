@@ -135,6 +135,8 @@ JobAgent.prototype.rpcFunctions.finish = function(params) {
   delete this.openJobs[agentId][jobId];
 
   this.updateStats();
+
+  return {elapsedTime: this.closedJobs[agentId][jobId].elapsedTime, elapsedTimeWithPause: this.closedJobs[agentId][jobId].elapsedTimeWithPause};
 };
 
 /**
@@ -149,7 +151,7 @@ JobAgent.prototype.rpcFunctions.update = function(params) {
 
   switch (operation) {
     case 'pause':
-      job.pause(params.time);
+      job.pause(params.time, false);
       break;
     case 'endOfDay':
       job.pause(params.time, true);
@@ -158,10 +160,10 @@ JobAgent.prototype.rpcFunctions.update = function(params) {
       job.resume(params.time, true);
       break;
     case 'resume':
-      job.resume(params.time);
+      job.resume(params.time, false);
       break;
   }
-  return job.elapsedTime;
+  return {elapsedTime: job.elapsedTime, elapsedTimeWithPause: job.elapsedTimeWithPause};
 };
 
 /**
