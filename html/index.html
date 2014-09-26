@@ -5,10 +5,13 @@
 
     <style type="text/css">
         .vis.timeline .item.background.negative {
-            background-color: rgba(255, 120, 0, 0.2);
+            background-color: rgba(255, 120, 0, 0.2) !important;
         }
         .vis.timeline .item.background.positive {
-            background-color: rgba(113, 255, 34, 0.20);
+            background-color: rgba(113, 255, 34, 0.20) !important;
+        }
+        .vis.timeline .item.background {
+            background-color: rgba(40, 148, 255, 0.20) !important;
         }
         .vis.timeline .labelset .timelineGroup .inner {
             height:100px !important;
@@ -31,6 +34,16 @@
         .vis.timeline .item.dot.pause{
             top:-5px !important;
             border-color: #7d807d;
+        }
+
+        .vis.timeline .item.range.finished{
+            border-color: #7d807d !important;
+            background-color: #b1ebb0 !important;
+        }
+
+        .vis.timeline .item {
+            border-color: #7d807d !important;
+            background-color: #f2f8ff !important;
         }
 
         img.icon{
@@ -124,17 +137,18 @@
         var eventGen = new EventGenerator("frank");
 
         setTimeout(function () {
-            agentGen.getEvents(3);
-            eventCounter.innerHTML = agentGen.eventNumber +"";
+            agentGen.getEvents(29);
+            eventCounter.innerHTML = agentGen.eventNumber +""; // make string so it works
         }, 200);
 //        eventGen.start();
         function getNewEvent() {
             agentGen.getEvents(1);
-            eventCounter.innerHTML = agentGen.eventNumber +"";
+            eventCounter.innerHTML = agentGen.eventNumber +""; // make string so it works
         }
 
         function getAllEvents() {
             agentGen.getEvents(agentGen.amountOfEvents);
+            eventCounter.innerHTML = agentGen.eventNumber +""; // make string so it works
         }
     </script>
 

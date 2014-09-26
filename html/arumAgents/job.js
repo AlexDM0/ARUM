@@ -84,6 +84,7 @@ Job.prototype.pause = function(time, endOfDay) {
   else if (endOfDay == true && this.paused == false) {
     this.elapsedTimeWithPause += new Date(time).getTime() - new Date(this.timeResumed).getTime();
     this.elapsedTime += new Date(time).getTime() - new Date(this.timeResumed).getTime();
+    console.log("yes im here")
     this.endOfDayPause = true;
   }
   else if (this.paused == false) {

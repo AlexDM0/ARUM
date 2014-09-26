@@ -163,7 +163,7 @@ JobAgent.prototype.rpcFunctions.update = function(params) {
       job.resume(params.time, false);
       break;
   }
-  return {elapsedTime: job.elapsedTime, elapsedTimeWithPause: job.elapsedTimeWithPause};
+  return {jobId: jobId, type: this.type, elapsedTime: job.elapsedTime, elapsedTimeWithPause: job.elapsedTimeWithPause};
 };
 
 /**
