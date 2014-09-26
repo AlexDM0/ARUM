@@ -38,7 +38,6 @@ JobManager.prototype.add = function(id, type, time) {
       me.jobs.id[id].prediction = prediction;
   });
 
-  //var assignment = new Job(id, type, timeStart);
   this.jobs.id[id] = {
     type: type,
     startTime: time,
@@ -61,7 +60,7 @@ JobManager.prototype.add = function(id, type, time) {
 
 JobManager.prototype.finish = function(id, type, time) {
   var me = this;
-
+  console.log('request finish', id, time);
   // finish the job.
   this.agent.rpc.request('job_' +  type, {method:'finish', params:{
     agentId: this.agent.id,
@@ -69,6 +68,7 @@ JobManager.prototype.finish = function(id, type, time) {
     jobId: id
   }})
     .then(function (reply) {
+      console.log('finish', id, time);
       me.jobs.id[id].elapsedTime = reply.elapsedTime;
       me.jobs.id[id].elapsedTimeWithPause = reply.elapsedTimeWithPause;
       me.updateDataSetsFinish(id, type, time, me.jobs.id[id].prediction);
@@ -86,7 +86,6 @@ JobManager.prototype.update = function(id, type, time, operation) {
   var me = this;
   var eventId = uuid();
   if (operation == 'endOfDay' || operation == 'startOfDay') {
-    console.log(this.openJobs)
     for (var jobId in this.openJobs) {
       if (this.openJobs.hasOwnProperty(jobId)) {
         var type = this.openJobs[jobId].type;
@@ -97,7 +96,6 @@ JobManager.prototype.update = function(id, type, time, operation) {
           operation: operation
         }})
           .then(function (reply) {
-            console.log('reply', reply)
             me.jobs.id[reply.jobId].elapsedTime = reply.elapsedTime;
             me.jobs.id[reply.jobId].elapsedTimeWithPause = reply.elapsedTimeWithPause;
             me.updateDataSetsOperation(reply.jobId, reply.type, time, operation, eventId);
@@ -208,6 +206,7 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
   var updateQuery = [];
   var image = '<img src="./images/control_play.png" class="icon"/>';
   var flagId = id + "_resumeNotifier" + eventId;
+
   // this causes there to be only one flag for the start of day as well as a sun icon
   if (operation == 'startOfDay') {
     image = '<img src="./images/sun.png"  class="icon"/>';

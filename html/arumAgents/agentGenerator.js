@@ -46,8 +46,11 @@ AgentGenerator.prototype.getEvents = function (count, delay) {
   if (this.eventNumber + count > this.amountOfEvents) {
     count = this.amountOfEvents - this.eventNumber;
   }
+  var timeout = 0;
+  var me = this;
   for (var i = 0; i < count; i++) {
     this.eventNumber += 1;
-    this.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}})
+    setTimeout(function () {me.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}});}, timeout);
+    timeout += 20;
   }
 }
