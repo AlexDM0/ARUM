@@ -3,6 +3,7 @@ exports.Agent = _dereq_('./lib/Agent');
 
 exports.ServiceManager = _dereq_('./lib/ServiceManager');
 exports.TransportManager = _dereq_('./lib/TransportManager');
+exports.hypertimer = _dereq_('hypertimer');
 
 exports.module = {
   BabbleModule: _dereq_('./lib/module/BabbleModule'),
@@ -17,20 +18,24 @@ exports.transport = {
   AMQPTransport:      _dereq_('./lib/transport/amqp/AMQPTransport'),
   DistribusTransport: _dereq_('./lib/transport/distribus/DistribusTransport'),
   HTTPTransport:      _dereq_('./lib/transport/http/HTTPTransport'),
-  
+  WebSocketTransport: _dereq_('./lib/transport/websocket/WebSocketTransport'),
+
   connection: {
     Connection:          _dereq_('./lib/transport/Connection'),
     LocalConnection:     _dereq_('./lib/transport/local/LocalConnection'),
     PubNubConnection:    _dereq_('./lib/transport/pubnub/PubNubConnection'),
     AMQPConnection:      _dereq_('./lib/transport/amqp/AMQPConnection'),
     DistribusConnection: _dereq_('./lib/transport/distribus/DistribusConnection'),
-    HTTPConnection:      _dereq_('./lib/transport/http/HTTPConnection')
+    HTTPConnection:      _dereq_('./lib/transport/http/HTTPConnection'),
+    WebSocketConnection: _dereq_('./lib/transport/websocket/WebSocketConnection')
   }
 };
 
 exports.system = _dereq_('./lib/system');
 
-},{"./lib/Agent":2,"./lib/ServiceManager":3,"./lib/TransportManager":4,"./lib/module/BabbleModule":5,"./lib/module/PatternModule":6,"./lib/module/RequestModule":8,"./lib/system":9,"./lib/transport/Connection":10,"./lib/transport/Transport":11,"./lib/transport/amqp/AMQPConnection":12,"./lib/transport/amqp/AMQPTransport":13,"./lib/transport/distribus/DistribusConnection":14,"./lib/transport/distribus/DistribusTransport":15,"./lib/transport/http/HTTPConnection":16,"./lib/transport/http/HTTPTransport":17,"./lib/transport/local/LocalConnection":18,"./lib/transport/local/LocalTransport":19,"./lib/transport/pubnub/PubNubConnection":20,"./lib/transport/pubnub/PubNubTransport":21}],2:[function(_dereq_,module,exports){
+exports.util = _dereq_('./lib/util');
+
+},{"./lib/Agent":2,"./lib/ServiceManager":3,"./lib/TransportManager":4,"./lib/module/BabbleModule":5,"./lib/module/PatternModule":6,"./lib/module/RequestModule":8,"./lib/system":9,"./lib/transport/Connection":10,"./lib/transport/Transport":11,"./lib/transport/amqp/AMQPConnection":12,"./lib/transport/amqp/AMQPTransport":13,"./lib/transport/distribus/DistribusConnection":14,"./lib/transport/distribus/DistribusTransport":15,"./lib/transport/http/HTTPConnection":16,"./lib/transport/http/HTTPTransport":17,"./lib/transport/local/LocalConnection":18,"./lib/transport/local/LocalTransport":19,"./lib/transport/pubnub/PubNubConnection":20,"./lib/transport/pubnub/PubNubTransport":21,"./lib/transport/websocket/WebSocketConnection":22,"./lib/transport/websocket/WebSocketTransport":23,"./lib/util":24,"hypertimer":107}],2:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('promise');
@@ -165,7 +170,7 @@ function _getModuleConstructor(name) {
  *                for sharing an address with remote agents.
  *              - A string "protocol://networkId/agentId". This is a sharable
  *                identifier for an agent.
- * @param {string} message  Message to be send
+ * @param {*} message  Message to be send
  * @return {Promise} Returns a promise which resolves when the message as
  *                   successfully been sent, or rejected when sending the
  *                   message failed
@@ -175,8 +180,8 @@ Agent.prototype.send = function(to, message) {
   if (colon !== -1) {
     // to is an url like "protocol://networkId/agentId"
     var url = util.parseUrl(to);
-    if (url.protocol == 'http' || url.protocol == 'https') {
-      return this._sendAsHTTP(to, message);
+    if (url.protocol == 'http' || url.protocol == 'ws' || url.protocol == 'https') { // TODO: ugly fixed listing here...
+      return this._sendByProtocol(url.protocol, to, message);
     }
     else {
       return this._sendByNetworkId(url.domain, url.path, message);
@@ -193,7 +198,13 @@ Agent.prototype.send = function(to, message) {
   }
 
   // to is an id like "agentId". Send via the default transport
-  return this.defaultConnection.send(to, message);
+  var conn = this.defaultConnection;
+  if (conn) {
+    return conn.send(to, message);
+  }
+  else {
+    return Promise.reject(new Error('No transport found'));
+  }
 };
 
 /**
@@ -215,11 +226,14 @@ Agent.prototype._sendByNetworkId = function(networkId, to, message) {
     }
   }
 
-  throw new Error('No transport found with networkId "' + networkId + '"');
+  return Promise.reject(new Error('No transport found with networkId "' + networkId + '"'));
 };
 
 /**
- * Send a transport to an agent via a HTTPTransport
+ * Send a message by a transport by protocol.
+ * The message will be send via the first found transport having the specified
+ * protocol.
+ * @param {string} protocol     A protocol, for example 'http' or 'ws'
  * @param {string} to           An agents id
  * @param {string} message      Message to be send
  * @return {Promise} Returns a promise which resolves when the message as
@@ -227,15 +241,15 @@ Agent.prototype._sendByNetworkId = function(networkId, to, message) {
  *                   message failed
  * @private
  */
-Agent.prototype._sendAsHTTP = function(to, message) {
+Agent.prototype._sendByProtocol = function(protocol, to, message) {
   for (var i = 0; i < this.connections.length; i++) {
     var connection = this.connections[i];
-    if (connection.transport.type == 'http') {
+    if (connection.transport.type == protocol) {
       return connection.send(to, message);
     }
   }
 
-  throw new Error('No HTTPTransport found');
+  return Promise.reject(new Error('No transport found for protocol "' + protocol + '"'));
 };
 
 /**
@@ -256,7 +270,7 @@ Agent.prototype._sendByTransportId = function(transportId, to, message) {
     }
   }
 
-  throw new Error('No transport found with id "' + transportId + '"');
+  return Promise.reject(new Error('No transport found with id "' + transportId + '"'));
 };
 
 /**
@@ -437,13 +451,26 @@ Agent.prototype._updateReady = function () {
 
 module.exports = Agent;
 
-},{"./module/BabbleModule":5,"./module/PatternModule":6,"./module/RPCModule":7,"./module/RequestModule":8,"./system":9,"./util":22,"node-uuid":105,"promise":107}],3:[function(_dereq_,module,exports){
+},{"./module/BabbleModule":5,"./module/PatternModule":6,"./module/RPCModule":7,"./module/RequestModule":8,"./system":9,"./util":24,"node-uuid":110,"promise":112}],3:[function(_dereq_,module,exports){
 'use strict';
 
+var seed = _dereq_('seed-random');
+var hypertimer = _dereq_('hypertimer');
 var TransportManager = _dereq_('./TransportManager');
+
+// map with known configuration properties
+var KNOWN_PROPERTIES = {
+  transports: true,
+  timer: true,
+  random: true
+};
 
 function ServiceManager(config) {
   this.transports = new TransportManager();
+
+  this.timer = hypertimer();
+
+  this.random = Math.random;
 
   this.init(config);
 }
@@ -456,8 +483,31 @@ function ServiceManager(config) {
 ServiceManager.prototype.init = function (config) {
   this.transports.clear();
 
-  if (config && config.transports) {
-    this.transports.load(config.transports);
+  if (config) {
+    if (config.transports) {
+      this.transports.load(config.transports);
+    }
+
+    if (config.timer) {
+      this.timer.config(config.timer);
+    }
+
+    if (config.random) {
+      if (config.random.deterministic) {
+        var key = config.random.seed || 'random seed';
+        this.random = seed(key, config.random);
+      }
+      else {
+        this.random = Math.random;
+      }
+    }
+
+    for (var prop in config) {
+      if (config.hasOwnProperty(prop) && !KNOWN_PROPERTIES[prop]) {
+        // TODO: should log this warning via a configured logger
+        console.log('WARNING: Unknown configuration option "' + prop + '"')
+      }
+    }
   }
 };
 
@@ -470,7 +520,7 @@ ServiceManager.prototype.clear = function () {
 
 module.exports = ServiceManager;
 
-},{"./TransportManager":4}],4:[function(_dereq_,module,exports){
+},{"./TransportManager":4,"hypertimer":107,"seed-random":115}],4:[function(_dereq_,module,exports){
 'use strict';
 
 var AMQPTransport = _dereq_('./transport/amqp/AMQPTransport');
@@ -478,6 +528,7 @@ var DistribusTransport = _dereq_('./transport/distribus/DistribusTransport');
 var LocalTransport = _dereq_('./transport/local/LocalTransport');
 var PubNubTransport = _dereq_('./transport/pubnub/PubNubTransport');
 var HTTPTransport = _dereq_('./transport/http/HTTPTransport');
+var WebSocketTransport = _dereq_('./transport/websocket/WebSocketTransport');
 
 /**
  * A manager for loading and finding transports.
@@ -494,6 +545,7 @@ function TransportManager(config) {
   this.registerType(LocalTransport);
   this.registerType(PubNubTransport);
   this.registerType(HTTPTransport);
+  this.registerType(WebSocketTransport);
 
   if (config) {
     this.load(config);
@@ -648,7 +700,7 @@ TransportManager.prototype.clear = function () {
 
 module.exports = TransportManager;
 
-},{"./transport/amqp/AMQPTransport":13,"./transport/distribus/DistribusTransport":15,"./transport/http/HTTPTransport":17,"./transport/local/LocalTransport":19,"./transport/pubnub/PubNubTransport":21}],5:[function(_dereq_,module,exports){
+},{"./transport/amqp/AMQPTransport":13,"./transport/distribus/DistribusTransport":15,"./transport/http/HTTPTransport":17,"./transport/local/LocalTransport":19,"./transport/pubnub/PubNubTransport":21,"./transport/websocket/WebSocketTransport":23}],5:[function(_dereq_,module,exports){
 'use strict';
 
 var babble = _dereq_('babble');
@@ -662,13 +714,19 @@ var babble = _dereq_('babble');
  * @constructor
  */
 function BabbleModule(agent, options) {
-  var receiveOriginal = agent._receive;
-
   // create a new babbler
   var babbler = babble.babbler(agent.id);
+  babbler.connect({
+    connect: function (params) {},
+    disconnect: function(token) {},
+    send: function (to, message) {
+      agent.send(to, message);
+    }
+  });
   this.babbler = babbler;
 
-  // attach receive function to the agent
+  // create a receive function for the agent
+  var receiveOriginal = agent._receive;
   this._receive = function (from, message) {
     babbler._receive(message);
     // TODO: only propagate to receiveOriginal if the message is not handled by the babbler
@@ -694,7 +752,7 @@ BabbleModule.prototype.mixin = function () {
 
 module.exports = BabbleModule;
 
-},{"babble":39}],6:[function(_dereq_,module,exports){
+},{"babble":41}],6:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -848,15 +906,11 @@ RPCModule.prototype.request = function (to, message) {
   var me = this;
   return new Promise(function (resolve, reject) {
     // prepare the envelope
-    if (message         === undefined) {reject(new Error('Message is empty.'));}
-    if (typeof message  !=  'object' ) {reject(new Error('Message must be an object.'));}
-    if (message.jsonrpc === undefined) {message.jsonrpc = '2.0';}
+    if (typeof message  !=  'object' ) {reject(new TypeError('Message must be an object'));}
     if (message.jsonrpc !== '2.0'    ) {message.jsonrpc = '2.0';}
-    if (message.method  === undefined) {reject(new Error('Method must be supplied.'));}
+    if (message.id      === undefined) {message.id = uuid.v1();}
+    if (message.method  === undefined) {reject(new Error('Property "method" expected'));}
     if (message.params  === undefined) {message.params = {};}
-
-    // generate an envelope id
-    message.id = uuid.v1();
 
     // add the request to the list with requests in progress
     me.queue[message.id] = {
@@ -903,27 +957,28 @@ RPCModule.prototype.receive = function (from, message) {
  */
 RPCModule.prototype._receive = function (from, message) {
   // define structure of return message
-  var returnMessage = {jsonrpc:'2.0', id:message.id, result: null, error:null};
+  var returnMessage = {jsonrpc:'2.0', id:message.id};
 
   // check if this is a request
   if (message.method !== undefined) {
     // check is method is available for this agent
     var method = this.availableFunctions[message.method];
     if (method !== undefined) {
-      returnMessage.result = method.call(this.agent, message.params, from);
+      returnMessage.result = method.call(this.agent, message.params, from) || null;
     }
     else {
       var error = new Error('Cannot find function: ' + message.method);
       returnMessage.error = error.message || error.toString();
     }
-    this.agent.send(from,returnMessage);
+    this.agent.send(from, returnMessage);
   }
-  // check if this is a reponse
-  else if (message.result !== undefined) {
+  // check if this is a response
+  else if (message.result !== undefined || message.error !== undefined) {
     var request = this.queue[message.id];
     if (request !== undefined) {
       // if an error is defined, reject promise
-      if (message.error !== null) {
+      if (message.error != undefined) { // null or undefined
+        // FIXME: returned error should be an object {code: number, message: string}
         request.reject(new Error(message.error));
       }
       else {
@@ -935,7 +990,8 @@ RPCModule.prototype._receive = function (from, message) {
     // send error back to sender.
     var error = new Error('No method or result defined. Message:' + JSON.stringify(message));
     returnMessage.error = error.message || error.toString();
-    this.agent.send(from,returnMessage);
+    // FIXME: returned error should be an object {code: number, message: string}
+    this.agent.send(from, returnMessage);
   }
 };
 
@@ -952,7 +1008,7 @@ RPCModule.prototype.mixin = function () {
 };
 
 module.exports = RPCModule;
-},{"node-uuid":105,"promise":107}],8:[function(_dereq_,module,exports){
+},{"node-uuid":110,"promise":112}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var uuid = _dereq_('node-uuid');
@@ -1082,7 +1138,7 @@ Request.prototype.mixin = function () {
 
 module.exports = Request;
 
-},{"../util":22,"node-uuid":105,"promise":107}],9:[function(_dereq_,module,exports){
+},{"../util":24,"node-uuid":110,"promise":112}],9:[function(_dereq_,module,exports){
 'use strict';
 
 var ServiceManager = _dereq_('./ServiceManager');
@@ -1131,7 +1187,7 @@ Connection.prototype.close = function () {
 
 module.exports = Connection;
 
-},{"promise":107}],11:[function(_dereq_,module,exports){
+},{"promise":112}],11:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1363,7 +1419,7 @@ AMQPTransport.prototype.close = function() {
 
 module.exports = AMQPTransport;
 
-},{"./../Transport":11,"./AMQPConnection":12,"amqp":23,"promise":107}],14:[function(_dereq_,module,exports){
+},{"./../Transport":11,"./AMQPConnection":12,"amqp":25,"promise":112}],14:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('promise');
@@ -1406,7 +1462,7 @@ DistribusConnection.prototype.close = function () {
 
 module.exports = DistribusConnection;
 
-},{"../Connection":10,"promise":107}],15:[function(_dereq_,module,exports){
+},{"../Connection":10,"promise":112}],15:[function(_dereq_,module,exports){
 'use strict';
 
 var distribus = _dereq_('distribus');
@@ -1454,7 +1510,7 @@ DistribusTransport.prototype.close = function() {
 
 module.exports = DistribusTransport;
 
-},{"./../Transport":11,"./DistribusConnection":14,"distribus":62}],16:[function(_dereq_,module,exports){
+},{"./../Transport":11,"./DistribusConnection":14,"distribus":64}],16:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('promise');
@@ -1489,9 +1545,9 @@ function HTTPConnection(transport, id, receive) {
 HTTPConnection.prototype.send = function (to, message) {
   var fromURL = this.transport.url.replace(':id', this.id);
 
-  var isURL = to.indexOf('://');
+  var isURL = to.indexOf('://') !== -1;
   var toURL;
-  if (isURL != -1) {
+  if (isURL) {
     toURL = to;
   }
   else {
@@ -1499,7 +1555,7 @@ HTTPConnection.prototype.send = function (to, message) {
       toURL = this.transport.remoteUrl.replace(':id', to);
     }
     else {
-      console.log("ERROR: no remote URL specified. Cannot send over HTTP.", to);
+      console.log('ERROR: no remote URL specified. Cannot send over HTTP.', to);
     }
   }
 
@@ -1515,7 +1571,7 @@ HTTPConnection.prototype.close = function () {
 
 module.exports = HTTPConnection;
 
-},{"../Connection":10,"promise":107}],17:[function(_dereq_,module,exports){
+},{"../Connection":10,"promise":112}],17:[function(_dereq_,module,exports){
 'use strict';
 
 var http = _dereq_('http');
@@ -1528,9 +1584,9 @@ var HTTPConnection = _dereq_('./HTTPConnection');
  *
  * Supported Options:
  *
- * {Number}  config.port | Port to listen on.
- * {String}  config.path | Path, with or without leading and trailing slash (/)
- * {Boolean} config.localIfAvailable | if the agentId exists locally, use local transport. (local)
+ * {Number}  config.port              Port to listen on.
+ * {String}  config.path              Path, with or without leading and trailing slash (/)
+ * {Boolean} config.localShortcut     If the agentId exists locally, use local transport. (local)
  *
  * Address: http://127.0.0.1:PORTNUMBER/PATH
  */
@@ -1543,15 +1599,15 @@ function HTTPTransport(config) {
 
   this.url = config.url;
   this.remoteUrl = config.remoteUrl;
-  this.localShortcut = config.localShortcut || true;
+  this.localShortcut = (config && config.localShortcut === false) ? false : true;
 
-  this.httpTimeout = 1000; // 1 second
-  this.regexHosts = new RegExp(/[http]{4}s?:\/\/([a-z\-\.A-Z0-9]*):?([0-9]*)(\/[a-z\/:A-Z0-9._\-% \\\(\)\*\+\.\^\$]*)/);
+  this.httpTimeout = 1000; // 1 second // TODO: make httpTimeout customizable, set to 10 sec by default?
+  this.regexHosts = /[http]{4}s?:\/\/([a-z\-\.A-Z0-9]*):?([0-9]*)(\/[a-z\/:A-Z0-9._\-% \\\(\)\*\+\.\^\$]*)/;
   this.urlHostData = this.regexHosts.exec(this.url);
 
   this.regexPath = this.getRegEx(this.urlHostData[3]);
   this.port = config.port || this.urlHostData[2] || 3000;
-  this.path = this.urlHostData[3].replace(":id","");
+  this.path = this.urlHostData[3].replace(':id', '');
 }
 
 HTTPTransport.prototype = new Transport();
@@ -1564,9 +1620,8 @@ HTTPTransport.prototype.getRegEx = function(url) {
 /**
  * Connect an agent
  * @param {String} id
- * @param {Function} onMessage            Invoked as onMessage(from, message)
- * @return {Promise.<Transport, Error>}  Returns a promise which resolves when
- *                                        connected.
+ * @param {Function} receive  Invoked as receive(from, message)
+ * @return {HTTPConnection}   Returns a connection.
  */
 HTTPTransport.prototype.connect = function(id, receive) {
   if (this.server === undefined) {
@@ -1589,14 +1644,14 @@ HTTPTransport.prototype.send = function(from, to, message) {
     var fromRegexpCheck = me.regexPath.exec(from);
     var fromAgentId = fromRegexpCheck[1];
 
-    // check for local shortcut possibililty
+    // check for local shortcut possibility
     if (me.localShortcut == true) {
       var toRegexpCheck = me.regexPath.exec(to);
       var toAgentId = toRegexpCheck[1];
       var toPath = hostData[3].replace(toAgentId,"");
 
       // check if the "to" address is on the same URL, port and path as the "from"
-      if ((hostData[1] == "127.0.0.1"       && hostData[2] == me.urlHostData[2] && toPath == me.path) ||
+      if ((hostData[1] == '127.0.0.1'       && hostData[2] == me.urlHostData[2] && toPath == me.path) ||
           (me.urlHostData[1] == hostData[1] && hostData[2] == me.urlHostData[2] && toPath == me.path)) {
         // by definition true but check anyway
         if (me.agents[toAgentId] !== undefined) {
@@ -1608,7 +1663,7 @@ HTTPTransport.prototype.send = function(from, to, message) {
     }
 
     // stringify the message. If the message is an object, it can have an ID so it may be part of a req/rep.
-    if (typeof message == "object") {
+    if (typeof message == 'object') {
       message = JSON.stringify(message);
 
       // check if the send is a reply to an outstanding request and if so, deliver
@@ -1639,7 +1694,7 @@ HTTPTransport.prototype.send = function(from, to, message) {
       res.on('data', function (response) {
         var parsedResponse;
         try {parsedResponse = JSON.parse(response);} catch (err) {parsedResponse = response;}
-        if (typeof parsedResponse == "object") {
+        if (typeof parsedResponse == 'object') {
           if (parsedResponse.__httpError__ !== undefined) {
             reject(new Error(parsedResponse.__httpError__));
             return;
@@ -1709,7 +1764,7 @@ HTTPTransport.prototype.processRequest = function(request, response) {
 
       var callback = me.agents[agentId];
       if (callback === undefined) {
-        var error = new Error("Agent: '" + agentId + "' does not exist.");
+        var error = new Error('Agent: "' + agentId + '" does not exist.');
         response.end(JSON.stringify({__httpError__:error.message || error.toString()}));
       }
       else {
@@ -1758,10 +1813,9 @@ HTTPTransport.prototype.initiateServer = function() {
       }
     });
 
-    var me = this;
-    this.server.on("error", function(err) {
-      if (err.code == "EADDRINUSE") {
-        throw new Error("ERROR: Could not start HTTP server. Port " + me.port + " is occupied.");
+    this.server.on('error', function(err) {
+      if (err.code == 'EADDRINUSE') {
+        throw new Error('ERROR: Could not start HTTP server. Port ' + me.port + ' is occupied.');
       }
       else {
         throw new Error(err);
@@ -1797,7 +1851,7 @@ HTTPTransport.prototype.close = function() {
 module.exports = HTTPTransport;
 
 
-},{"./../Transport":11,"./HTTPConnection":16,"http":121,"promise":107}],18:[function(_dereq_,module,exports){
+},{"./../Transport":11,"./HTTPConnection":16,"http":128,"promise":112}],18:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('promise');
@@ -1848,7 +1902,7 @@ LocalConnection.prototype.close = function () {
 
 module.exports = LocalConnection;
 
-},{"../Connection":10,"promise":107}],19:[function(_dereq_,module,exports){
+},{"../Connection":10,"promise":112}],19:[function(_dereq_,module,exports){
 'use strict';
 
 var Transport = _dereq_('./../Transport');
@@ -1950,7 +2004,7 @@ PubNubConnection.prototype.close = function () {
 
 module.exports = PubNubConnection;
 
-},{"../Connection":10,"promise":107}],21:[function(_dereq_,module,exports){
+},{"../Connection":10,"promise":112}],21:[function(_dereq_,module,exports){
 'use strict';
 
 var Transport = _dereq_('./../Transport');
@@ -2013,7 +2067,393 @@ function PUBNUB() {
 
 module.exports = PubNubTransport;
 
-},{"./../Transport":11,"./PubNubConnection":20,"pubnub":109}],22:[function(_dereq_,module,exports){
+},{"./../Transport":11,"./PubNubConnection":20,"pubnub":114}],22:[function(_dereq_,module,exports){
+'use strict';
+
+var uuid = _dereq_('node-uuid');
+var Promise = _dereq_('promise');
+var WebSocket = (typeof window !== 'undefined' && typeof window.WebSocket !== 'undefined') ?
+    window.WebSocket :
+    _dereq_('ws');
+
+var util = _dereq_('../../util');
+var Connection = _dereq_('../Connection');
+
+
+/**
+ * A websocket connection.
+ * @param {WebSocketTransport} transport
+ * @param {string | number | null} url  The url of the agent. The url must match
+ *                                      the url of the WebSocket server.
+ *                                      If url is null, a UUID id is generated as url.
+ * @param {function} receive
+ * @constructor
+ */
+function WebSocketConnection(transport, url, receive) {
+  this.transport = transport;
+  this.url = url ? util.normalizeURL(url) : uuid.v4();
+  this.receive = receive;
+
+  this.sockets = {};
+
+  // ready state
+  this.ready = Promise.resolve(this);
+}
+
+/**
+ * Send a message to an agent.
+ * @param {string} to   The WebSocket url of the receiver
+ * @param {*} message
+ * @return {Promise} Returns a promise which resolves when the message is sent,
+ *                   and rejects when sending the message failed
+ */
+WebSocketConnection.prototype.send = function (to, message) {
+  //console.log('send', this.url, to, message); // TODO: cleanup
+
+  // deliver locally when possible
+  if (this.transport.localShortcut) {
+    var agent = this.transport.agents[to];
+    if (agent) {
+      try {
+        agent.receive(this.url, message);
+        return Promise.resolve();
+      }
+      catch (err) {
+        return Promise.reject(err);
+      }
+    }
+  }
+
+  // get or create a connection
+  var conn = this.sockets[to];
+  if (conn) {
+    try {
+      if (conn.readyState == conn.CONNECTING) {
+        // the connection is still opening
+        return new Promise(function (resolve, reject) {
+          conn.onopen.callback.push(function () {
+            conn.send(JSON.stringify(message));
+            resolve();
+          })
+        });
+      }
+      else if (conn.readyState == conn.OPEN) {
+        conn.send(JSON.stringify(message));
+        return Promise.resolve();
+      }
+      else {
+        // remove the connection
+        conn = null;
+      }
+    }
+    catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
+  if (!conn) {
+    // try to open a connection
+    var me = this;
+    return new Promise(function (resolve, reject) {
+      me._connect(to, function (conn) {
+        conn.send(JSON.stringify(message));
+        resolve();
+      }, function (err) {
+        reject(new Error('Failed to connect to agent "' + to + '"'));
+      });
+    })
+  }
+};
+
+/**
+ * Open a websocket connection to an other agent. No messages are sent.
+ * @param {string} to  Url of the remote agent.
+ * @returns {Promise.<WebSocketConnection, Error>}
+ *              Returns a promise which resolves when the connection is
+ *              established and rejects in case of an error.
+ */
+WebSocketConnection.prototype.connect = function (to) {
+  var me = this;
+  return new Promise(function (resolve, reject) {
+    me._connect(to, function () {
+      resolve(me);
+    }, reject);
+  });
+};
+
+/**
+ * Open a websocket connection
+ * @param {String} to   Url of the remote agent
+ * @param {function} callback
+ * @param {function} errback
+ * @returns {WebSocket}
+ * @private
+ */
+WebSocketConnection.prototype._connect = function (to, callback, errback) {
+  var me = this;
+
+  var conn = new WebSocket(to + '?id=' + this.url);
+
+  // register the new socket
+  me.sockets[to] = conn;
+
+  conn.onopen = function () {
+    conn.onopen.callbacks.forEach(function (cb) {
+      cb(conn);
+    });
+    conn.onopen.callbacks = [];
+  };
+  conn.onopen.callbacks = [callback];
+
+  conn.onmessage = function (event) {
+    me.receive(to, JSON.parse(event.data));
+  };
+
+  conn.onclose = function () {
+    delete me.sockets[to];
+    //console.log('Connection closed');
+    // TODO: implement auto reconnect
+  };
+
+  conn.onerror = function (err) {
+    delete me.sockets[to];
+    //console.log('Error: ' + err);
+    // TODO: implement auto reconnect
+    errback(err);
+  };
+
+  return conn;
+};
+
+/**
+ * Register a websocket connection
+ * @param {String} from       Url of the remote agent
+ * @param {WebSocket} conn    WebSocket connection
+ * @returns {WebSocket}       Returns the websocket itself
+ * @private
+ */
+WebSocketConnection.prototype._onConnection = function (from, conn) {
+  var me = this;
+
+  conn.onmessage = function (event) {
+    me.receive(from, JSON.parse(event.data));
+  };
+
+  conn.onclose = function () {
+    // remove this connection from the sockets list
+    delete me.sockets[from];
+  };
+
+  conn.onerror = function (err) {
+    // TODO: what to do with errors?
+    delete me.sockets[from];
+  };
+
+  if (this.sockets[from]) {
+    // there is already a connection open with remote agent
+    // TODO: what to do with overwriting existing sockets?
+    this.sockets[from].close();
+  }
+
+  // register new connection
+  this.sockets[from] = conn;
+
+  return conn;
+};
+
+/**
+ * Get a list with all open sockets
+ * @return {String[]} Returns all open sockets
+ */
+WebSocketConnection.prototype.list = function () {
+  return Object.keys(this.sockets);
+};
+
+/**
+ * Close the connection. All open sockets will be closed and the agent will
+ * be unregistered from the WebSocketTransport.
+ */
+WebSocketConnection.prototype.close = function () {
+  // close all connections
+  for (var id in this.sockets) {
+    if (this.sockets.hasOwnProperty(id)) {
+      this.sockets[id].close();
+    }
+  }
+  this.sockets = {};
+
+  delete this.transport.agents[this.url];
+};
+
+module.exports = WebSocketConnection;
+
+},{"../../util":24,"../Connection":10,"node-uuid":110,"promise":112,"ws":116}],23:[function(_dereq_,module,exports){
+'use strict';
+
+var urlModule = _dereq_('url');
+var uuid = _dereq_('node-uuid');
+var Promise = _dereq_('promise');
+var WebSocketServer = _dereq_('ws').Server;
+
+var util = _dereq_('../../util');
+var Transport = _dereq_('../Transport');
+var WebSocketConnection = _dereq_('./WebSocketConnection');
+
+/**
+ * Create a web socket transport.
+ * @param {Object} config         Config can contain the following properties:
+ *                                - `id: string`. Optional
+ *                                - `default: boolean`. Optional
+ *                                - `url: string`. Optional. If provided,
+ *                                  A WebSocket server is started on given
+ *                                  url.
+ *                                - `localShortcut: boolean`. Optional. If true
+ *                                  (default), messages to local agents are not
+ *                                  send via WebSocket but delivered immediately
+ * @constructor
+ */
+function WebSocketTransport(config) {
+  this.id = config && config.id || null;
+  this.networkId = this.id || null;
+  this['default'] = config && config['default'] || false;
+  this.localShortcut = (config && config.localShortcut === false) ? false : true;
+
+  this.url = config && config.url || null;
+  this.server = null;
+
+  if (this.url != null) {
+    var urlParts = urlModule.parse(this.url);
+
+    if (urlParts.protocol != 'ws:') throw new Error('Invalid protocol, "ws:" expected');
+    if (this.url.indexOf(':id') == -1) throw new Error('":id" placeholder missing in url');
+
+    this.address = urlParts.protocol + '//' + urlParts.host; // the url without path, for example 'ws://localhost:3000'
+    this.ready = this._initServer(this.url);
+  }
+  else {
+    this.address = null;
+    this.ready = Promise.resolve(this);
+  }
+
+  this.agents = {}; // WebSocketConnections of all registered agents. The keys are the urls of the agents
+}
+
+WebSocketTransport.prototype = new Transport();
+
+WebSocketTransport.prototype.type = 'ws';
+
+/**
+ * Build an url for given id. Example:
+ *   var url = getUrl('agent1'); // 'ws://localhost:3000/agents/agent1'
+ * @param {String} id
+ * @return {String} Returns the url, or returns null when no url placeholder
+ *                  is defined.
+ */
+WebSocketTransport.prototype.getUrl = function (id) {
+  return this.url ? this.url.replace(':id', id) : null;
+};
+
+/**
+ * Initialize a server on given url
+ * @param {String} url    For example 'http://localhost:3000'
+ * @return {Promise} Returns a promise which resolves when the server is up
+ *                   and running
+ * @private
+ */
+WebSocketTransport.prototype._initServer = function (url) {
+  var urlParts = urlModule.parse(url);
+  var port = urlParts.port || 80;
+
+  var me = this;
+  return new Promise(function (resolve, reject) {
+    me.server = new WebSocketServer({port: port}, function () {
+      resolve(me);
+    });
+
+    me.server.on('connection', me._onConnection.bind(me));
+
+    me.server.on('error', function (err) {
+      reject(err)
+    });
+  })
+};
+
+/**
+ * Handle a new connection. The connection is added to the addressed agent.
+ * @param {WebSocket} conn
+ * @private
+ */
+WebSocketTransport.prototype._onConnection = function (conn) {
+  var url = conn.upgradeReq.url;
+  var urlParts = urlModule.parse(url, true);
+  var toPath = urlParts.pathname;
+  var to = util.normalizeURL(this.address + toPath);
+
+  // read sender id from query parameters or generate a random uuid
+  var queryParams = urlParts.query;
+  var from = queryParams.id || uuid.v4();
+  // TODO: make a config option to allow/disallow anonymous connections?
+  //console.log('onConnection, to=', to, ', from=', from, ', agents:', Object.keys(this.agents)); // TODO: cleanup
+
+  var agent = this.agents[to];
+  if (agent) {
+    agent._onConnection(from, conn);
+  }
+  else {
+    // reject the connection
+    // conn.send('Error: Agent with id "' + to + '" not found'); // TODO: can we send back a message before closing?
+    conn.close();
+  }
+};
+
+/**
+ * Connect an agent
+ * @param {string} id     The id or url of the agent. In case of an
+ *                        url, this url should match the url of the
+ *                        WebSocket server.
+ * @param {Function} receive                  Invoked as receive(from, message)
+ * @return {WebSocketConnection} Returns a promise which resolves when
+ *                                                connected.
+ */
+WebSocketTransport.prototype.connect = function(id, receive) {
+  var isURL = (id.indexOf('://') !== -1);
+
+  // FIXME: it's confusing right now what the final url will be based on the provided id...
+  var url = isURL ? id : (this.getUrl(id) || id);
+  if (url) url = util.normalizeURL(url);
+
+  // register the agents receive function
+  if (this.agents[url]) {
+    throw new Error('Agent with id ' + this.id + ' already exists');
+  }
+
+  var conn = new WebSocketConnection(this, url, receive);
+  this.agents[conn.url] = conn; // use conn.url, url can be changed when it was null
+
+  return conn;
+};
+
+/**
+ * Close the transport. Removes all agent connections.
+ */
+WebSocketTransport.prototype.close = function() {
+  // close all connections
+  for (var id in this.agents) {
+    if (this.agents.hasOwnProperty(id)) {
+      this.agents[id].close();
+    }
+  }
+  this.agents = {};
+
+  // close the server
+  if (this.server) {
+    this.server.close();
+  }
+};
+
+module.exports = WebSocketTransport;
+
+},{"../../util":24,"../Transport":11,"./WebSocketConnection":22,"node-uuid":110,"promise":112,"url":147,"ws":116}],24:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -2051,7 +2491,30 @@ exports.parseUrl = function (url) {
   return null;
 };
 
-},{}],23:[function(_dereq_,module,exports){
+/**
+ * Test whether a value is a UUID
+ * @param {string} value
+ * @returns {boolean} Returns true when value is a uuid
+ */
+exports.isUUID = function (value) {
+  return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(value);
+};
+
+/**
+ * Normalize a url. Removes trailing slash
+ * @param {string} url
+ * @return {string} Returns the normalized url
+ */
+exports.normalizeURL = function (url) {
+  if (url[url.length - 1] == '/') {
+    return url.substring(0, url.length - 1);
+  }
+  else {
+    return url;
+  }
+};
+
+},{}],25:[function(_dereq_,module,exports){
 'use strict';
 var Connection = _dereq_('./lib/connection');
     
@@ -2064,7 +2527,7 @@ module.exports = {
   }
 };
 
-},{"./lib/connection":27}],24:[function(_dereq_,module,exports){
+},{"./lib/connection":29}],26:[function(_dereq_,module,exports){
 // Copyright (c) 2008, Fair Oaks Labs, Inc.
 // All rights reserved.
 // 
@@ -2547,7 +3010,7 @@ exports.jspack.prototype._formatLut = {
   }
 };
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 exports.constants = [
   [1, "frameMethod"],
   [2, "frameHeader"],
@@ -3296,7 +3759,7 @@ exports.classes = [{
     "fields": []
   }]
 }];
-},{}],26:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 'use strict';
 var events = _dereq_('events');
 var util = _dereq_('util');
@@ -3394,7 +3857,7 @@ Channel.prototype.close = function(reason) {
                                'methodId': 0});
 };
 
-},{"./definitions":30,"./promise":34,"events":120,"fs":110,"util":142}],27:[function(_dereq_,module,exports){
+},{"./definitions":32,"./promise":36,"events":127,"fs":117,"util":149}],29:[function(_dereq_,module,exports){
 (function (process,Buffer){
 'use strict';
 var net = _dereq_('net');
@@ -4196,7 +4659,7 @@ Connection.prototype.generateChannelId = function () {
 };
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),_dereq_("buffer").Buffer)
-},{"../package":38,"./debug":29,"./definitions":30,"./exchange":31,"./parser":33,"./queue":35,"./serializer":36,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127,"buffer":111,"events":120,"fs":110,"lodash":37,"net":110,"tls":110,"url":140,"util":142}],28:[function(_dereq_,module,exports){
+},{"../package":40,"./debug":31,"./definitions":32,"./exchange":33,"./parser":35,"./queue":37,"./serializer":38,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"buffer":118,"events":127,"fs":117,"lodash":39,"net":117,"tls":117,"url":147,"util":149}],30:[function(_dereq_,module,exports){
 module.exports = {
   AMQPTypes: Object.freeze({
       STRING:       'S'.charCodeAt(0)
@@ -4230,7 +4693,7 @@ module.exports = {
 }
 
 
-},{}],29:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
@@ -4247,7 +4710,7 @@ if (DEBUG) {
 
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127}],30:[function(_dereq_,module,exports){
+},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],32:[function(_dereq_,module,exports){
 'use strict';
 
 var protocol = _dereq_('./amqp-definitions-0-9-1');
@@ -4294,7 +4757,7 @@ var classes = {};
 
 module.exports = {methods: methods, classes: classes, methodTable: methodTable};
 
-},{"./amqp-definitions-0-9-1":25}],31:[function(_dereq_,module,exports){
+},{"./amqp-definitions-0-9-1":27}],33:[function(_dereq_,module,exports){
 'use strict';
 var events = _dereq_('events');
 var util = _dereq_('util');
@@ -4677,7 +5140,7 @@ Exchange.prototype.bind_headers = function (/* exchange, routing [, bindCallback
     });
 };
 
-},{"./channel":26,"./definitions":30,"events":120,"fs":110,"lodash":37,"net":110,"tls":110,"util":142}],32:[function(_dereq_,module,exports){
+},{"./channel":28,"./definitions":32,"events":127,"fs":117,"lodash":39,"net":117,"tls":117,"util":149}],34:[function(_dereq_,module,exports){
 'use strict';
 var events = _dereq_('events'),
     util = _dereq_('util'),
@@ -4746,7 +5209,7 @@ Message.prototype.reject = function (requeue) {
 };
 
 
-},{"./definitions":30,"events":120,"fs":110,"util":142}],33:[function(_dereq_,module,exports){
+},{"./definitions":32,"events":127,"fs":117,"util":149}],35:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -5142,7 +5605,7 @@ AMQPParser.prototype._parseHeaderFrame = function (channel, buffer) {
 };
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"../jspack":24,"./constants":28,"./debug":29,"./definitions":30,"buffer":111,"events":120,"fs":110,"net":110,"tls":110,"util":142}],34:[function(_dereq_,module,exports){
+},{"../jspack":26,"./constants":30,"./debug":31,"./definitions":32,"buffer":118,"events":127,"fs":117,"net":117,"tls":117,"util":149}],36:[function(_dereq_,module,exports){
 (function (process){
 var events = _dereq_('events');
 var inherits = _dereq_('util').inherits;
@@ -5232,7 +5695,7 @@ exports.Promise.prototype.addErrback = function (listener) {
 };
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127,"events":120,"util":142}],35:[function(_dereq_,module,exports){
+},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"events":127,"util":149}],37:[function(_dereq_,module,exports){
 (function (process,Buffer){
 'use strict';
 var util = _dereq_('util');
@@ -5774,7 +6237,7 @@ Queue.prototype.flow = function(active) {
 };
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),_dereq_("buffer").Buffer)
-},{"./channel":26,"./debug":29,"./definitions":30,"./exchange":31,"./message":32,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127,"buffer":111,"fs":110,"lodash":37,"util":142}],36:[function(_dereq_,module,exports){
+},{"./channel":28,"./debug":31,"./definitions":32,"./exchange":33,"./message":34,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"buffer":118,"fs":117,"lodash":39,"util":149}],38:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -6096,7 +6559,7 @@ var serializer = module.exports = {
 };
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"../jspack":24,"buffer":111}],37:[function(_dereq_,module,exports){
+},{"../jspack":26,"buffer":118}],39:[function(_dereq_,module,exports){
 (function (global){
 /**
  * @license
@@ -11655,7 +12118,7 @@ var serializer = module.exports = {
 }(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],38:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 module.exports={
   "name": "amqp",
   "description": "AMQP driver for node",
@@ -11768,12 +12231,12 @@ module.exports={
   "homepage": "https://github.com/postwait/node-amqp"
 }
 
-},{}],39:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = _dereq_('./lib/babble');
 
-},{"./lib/babble":42}],40:[function(_dereq_,module,exports){
+},{"./lib/babble":44}],42:[function(_dereq_,module,exports){
 'use strict';
 
 var uuid = _dereq_('node-uuid');
@@ -12122,7 +12585,7 @@ Babbler.prototype._process = function (block, conversation) {
 
 module.exports = Babbler;
 
-},{"./Conversation":41,"./block/Block":43,"./block/IIf":45,"./block/Listen":46,"./block/Tell":47,"./block/Then":48,"./messagebus":49,"es6-promise":51,"node-uuid":105}],41:[function(_dereq_,module,exports){
+},{"./Conversation":43,"./block/Block":45,"./block/IIf":47,"./block/Listen":48,"./block/Tell":49,"./block/Then":50,"./messagebus":51,"es6-promise":53,"node-uuid":110}],43:[function(_dereq_,module,exports){
 var uuid = _dereq_('node-uuid');
 var Promise = _dereq_('es6-promise').Promise;
 
@@ -12202,7 +12665,7 @@ Conversation.prototype.receive = function () {
 
 module.exports = Conversation;
 
-},{"es6-promise":51,"node-uuid":105}],42:[function(_dereq_,module,exports){
+},{"es6-promise":53,"node-uuid":110}],44:[function(_dereq_,module,exports){
 'use strict';
 
 var Babbler = _dereq_('./Babbler');
@@ -12496,7 +12959,7 @@ exports.unbabblify = function (actor) {
   return actor;
 };
 
-},{"./Babbler":40,"./block/Block":43,"./block/Decision":44,"./block/IIf":45,"./block/Listen":46,"./block/Tell":47,"./block/Then":48,"./messagebus":49}],43:[function(_dereq_,module,exports){
+},{"./Babbler":42,"./block/Block":45,"./block/Decision":46,"./block/IIf":47,"./block/Listen":48,"./block/Tell":49,"./block/Then":50,"./messagebus":51}],45:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -12520,7 +12983,7 @@ Block.prototype.execute = function (conversation, message) {
 
 module.exports = Block;
 
-},{}],44:[function(_dereq_,module,exports){
+},{}],46:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('es6-promise').Promise;
@@ -12717,7 +13180,7 @@ Block.prototype.decide = function (arg1, arg2) {
 
 module.exports = Decision;
 
-},{"../util":50,"./Block":43,"./Then":48,"es6-promise":51}],45:[function(_dereq_,module,exports){
+},{"../util":52,"./Block":45,"./Then":50,"es6-promise":53}],47:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('es6-promise').Promise;
@@ -12857,7 +13320,7 @@ Block.prototype.iif = function (condition, trueBlock, falseBlock) {
 
 module.exports = IIf;
 
-},{"../util":50,"./Block":43,"./Then":48,"es6-promise":51}],46:[function(_dereq_,module,exports){
+},{"../util":52,"./Block":45,"./Then":50,"es6-promise":53}],48:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('es6-promise').Promise;
@@ -12921,7 +13384,7 @@ Block.prototype.listen = function (callback) {
 
 module.exports = Listen;
 
-},{"./Block":43,"./Then":48,"es6-promise":51}],47:[function(_dereq_,module,exports){
+},{"./Block":45,"./Then":50,"es6-promise":53}],49:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('es6-promise').Promise;
@@ -13027,7 +13490,7 @@ Block.prototype.ask = function (message, callback) {
 
 module.exports = Tell;
 
-},{"../util":50,"./Block":43,"./Listen":46,"./Then":48,"es6-promise":51}],48:[function(_dereq_,module,exports){
+},{"../util":52,"./Block":45,"./Listen":48,"./Then":50,"es6-promise":53}],50:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('es6-promise').Promise;
@@ -13110,7 +13573,7 @@ Block.prototype.then = function (next) {
 
 module.exports = Then;
 
-},{"../util":50,"./Block":43,"es6-promise":51}],49:[function(_dereq_,module,exports){
+},{"../util":52,"./Block":45,"es6-promise":53}],51:[function(_dereq_,module,exports){
 'use strict';
 
 var Promise = _dereq_('es6-promise').Promise;
@@ -13198,7 +13661,7 @@ exports['pubnub'] = function (params) {
 // default interface
 exports['default'] = exports['pubsub-js'];
 
-},{"es6-promise":51,"pubnub":109,"pubsub-js":61}],50:[function(_dereq_,module,exports){
+},{"es6-promise":53,"pubnub":114,"pubsub-js":63}],52:[function(_dereq_,module,exports){
 /**
  * Test whether the provided value is a Promise.
  * A value is marked as a Promise when it is an object containing functions
@@ -13212,13 +13675,13 @@ exports.isPromise = function (value) {
       typeof value['catch'] === 'function'
 };
 
-},{}],51:[function(_dereq_,module,exports){
+},{}],53:[function(_dereq_,module,exports){
 "use strict";
 var Promise = _dereq_("./promise/promise").Promise;
 var polyfill = _dereq_("./promise/polyfill").polyfill;
 exports.Promise = Promise;
 exports.polyfill = polyfill;
-},{"./promise/polyfill":55,"./promise/promise":56}],52:[function(_dereq_,module,exports){
+},{"./promise/polyfill":57,"./promise/promise":58}],54:[function(_dereq_,module,exports){
 "use strict";
 /* global toString */
 
@@ -13312,7 +13775,7 @@ function all(promises) {
 }
 
 exports.all = all;
-},{"./utils":60}],53:[function(_dereq_,module,exports){
+},{"./utils":62}],55:[function(_dereq_,module,exports){
 (function (process,global){
 "use strict";
 var browserGlobal = (typeof window !== 'undefined') ? window : {};
@@ -13376,7 +13839,7 @@ function asap(callback, arg) {
 
 exports.asap = asap;
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127}],54:[function(_dereq_,module,exports){
+},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],56:[function(_dereq_,module,exports){
 "use strict";
 var config = {
   instrument: false
@@ -13392,7 +13855,7 @@ function configure(name, value) {
 
 exports.config = config;
 exports.configure = configure;
-},{}],55:[function(_dereq_,module,exports){
+},{}],57:[function(_dereq_,module,exports){
 (function (global){
 "use strict";
 /*global self*/
@@ -13433,7 +13896,7 @@ function polyfill() {
 
 exports.polyfill = polyfill;
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./promise":56,"./utils":60}],56:[function(_dereq_,module,exports){
+},{"./promise":58,"./utils":62}],58:[function(_dereq_,module,exports){
 "use strict";
 var config = _dereq_("./config").config;
 var configure = _dereq_("./config").configure;
@@ -13645,7 +14108,7 @@ function publishRejection(promise) {
 }
 
 exports.Promise = Promise;
-},{"./all":52,"./asap":53,"./config":54,"./race":57,"./reject":58,"./resolve":59,"./utils":60}],57:[function(_dereq_,module,exports){
+},{"./all":54,"./asap":55,"./config":56,"./race":59,"./reject":60,"./resolve":61,"./utils":62}],59:[function(_dereq_,module,exports){
 "use strict";
 /* global toString */
 var isArray = _dereq_("./utils").isArray;
@@ -13735,7 +14198,7 @@ function race(promises) {
 }
 
 exports.race = race;
-},{"./utils":60}],58:[function(_dereq_,module,exports){
+},{"./utils":62}],60:[function(_dereq_,module,exports){
 "use strict";
 /**
   `RSVP.reject` returns a promise that will become rejected with the passed
@@ -13783,7 +14246,7 @@ function reject(reason) {
 }
 
 exports.reject = reject;
-},{}],59:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 "use strict";
 function resolve(value) {
   /*jshint validthis:true */
@@ -13799,7 +14262,7 @@ function resolve(value) {
 }
 
 exports.resolve = resolve;
-},{}],60:[function(_dereq_,module,exports){
+},{}],62:[function(_dereq_,module,exports){
 "use strict";
 function objectOrFunction(x) {
   return isFunction(x) || (typeof x === "object" && x !== null);
@@ -13822,7 +14285,7 @@ exports.objectOrFunction = objectOrFunction;
 exports.isFunction = isFunction;
 exports.isArray = isArray;
 exports.now = now;
-},{}],61:[function(_dereq_,module,exports){
+},{}],63:[function(_dereq_,module,exports){
 /*
 Copyright (c) 2010,2011,2012,2013 Morgan Roderick http://roderick.dk
 License: MIT - http://mrgnrdrck.mit-license.org
@@ -14039,11 +14502,11 @@ https://github.com/mroderick/PubSubJS
 	return PubSub;
 }));
 
-},{}],62:[function(_dereq_,module,exports){
+},{}],64:[function(_dereq_,module,exports){
 exports.Host    = _dereq_('./lib/Host');
 exports.Promise = _dereq_('./lib/Promise');
 
-},{"./lib/Host":63,"./lib/Promise":65}],63:[function(_dereq_,module,exports){
+},{"./lib/Host":65,"./lib/Promise":67}],65:[function(_dereq_,module,exports){
 var WebSocket = _dereq_('ws');
 var WebSocketServer = _dereq_('ws').Server;
 var uuid = _dereq_('node-uuid');
@@ -14782,7 +15245,7 @@ function _peerUnreachable(id, url) {
 
 module.exports = Host;
 
-},{"./Peer":64,"./Promise":65,"./requestify":66,"node-uuid":105,"ws":104}],64:[function(_dereq_,module,exports){
+},{"./Peer":66,"./Promise":67,"./requestify":68,"node-uuid":110,"ws":106}],66:[function(_dereq_,module,exports){
 //var Emitter = require('emitter-component');
 
 
@@ -14844,11 +15307,11 @@ Peer.prototype.emit = function (event, from, message) {
 
 module.exports = Peer;
 
-},{}],65:[function(_dereq_,module,exports){
+},{}],67:[function(_dereq_,module,exports){
 // Return a promise implementation.
 module.exports = _dereq_('bluebird');
 
-},{"bluebird":69}],66:[function(_dereq_,module,exports){
+},{"bluebird":71}],68:[function(_dereq_,module,exports){
 var uuid = _dereq_('node-uuid'),
     Promise = _dereq_('./Promise');
 
@@ -15007,7 +15470,7 @@ function requestify (socket) {
 
 module.exports = requestify;
 
-},{"./Promise":65,"node-uuid":105}],67:[function(_dereq_,module,exports){
+},{"./Promise":67,"node-uuid":110}],69:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15062,7 +15525,7 @@ Promise.prototype.any = function Promise$any() {
 
 };
 
-},{"./some_promise_array.js":99}],68:[function(_dereq_,module,exports){
+},{"./some_promise_array.js":101}],70:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15175,7 +15638,7 @@ Async.prototype._reset = function Async$_reset() {
 
 module.exports = new Async();
 
-},{"./global.js":81,"./queue.js":92,"./schedule.js":95,"./util.js":103}],69:[function(_dereq_,module,exports){
+},{"./global.js":83,"./queue.js":94,"./schedule.js":97,"./util.js":105}],71:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15201,7 +15664,7 @@ module.exports = new Async();
 "use strict";
 var Promise = _dereq_("./promise.js")();
 module.exports = Promise;
-},{"./promise.js":85}],70:[function(_dereq_,module,exports){
+},{"./promise.js":87}],72:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15256,7 +15719,7 @@ Promise.prototype.get = function Promise$get(propertyName) {
 };
 };
 
-},{}],71:[function(_dereq_,module,exports){
+},{}],73:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15331,7 +15794,7 @@ function Promise$fork(didFulfill, didReject, didProgress) {
 };
 };
 
-},{"./async.js":68,"./errors.js":75}],72:[function(_dereq_,module,exports){
+},{"./async.js":70,"./errors.js":77}],74:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15555,7 +16018,7 @@ var captureStackTrace = (function stackDetection() {
 return CapturedTrace;
 };
 
-},{"./es5.js":77,"./util.js":103}],73:[function(_dereq_,module,exports){
+},{"./es5.js":79,"./util.js":105}],75:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15651,7 +16114,7 @@ CatchFilter.prototype.doFilter = function CatchFilter$_doFilter(e) {
 return CatchFilter;
 };
 
-},{"./errors.js":75,"./es5.js":77,"./util.js":103}],74:[function(_dereq_,module,exports){
+},{"./errors.js":77,"./es5.js":79,"./util.js":105}],76:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15732,7 +16195,7 @@ function Promise$thenThrow(reason) {
 };
 };
 
-},{"./util.js":103}],75:[function(_dereq_,module,exports){
+},{"./util.js":105}],77:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15848,7 +16311,7 @@ module.exports = {
     canAttach: canAttach
 };
 
-},{"./es5.js":77,"./global.js":81,"./util.js":103}],76:[function(_dereq_,module,exports){
+},{"./es5.js":79,"./global.js":83,"./util.js":105}],78:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15888,7 +16351,7 @@ function apiRejection(msg) {
 return apiRejection;
 };
 
-},{"./errors.js":75}],77:[function(_dereq_,module,exports){
+},{"./errors.js":77}],79:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -15979,7 +16442,7 @@ else {
     };
 }
 
-},{}],78:[function(_dereq_,module,exports){
+},{}],80:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -16032,7 +16495,7 @@ Promise.prototype.filter = function Promise$filter(fn) {
 };
 };
 
-},{"./util.js":103}],79:[function(_dereq_,module,exports){
+},{"./util.js":105}],81:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -16157,7 +16620,7 @@ Promise.prototype.tap = function Promise$tap(handler) {
 };
 };
 
-},{"./util.js":103}],80:[function(_dereq_,module,exports){
+},{"./util.js":105}],82:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -16215,7 +16678,7 @@ Promise.spawn = function Promise$Spawn(generatorFunction) {
 };
 };
 
-},{"./errors.js":75,"./promise_spawn.js":88,"./util.js":103}],81:[function(_dereq_,module,exports){
+},{"./errors.js":77,"./promise_spawn.js":90,"./util.js":105}],83:[function(_dereq_,module,exports){
 (function (global){
 /**
  * Copyright (c) 2014 Petka Antonov
@@ -16250,7 +16713,7 @@ module.exports = (function() {
 })();
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],82:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -16428,7 +16891,7 @@ Promise.map = function Promise$Map(promises, fn, ref) {
 };
 };
 
-},{"./errors.js":75,"./util.js":103}],83:[function(_dereq_,module,exports){
+},{"./errors.js":77,"./util.js":105}],85:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -16494,7 +16957,7 @@ Promise.prototype.nodeify = function Promise$nodeify(nodeback) {
 };
 };
 
-},{"./async.js":68,"./util.js":103}],84:[function(_dereq_,module,exports){
+},{"./async.js":70,"./util.js":105}],86:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -16607,7 +17070,7 @@ function Promise$_progressUnchecked(progressValue) {
 };
 };
 
-},{"./async.js":68,"./errors.js":75,"./util.js":103}],85:[function(_dereq_,module,exports){
+},{"./async.js":70,"./errors.js":77,"./util.js":105}],87:[function(_dereq_,module,exports){
 (function (process){
 /**
  * Copyright (c) 2014 Petka Antonov
@@ -17743,7 +18206,7 @@ return Promise;
 };
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"./any.js":67,"./async.js":68,"./call_get.js":70,"./cancel.js":71,"./captured_trace.js":72,"./catch_filter.js":73,"./direct_resolve.js":74,"./errors.js":75,"./errors_api_rejection":76,"./filter.js":78,"./finally.js":79,"./generators.js":80,"./global.js":81,"./map.js":82,"./nodeify.js":83,"./progress.js":84,"./promise_array.js":86,"./promise_resolver.js":87,"./promisify.js":89,"./props.js":91,"./race.js":93,"./reduce.js":94,"./settle.js":96,"./some.js":98,"./synchronous_inspection.js":100,"./thenables.js":101,"./timers.js":102,"./util.js":103,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127}],86:[function(_dereq_,module,exports){
+},{"./any.js":69,"./async.js":70,"./call_get.js":72,"./cancel.js":73,"./captured_trace.js":74,"./catch_filter.js":75,"./direct_resolve.js":76,"./errors.js":77,"./errors_api_rejection":78,"./filter.js":80,"./finally.js":81,"./generators.js":82,"./global.js":83,"./map.js":84,"./nodeify.js":85,"./progress.js":86,"./promise_array.js":88,"./promise_resolver.js":89,"./promisify.js":91,"./props.js":93,"./race.js":95,"./reduce.js":96,"./settle.js":98,"./some.js":100,"./synchronous_inspection.js":102,"./thenables.js":103,"./timers.js":104,"./util.js":105,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],88:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -17978,7 +18441,7 @@ function PromiseArray$_promiseRejected(reason, index) {
 return PromiseArray;
 };
 
-},{"./async.js":68,"./errors.js":75,"./util.js":103}],87:[function(_dereq_,module,exports){
+},{"./async.js":70,"./errors.js":77,"./util.js":105}],89:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -18138,7 +18601,7 @@ function PromiseResolver$_setCarriedStackTrace(trace) {
 
 module.exports = PromiseResolver;
 
-},{"./async.js":68,"./errors.js":75,"./es5.js":77,"./util.js":103}],88:[function(_dereq_,module,exports){
+},{"./async.js":70,"./errors.js":77,"./es5.js":79,"./util.js":105}],90:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -18270,7 +18733,7 @@ PromiseSpawn.addYieldHandler = function PromiseSpawn$AddYieldHandler(fn) {
 return PromiseSpawn;
 };
 
-},{"./errors.js":75,"./util.js":103}],89:[function(_dereq_,module,exports){
+},{"./errors.js":77,"./util.js":105}],91:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -18565,7 +19028,7 @@ Promise.promisifyAll = function Promise$PromisifyAll(target) {
 };
 
 
-},{"./errors":75,"./es5.js":77,"./promise_resolver.js":87,"./util.js":103}],90:[function(_dereq_,module,exports){
+},{"./errors":77,"./es5.js":79,"./promise_resolver.js":89,"./util.js":105}],92:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -18644,7 +19107,7 @@ PromiseArray.PropertiesPromiseArray = PropertiesPromiseArray;
 return PropertiesPromiseArray;
 };
 
-},{"./es5.js":77,"./util.js":103}],91:[function(_dereq_,module,exports){
+},{"./es5.js":79,"./util.js":105}],93:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -18710,7 +19173,7 @@ Promise.props = function Promise$Props(promises) {
 };
 };
 
-},{"./errors_api_rejection":76,"./properties_promise_array.js":90,"./util.js":103}],92:[function(_dereq_,module,exports){
+},{"./errors_api_rejection":78,"./properties_promise_array.js":92,"./util.js":105}],94:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -18847,7 +19310,7 @@ Queue.prototype._resizeTo = function Queue$_resizeTo(capacity) {
 
 module.exports = Queue;
 
-},{}],93:[function(_dereq_,module,exports){
+},{}],95:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -18933,7 +19396,7 @@ Promise.prototype.race = function Promise$race() {
 
 };
 
-},{"./errors_api_rejection.js":76,"./util.js":103}],94:[function(_dereq_,module,exports){
+},{"./errors_api_rejection.js":78,"./util.js":105}],96:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -19096,7 +19559,7 @@ Promise.prototype.reduce = function Promise$reduce(fn, initialValue) {
 };
 };
 
-},{}],95:[function(_dereq_,module,exports){
+},{}],97:[function(_dereq_,module,exports){
 (function (process){
 /**
  * Copyright (c) 2014 Petka Antonov
@@ -19221,7 +19684,7 @@ else {
 module.exports = schedule;
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"./global.js":81,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127}],96:[function(_dereq_,module,exports){
+},{"./global.js":83,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],98:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -19270,7 +19733,7 @@ Promise.prototype.settle = function Promise$settle() {
 };
 };
 
-},{"./settled_promise_array.js":97}],97:[function(_dereq_,module,exports){
+},{"./settled_promise_array.js":99}],99:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -19332,7 +19795,7 @@ function SettledPromiseArray$_promiseRejected(reason, index) {
 return SettledPromiseArray;
 };
 
-},{"./util.js":103}],98:[function(_dereq_,module,exports){
+},{"./util.js":105}],100:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -19390,7 +19853,7 @@ Promise.prototype.some = function Promise$some(count) {
 
 };
 
-},{"./some_promise_array.js":99}],99:[function(_dereq_,module,exports){
+},{"./some_promise_array.js":101}],101:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -19523,7 +19986,7 @@ function SomePromiseArray$_canPossiblyFulfill() {
 return SomePromiseArray;
 };
 
-},{"./errors.js":75,"./util.js":103}],100:[function(_dereq_,module,exports){
+},{"./errors.js":77,"./util.js":105}],102:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -19604,7 +20067,7 @@ Promise.prototype.inspect = function Promise$inspect() {
 Promise.PromiseInspection = PromiseInspection;
 };
 
-},{}],101:[function(_dereq_,module,exports){
+},{}],103:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -19741,7 +20204,7 @@ function Promise$_doThenable(x, then, originalPromise) {
 Promise._cast = Promise$_Cast;
 };
 
-},{"./errors.js":75,"./util.js":103}],102:[function(_dereq_,module,exports){
+},{"./errors.js":77,"./util.js":105}],104:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -19846,7 +20309,7 @@ Promise.prototype.timeout = function Promise$timeout(ms, message) {
 
 };
 
-},{"./errors.js":75,"./errors_api_rejection":76,"./global.js":81,"./util.js":103}],103:[function(_dereq_,module,exports){
+},{"./errors.js":77,"./errors_api_rejection":78,"./global.js":83,"./util.js":105}],105:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014 Petka Antonov
  * 
@@ -20041,7 +20504,7 @@ var ret = {
 
 module.exports = ret;
 
-},{"./es5.js":77,"./global.js":81}],104:[function(_dereq_,module,exports){
+},{"./es5.js":79,"./global.js":83}],106:[function(_dereq_,module,exports){
 
 /**
  * Module dependencies.
@@ -20086,7 +20549,568 @@ function ws(uri, protocols, opts) {
 
 if (WebSocket) ws.prototype = WebSocket.prototype;
 
-},{}],105:[function(_dereq_,module,exports){
+},{}],107:[function(_dereq_,module,exports){
+module.exports = _dereq_('./lib/hypertimer');
+
+},{"./lib/hypertimer":108}],108:[function(_dereq_,module,exports){
+var util = _dereq_('./util');
+
+// enum for type of timeout
+var TYPE = {
+  TIMEOUT: 0,
+  INTERVAL: 1,
+  TRIGGER: 2
+};
+
+var DISCRETE = 'discrete';
+
+/**
+ * Create a new hypertimer
+ * @param {Object} [options]  The following options are available:
+ *                            rate: number | 'discrete'
+ *                                        The rate of speed of hyper time with
+ *                                        respect to real-time in milliseconds
+ *                                        per millisecond. Rate must be a
+ *                                        positive number, or 'discrete' to
+ *                                        run in discrete time (jumping from
+ *                                        event to event). By default, rate is 1.
+ *                            deterministic: boolean
+ *                                        If true (default), simultaneous events
+ *                                        are executed in a deterministic order.
+ */
+function hypertimer(options) {
+  // options
+  var rate = 1;             // number of milliseconds per milliseconds
+  var deterministic = true; // run simultaneous events in a deterministic order
+
+  // properties
+  var running = false;   // true when running
+  var realTime = null;   // timestamp. the moment in real-time when hyperTime was set
+  var hyperTime = null;  // timestamp. the start time in hyper-time
+  var timeouts = [];     // array with all running timeouts
+  var current = {};      // the timeouts currently in progress (callback is being executed)
+  var timeoutId = null;  // currently running timer
+  var idSeq = 0;         // counter for unique timeout id's
+
+  // exported timer object with public functions and variables
+  var timer = {};
+
+  /**
+   * Change configuration options of the hypertimer, or retrieve current
+   * configuration.
+   * @param {Object} [options]  The following options are available:
+   *                            rate: number | 'discrete'
+   *                                        The rate of speed of hyper time with
+   *                                        respect to real-time in milliseconds
+   *                                        per millisecond. Rate must be a
+   *                                        positive number, or 'discrete' to
+   *                                        run in discrete time (jumping from
+   *                                        event to event). By default, rate is 1.
+   *                            deterministic: boolean
+   *                                        If true (default), simultaneous events
+   *                                        are executed in a deterministic order.
+   * @return {Object} Returns the applied configuration
+   */
+  timer.config = function(options) {
+    if (options) {
+      if ('rate' in options) {
+        var newRate = (options.rate === DISCRETE) ? DISCRETE : Number(options.rate);
+        if (newRate !== DISCRETE && (isNaN(newRate) || newRate <= 0)) {
+          throw new TypeError('rate must be a positive number or the string "discrete"');
+        }
+        hyperTime = timer.now();
+        realTime = util.nowReal();
+        rate = newRate;
+      }
+      if ('deterministic' in options) {
+        deterministic = options.deterministic ? true : false;
+      }
+    }
+
+    // reschedule running timeouts
+    _schedule();
+
+    // return a copy of the configuration options
+    return {
+      rate: rate,
+      deterministic: deterministic
+    };
+  };
+
+  /**
+   * Set the time of the timer. To get the current time, use getTime() or now().
+   * @param {number | Date} time  The time in hyper-time.
+   */
+  timer.setTime = function (time) {
+    if (time instanceof Date) {
+      hyperTime = time.valueOf();
+    }
+    else {
+      var newTime = Number(time);
+      if (isNaN(newTime)) {
+        throw new TypeError('time must be a Date or number');
+      }
+      hyperTime = newTime;
+    }
+
+    // reschedule running timeouts
+    _schedule();
+  };
+
+  /**
+   * Returns the current time of the timer as a number.
+   * See also getTime().
+   * @return {number} The time
+   */
+  timer.now = function () {
+    if (rate === DISCRETE) {
+      return hyperTime;
+    }
+    else {
+      if (running) {
+        // TODO: implement performance.now() / process.hrtime(time) for high precision calculation of time interval
+        var realInterval = util.nowReal() - realTime;
+        var hyperInterval = realInterval * rate;
+        return hyperTime + hyperInterval;
+      }
+      else {
+        return hyperTime;
+      }
+    }
+  };
+
+  /**
+   * Continue the timer.
+   */
+  timer['continue'] = function() {
+    realTime = util.nowReal();
+    running = true;
+
+    // reschedule running timeouts
+    _schedule();
+  };
+
+  /**
+   * Pause the timer. The timer can be continued again with `continue()`
+   */
+  timer.pause = function() {
+    hyperTime = timer.now();
+    realTime = null;
+    running = false;
+
+    // reschedule running timeouts (pauses them)
+    _schedule();
+  };
+
+  /**
+   * Returns the current time of the timer as Date.
+   * See also now().
+   * @return {Date} The time
+   */
+// rename to getTime
+  timer.getTime = function() {
+    return new Date(timer.now());
+  };
+
+  /**
+   * Get the value of the hypertimer. This function returns the result of getTime().
+   * @return {Date} current time
+   */
+  timer.valueOf = timer.getTime;
+
+  /**
+   * Return a string representation of the current hyper-time.
+   * @returns {string} String representation
+   */
+  timer.toString = function () {
+    return timer.getTime().toString();
+  };
+
+  /**
+   * Set a timeout, which is triggered when the timeout occurs in hyper-time.
+   * See also setTrigger.
+   * @param {Function} callback   Function executed when delay is exceeded.
+   * @param {number} delay        The delay in milliseconds. When the delay is
+   *                              smaller or equal to zero, the callback is
+   *                              triggered immediately.
+   * @return {number} Returns a timeoutId which can be used to cancel the
+   *                  timeout using clearTimeout().
+   */
+  timer.setTimeout = function(callback, delay) {
+    var id = idSeq++;
+    var timestamp = timer.now() + delay;
+    if (isNaN(timestamp)) {
+      throw new TypeError('delay must be a number');
+    }
+
+    // add a new timeout to the queue
+    _queueTimeout({
+      id: id,
+      type: TYPE.TIMEOUT,
+      time: timestamp,
+      callback: callback
+    });
+
+    // reschedule the timeouts
+    _schedule();
+
+    return id;
+  };
+
+  /**
+   * Set a trigger, which is triggered when the timeout occurs in hyper-time.
+   * See also getTimeout.
+   * @param {Function} callback   Function executed when timeout occurs.
+   * @param {Date | number} time  An absolute moment in time (Date) when the
+   *                              callback will be triggered. When the date is
+   *                              a Date in the past, the callback is triggered
+   *                              immediately.
+   * @return {number} Returns a triggerId which can be used to cancel the
+   *                  trigger using clearTrigger().
+   */
+  timer.setTrigger = function (callback, time) {
+    var id = idSeq++;
+    var timestamp = Number(time);
+    if (isNaN(timestamp)) {
+      throw new TypeError('time must be a Date or number');
+    }
+
+    // add a new timeout to the queue
+    _queueTimeout({
+      id: id,
+      type: TYPE.TRIGGER,
+      time: timestamp,
+      callback: callback
+    });
+
+    // reschedule the timeouts
+    _schedule();
+
+    return id;
+  };
+
+
+  /**
+   * Trigger a callback every interval. Optionally, a start date can be provided
+   * to specify the first time the callback must be triggered.
+   * See also setTimeout and setTrigger.
+   * @param {Function} callback         Function executed when delay is exceeded.
+   * @param {number} interval           Interval in milliseconds. When interval
+   *                                    is smaller than zero or is infinity, the
+   *                                    interval will be set to zero and triggered
+   *                                    with a maximum rate.
+   * @param {Date | number} [firstTime] An absolute moment in time (Date) when the
+   *                                    callback will be triggered the first time.
+   *                                    By default, firstTime = now() + interval.
+   * @return {number} Returns a intervalId which can be used to cancel the
+   *                  trigger using clearInterval().
+   */
+  timer.setInterval = function(callback, interval, firstTime) {
+    var id = idSeq++;
+
+    var _interval = Number(interval);
+    if (isNaN(_interval)) {
+      throw new TypeError('interval must be a number');
+    }
+    if (_interval < 0 || !isFinite(_interval)) {
+      _interval = 0;
+    }
+
+    var timestamp;
+    if (firstTime != undefined) {
+      timestamp = Number(firstTime);
+      if (isNaN(timestamp)) {
+        throw new TypeError('firstTime must be a Date or number');
+      }
+    }
+    else {
+      // firstTime is undefined or null
+      timestamp = (timer.now() + _interval);
+    }
+
+    // add a new timeout to the queue
+    _queueTimeout({
+      id: id,
+      type: TYPE.INTERVAL,
+      interval: _interval,
+      time: timestamp,
+      firstTime: timestamp,
+      occurrence: 0,
+      callback: callback
+    });
+
+    // reschedule the timeouts
+    _schedule();
+
+    return id;
+  };
+
+  /**
+   * Cancel a timeout
+   * @param {number} timeoutId   The id of a timeout
+   */
+  timer.clearTimeout = function(timeoutId) {
+    // test whether timeout is currently being executed
+    if (current[timeoutId]) {
+      delete current[timeoutId];
+      return;
+    }
+
+    // find the timeout in the queue
+    for (var i = 0; i < timeouts.length; i++) {
+      if (timeouts[i].id === timeoutId) {
+        // remove this timeout from the queue
+        timeouts.splice(i, 1);
+
+        // reschedule timeouts
+        _schedule();
+        break;
+      }
+    }
+  };
+
+  /**
+   * Cancel a trigger
+   * @param {number} triggerId   The id of a trigger
+   */
+  timer.clearTrigger = timer.clearTimeout;
+
+  timer.clearInterval = timer.clearTimeout;
+
+  /**
+   * Returns a list with the id's of all timeouts
+   * @returns {number[]} Timeout id's
+   */
+  timer.list = function () {
+    return timeouts.map(function (timeout) {
+      return timeout.id;
+    });
+  };
+
+  /**
+   * Clear all timeouts
+   */
+  timer.clear = function () {
+    // empty the queue
+    current = {};
+    timeouts = [];
+
+    // reschedule
+    _schedule();
+  };
+
+  /**
+   * Add a timeout to the queue. After the queue has been changed, the queue
+   * must be rescheduled by executing _reschedule()
+   * @param {{id: number, type: number, time: number, callback: Function}} timeout
+   * @private
+   */
+  function _queueTimeout(timeout) {
+    // insert the new timeout at the right place in the array, sorted by time
+    if (timeouts.length > 0) {
+      var i = timeouts.length - 1;
+      while (i >= 0 && timeouts[i].time > timeout.time) {
+        i--;
+      }
+
+      // insert the new timeout in the queue. Note that the timeout is
+      // inserted *after* existing timeouts with the exact *same* time,
+      // so the order in which they are executed is deterministic
+      timeouts.splice(i + 1, 0, timeout);
+    }
+    else {
+      // queue is empty, append the new timeout
+      timeouts.push(timeout);
+    }
+  }
+
+  /**
+   * Execute a timeout
+   * @param {{id: number, type: number, time: number, callback: function}} timeout
+   * @param {function} [callback]
+   *             The callback is executed when the timeout's callback is
+   *             finished. Called without parameters
+   * @private
+   */
+  function _execTimeout(timeout, callback) {
+    // store the timeout in the queue with timeouts in progress
+    // it can be cleared when a clearTimeout is executed inside the callback
+    current[timeout.id] = timeout;
+
+    function finish() {
+      // in case of an interval we have to reschedule on next cycle
+      // interval must not be cleared while executing the callback
+      if (timeout.type === TYPE.INTERVAL && current[timeout.id]) {
+        timeout.occurrence++;
+        timeout.time = timeout.firstTime + timeout.occurrence * timeout.interval;
+        _queueTimeout(timeout);
+      }
+
+      // remove the timeout from the queue with timeouts in progress
+      delete current[timeout.id];
+
+      if (typeof callback === 'function') callback();
+    }
+
+    // execute the callback
+    try {
+      if (timeout.callback.length == 0) {
+        // synchronous timeout,  like `timer.setTimeout(function () {...}, delay)`
+        timeout.callback();
+        finish();
+      } else {
+        // asynchronous timeout, like `timer.setTimeout(function (done) {...; done(); }, delay)`
+        timeout.callback(finish);
+      }
+    } catch (err) {
+      // silently ignore errors thrown by the callback
+      finish();
+    }
+  }
+
+  /**
+   * Remove all timeouts occurring before or on the provided time from the
+   * queue and return them.
+   * @param {number} time    A timestamp
+   * @returns {Array} returns an array containing all expired timeouts
+   * @private
+   */
+  function _getExpiredTimeouts(time) {
+    var i = 0;
+    while (i < timeouts.length && ((timeouts[i].time <= time) || !isFinite(timeouts[i].time))) {
+      i++;
+    }
+    var expired = timeouts.splice(0, i);
+
+    if (deterministic == false) {
+      // the array with expired timeouts is in deterministic order
+      // shuffle them
+      util.shuffle(expired);
+    }
+
+    return expired;
+  }
+
+  /**
+   * Reschedule all queued timeouts
+   * @private
+   */
+  function _schedule() {
+    // do not _schedule when there are timeouts in progress
+    // this can be the case with async timeouts in discrete time.
+    // _schedule will be executed again when all async timeouts are finished.
+    if (rate === DISCRETE && Object.keys(current).length > 0) {
+      return;
+    }
+
+    var next = timeouts[0];
+
+    // cancel timer when running
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+
+    if (running && next) {
+      // schedule next timeout
+      var time = next.time;
+      var delay = time - timer.now();
+      var realDelay = (rate === DISCRETE) ? 0 : delay / rate;
+
+      function onTimeout() {
+        // when running in discrete time, update the hyperTime to the time
+        // of the current event
+        if (rate === DISCRETE) {
+          hyperTime = time;
+        }
+
+        // grab all expired timeouts from the queue
+        var expired = _getExpiredTimeouts(time);
+        // note: expired.length can never be zero (on every change of the queue, we reschedule)
+
+        // execute all expired timeouts
+        if (rate === DISCRETE) {
+          // in discrete time, we execute all expired timeouts serially,
+          // and wait for their completion in order to guarantee deterministic
+          // order of execution
+          function next() {
+            var timeout = expired.shift();
+            if (timeout) {
+              _execTimeout(timeout, next);
+            }
+            else {
+              // schedule the next round
+              _schedule();
+            }
+          }
+          next();
+        }
+        else {
+          // in continuous time, we fire all timeouts in parallel,
+          // and don't await their completion (they can do async operations)
+          expired.forEach(_execTimeout);
+
+          // schedule the next round
+          _schedule();
+        }
+      }
+
+      timeoutId = setTimeout(onTimeout, realDelay);
+    }
+  }
+
+  Object.defineProperty(timer, 'running', {
+    get: function () {
+      return running;
+    }
+  });
+
+  timer.config(options);         // apply options
+  timer.setTime(util.nowReal()); // set time as current real time
+  timer.continue();              // start the timer
+
+  return timer;
+}
+
+module.exports = hypertimer;
+
+},{"./util":109}],109:[function(_dereq_,module,exports){
+
+/* istanbul ignore else */
+if (typeof Date.now === 'function') {
+  /**
+   * Helper function to get the current time
+   * @return {number} Current time
+   */
+  exports.nowReal = function () {
+    return Date.now();
+  }
+}
+else {
+  /**
+   * Helper function to get the current time
+   * @return {number} Current time
+   */
+  exports.nowReal = function () {
+    return new Date().valueOf();
+  }
+}
+
+/**
+ * Shuffle an array
+ *
+ * + Jonas Raoni Soares Silva
+ * @ http://jsfromhell.com/array/shuffle [v1.0]
+ *
+ * @param {Array} o   Array to be shuffled
+ * @returns {Array}   Returns the shuffled array
+ */
+exports.shuffle = function (o){
+  for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+  return o;
+};
+
+},{}],110:[function(_dereq_,module,exports){
 (function (Buffer){
 //     uuid.js
 //
@@ -20335,7 +21359,7 @@ if (WebSocket) ws.prototype = WebSocket.prototype;
 }).call(this);
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"buffer":111,"crypto":115}],106:[function(_dereq_,module,exports){
+},{"buffer":118,"crypto":122}],111:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -20442,7 +21466,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":108}],107:[function(_dereq_,module,exports){
+},{"asap":113}],112:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -20624,7 +21648,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":106,"asap":108}],108:[function(_dereq_,module,exports){
+},{"./core.js":111,"asap":113}],113:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -20741,7 +21765,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127}],109:[function(_dereq_,module,exports){
+},{"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134}],114:[function(_dereq_,module,exports){
 (function (Buffer){
 // Version: 3.6.7
 var NOW             = 1
@@ -22417,9 +23441,188 @@ module.exports = CREATE_PUBNUB
 module.exports.PNmessage = PNmessage;
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"buffer":111,"crypto":115,"http":121,"https":125}],110:[function(_dereq_,module,exports){
+},{"buffer":118,"crypto":122,"http":128,"https":132}],115:[function(_dereq_,module,exports){
+(function (global){
+'use strict';
 
-},{}],111:[function(_dereq_,module,exports){
+var width = 256;// each RC4 output is 0 <= x < 256
+var chunks = 6;// at least six RC4 outputs for each double
+var digits = 52;// there are 52 significant digits in a double
+var pool = [];// pool: entropy pool starts empty
+var GLOBAL = typeof global === 'undefined' ? window : global;
+
+//
+// The following constants are related to IEEE 754 limits.
+//
+var startdenom = Math.pow(width, chunks),
+    significance = Math.pow(2, digits),
+    overflow = significance * 2,
+    mask = width - 1;
+
+
+var oldRandom = Math.random;
+
+//
+// seedrandom()
+// This is the seedrandom function described above.
+//
+module.exports = function(seed, options) {
+  if (options && options.global === true) {
+    options.global = false;
+    Math.random = module.exports(seed, options);
+    options.global = true;
+    return Math.random;
+  }
+  var use_entropy = (options && options.entropy) || false;
+  var key = [];
+
+  // Flatten the seed string or build one from local entropy if needed.
+  var shortseed = mixkey(flatten(
+    use_entropy ? [seed, tostring(pool)] :
+    0 in arguments ? seed : autoseed(), 3), key);
+
+  // Use the seed to initialize an ARC4 generator.
+  var arc4 = new ARC4(key);
+
+  // Mix the randomness into accumulated entropy.
+  mixkey(tostring(arc4.S), pool);
+
+  // Override Math.random
+
+  // This function returns a random double in [0, 1) that contains
+  // randomness in every bit of the mantissa of the IEEE 754 value.
+
+  return function() {         // Closure to return a random double:
+    var n = arc4.g(chunks),             // Start with a numerator n < 2 ^ 48
+        d = startdenom,                 //   and denominator d = 2 ^ 48.
+        x = 0;                          //   and no 'extra last byte'.
+    while (n < significance) {          // Fill up all significant digits by
+      n = (n + x) * width;              //   shifting numerator and
+      d *= width;                       //   denominator and generating a
+      x = arc4.g(1);                    //   new least-significant-byte.
+    }
+    while (n >= overflow) {             // To avoid rounding up, before adding
+      n /= 2;                           //   last byte, shift everything
+      d /= 2;                           //   right using integer Math until
+      x >>>= 1;                         //   we have exactly the desired bits.
+    }
+    return (n + x) / d;                 // Form the number within [0, 1).
+  };
+};
+
+module.exports.resetGlobal = function () {
+  Math.random = oldRandom;
+};
+
+//
+// ARC4
+//
+// An ARC4 implementation.  The constructor takes a key in the form of
+// an array of at most (width) integers that should be 0 <= x < (width).
+//
+// The g(count) method returns a pseudorandom integer that concatenates
+// the next (count) outputs from ARC4.  Its return value is a number x
+// that is in the range 0 <= x < (width ^ count).
+//
+/** @constructor */
+function ARC4(key) {
+  var t, keylen = key.length,
+      me = this, i = 0, j = me.i = me.j = 0, s = me.S = [];
+
+  // The empty key [] is treated as [0].
+  if (!keylen) { key = [keylen++]; }
+
+  // Set up S using the standard key scheduling algorithm.
+  while (i < width) {
+    s[i] = i++;
+  }
+  for (i = 0; i < width; i++) {
+    s[i] = s[j = mask & (j + key[i % keylen] + (t = s[i]))];
+    s[j] = t;
+  }
+
+  // The "g" method returns the next (count) outputs as one number.
+  (me.g = function(count) {
+    // Using instance members instead of closure state nearly doubles speed.
+    var t, r = 0,
+        i = me.i, j = me.j, s = me.S;
+    while (count--) {
+      t = s[i = mask & (i + 1)];
+      r = r * width + s[mask & ((s[i] = s[j = mask & (j + t)]) + (s[j] = t))];
+    }
+    me.i = i; me.j = j;
+    return r;
+    // For robust unpredictability discard an initial batch of values.
+    // See http://www.rsa.com/rsalabs/node.asp?id=2009
+  })(width);
+}
+
+//
+// flatten()
+// Converts an object tree to nested arrays of strings.
+//
+function flatten(obj, depth) {
+  var result = [], typ = (typeof obj)[0], prop;
+  if (depth && typ == 'o') {
+    for (prop in obj) {
+      try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}
+    }
+  }
+  return (result.length ? result : typ == 's' ? obj : obj + '\0');
+}
+
+//
+// mixkey()
+// Mixes a string seed into a key that is an array of integers, and
+// returns a shortened string seed that is equivalent to the result key.
+//
+function mixkey(seed, key) {
+  var stringseed = seed + '', smear, j = 0;
+  while (j < stringseed.length) {
+    key[mask & j] =
+      mask & ((smear ^= key[mask & j] * 19) + stringseed.charCodeAt(j++));
+  }
+  return tostring(key);
+}
+
+//
+// autoseed()
+// Returns an object for autoseeding, using window.crypto if available.
+//
+/** @param {Uint8Array=} seed */
+function autoseed(seed) {
+  try {
+    GLOBAL.crypto.getRandomValues(seed = new Uint8Array(width));
+    return tostring(seed);
+  } catch (e) {
+    return [+new Date, GLOBAL, GLOBAL.navigator && GLOBAL.navigator.plugins,
+            GLOBAL.screen, tostring(pool)];
+  }
+}
+
+//
+// tostring()
+// Converts an array of charcodes to a string
+//
+function tostring(a) {
+  return String.fromCharCode.apply(0, a);
+}
+
+//
+// When seedrandom.js is loaded, we immediately mix a few bits
+// from the built-in RNG into the entropy pool.  Because we do
+// not want to intefere with determinstic PRNG state later,
+// seedrandom will not call Math.random on its own again after
+// initialization.
+//
+mixkey(Math.random(), pool);
+
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],116:[function(_dereq_,module,exports){
+module.exports=_dereq_(106)
+},{}],117:[function(_dereq_,module,exports){
+
+},{}],118:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -23530,7 +24733,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":112,"ieee754":113}],112:[function(_dereq_,module,exports){
+},{"base64-js":119,"ieee754":120}],119:[function(_dereq_,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -23653,7 +24856,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	module.exports.fromByteArray = uint8ToBase64
 }())
 
-},{}],113:[function(_dereq_,module,exports){
+},{}],120:[function(_dereq_,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -23739,7 +24942,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],114:[function(_dereq_,module,exports){
+},{}],121:[function(_dereq_,module,exports){
 var Buffer = _dereq_('buffer').Buffer;
 var intSize = 4;
 var zeroBuffer = new Buffer(intSize); zeroBuffer.fill(0);
@@ -23776,7 +24979,7 @@ function hash(buf, fn, hashSize, bigEndian) {
 
 module.exports = { hash: hash };
 
-},{"buffer":111}],115:[function(_dereq_,module,exports){
+},{"buffer":118}],122:[function(_dereq_,module,exports){
 var Buffer = _dereq_('buffer').Buffer
 var sha = _dereq_('./sha')
 var sha256 = _dereq_('./sha256')
@@ -23875,7 +25078,7 @@ each(['createCredentials'
   }
 })
 
-},{"./md5":116,"./rng":117,"./sha":118,"./sha256":119,"buffer":111}],116:[function(_dereq_,module,exports){
+},{"./md5":123,"./rng":124,"./sha":125,"./sha256":126,"buffer":118}],123:[function(_dereq_,module,exports){
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
  * Digest Algorithm, as defined in RFC 1321.
@@ -24040,7 +25243,7 @@ module.exports = function md5(buf) {
   return helpers.hash(buf, core_md5, 16);
 };
 
-},{"./helpers":114}],117:[function(_dereq_,module,exports){
+},{"./helpers":121}],124:[function(_dereq_,module,exports){
 // Original code adapted from Robert Kieffer.
 // details at https://github.com/broofa/node-uuid
 (function() {
@@ -24073,7 +25276,7 @@ module.exports = function md5(buf) {
 
 }())
 
-},{}],118:[function(_dereq_,module,exports){
+},{}],125:[function(_dereq_,module,exports){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
  * in FIPS PUB 180-1
@@ -24176,7 +25379,7 @@ module.exports = function sha1(buf) {
   return helpers.hash(buf, core_sha1, 20, true);
 };
 
-},{"./helpers":114}],119:[function(_dereq_,module,exports){
+},{"./helpers":121}],126:[function(_dereq_,module,exports){
 
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -24257,7 +25460,7 @@ module.exports = function sha256(buf) {
   return helpers.hash(buf, core_sha256, 32, true);
 };
 
-},{"./helpers":114}],120:[function(_dereq_,module,exports){
+},{"./helpers":121}],127:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24559,7 +25762,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],121:[function(_dereq_,module,exports){
+},{}],128:[function(_dereq_,module,exports){
 var http = module.exports;
 var EventEmitter = _dereq_('events').EventEmitter;
 var Request = _dereq_('./lib/request');
@@ -24698,7 +25901,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":122,"events":120,"url":140}],122:[function(_dereq_,module,exports){
+},{"./lib/request":129,"events":127,"url":147}],129:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var Response = _dereq_('./response');
 var Base64 = _dereq_('Base64');
@@ -24889,7 +26092,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":123,"Base64":124,"inherits":126,"stream":133}],123:[function(_dereq_,module,exports){
+},{"./response":130,"Base64":131,"inherits":133,"stream":140}],130:[function(_dereq_,module,exports){
 var Stream = _dereq_('stream');
 var util = _dereq_('util');
 
@@ -25011,7 +26214,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":133,"util":142}],124:[function(_dereq_,module,exports){
+},{"stream":140,"util":149}],131:[function(_dereq_,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -25073,7 +26276,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],125:[function(_dereq_,module,exports){
+},{}],132:[function(_dereq_,module,exports){
 var http = _dereq_('http');
 
 var https = module.exports;
@@ -25088,7 +26291,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":121}],126:[function(_dereq_,module,exports){
+},{"http":128}],133:[function(_dereq_,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -25113,7 +26316,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],127:[function(_dereq_,module,exports){
+},{}],134:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -25175,7 +26378,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],128:[function(_dereq_,module,exports){
+},{}],135:[function(_dereq_,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -25686,7 +26889,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],129:[function(_dereq_,module,exports){
+},{}],136:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -25772,7 +26975,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],130:[function(_dereq_,module,exports){
+},{}],137:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -25859,13 +27062,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],131:[function(_dereq_,module,exports){
+},{}],138:[function(_dereq_,module,exports){
 'use strict';
 
 exports.decode = exports.parse = _dereq_('./decode');
 exports.encode = exports.stringify = _dereq_('./encode');
 
-},{"./decode":129,"./encode":130}],132:[function(_dereq_,module,exports){
+},{"./decode":136,"./encode":137}],139:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -25939,7 +27142,7 @@ function onend() {
   });
 }
 
-},{"./readable.js":136,"./writable.js":138,"inherits":126,"process/browser.js":134}],133:[function(_dereq_,module,exports){
+},{"./readable.js":143,"./writable.js":145,"inherits":133,"process/browser.js":141}],140:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -26068,7 +27271,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"./duplex.js":132,"./passthrough.js":135,"./readable.js":136,"./transform.js":137,"./writable.js":138,"events":120,"inherits":126}],134:[function(_dereq_,module,exports){
+},{"./duplex.js":139,"./passthrough.js":142,"./readable.js":143,"./transform.js":144,"./writable.js":145,"events":127,"inherits":133}],141:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -26123,7 +27326,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],135:[function(_dereq_,module,exports){
+},{}],142:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -26166,7 +27369,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./transform.js":137,"inherits":126}],136:[function(_dereq_,module,exports){
+},{"./transform.js":144,"inherits":133}],143:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -27103,7 +28306,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"./index.js":133,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127,"buffer":111,"events":120,"inherits":126,"process/browser.js":134,"string_decoder":139}],137:[function(_dereq_,module,exports){
+},{"./index.js":140,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"buffer":118,"events":127,"inherits":133,"process/browser.js":141,"string_decoder":146}],144:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27309,7 +28512,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./duplex.js":132,"inherits":126}],138:[function(_dereq_,module,exports){
+},{"./duplex.js":139,"inherits":133}],145:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27697,7 +28900,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./index.js":133,"buffer":111,"inherits":126,"process/browser.js":134}],139:[function(_dereq_,module,exports){
+},{"./index.js":140,"buffer":118,"inherits":133,"process/browser.js":141}],146:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27890,7 +29093,7 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":111}],140:[function(_dereq_,module,exports){
+},{"buffer":118}],147:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28599,14 +29802,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":128,"querystring":131}],141:[function(_dereq_,module,exports){
+},{"punycode":135,"querystring":138}],148:[function(_dereq_,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],142:[function(_dereq_,module,exports){
+},{}],149:[function(_dereq_,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -29196,6 +30399,6 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,_dereq_("C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":141,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":127,"inherits":126}]},{},[1])
+},{"./support/isBuffer":148,"C:\\Users\\Alex\\AppData\\Roaming\\npm\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":134,"inherits":133}]},{},[1])
 (1)
 });

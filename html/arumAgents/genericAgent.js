@@ -31,10 +31,6 @@ GenericAgent.prototype.rpcFunctions = {};
 
 GenericAgent.prototype.newAssignment = function(id, type, time) {
   this.jobs.add(id, type, time, this.timelineDataset);
-  var addQuery = [{id:id, start:time, group:this.id, content:"started: "+ type}];
-
-  this.timelineDataset.add(addQuery);
-  this.graph2dDataset.add({x:time, y:this.delay, group: this.id});
 };
 
 /**
@@ -54,13 +50,13 @@ GenericAgent.prototype.updateAssignment = function(id, type, time, operation) {
 GenericAgent.prototype.rpcFunctions.newEvent = function(params) {
   // handle events
   if (params.operation == 'start') {
-    this.newAssignment(params.id, params.assignment, params.time)
+    this.newAssignment(params.jobId, params.assignment, params.time)
   }
   else if (params.operation == 'finish') {
-    this.finishAssignment(params.id, params.assignment, params.time);
+    this.finishAssignment(params.jobId, params.assignment, params.time);
   }
   else {
-    this.updateAssignment(params.id,params.assignment,params.time, params.operation);
+    this.updateAssignment(params.jobId,params.assignment,params.time, params.operation);
   }
 };
 

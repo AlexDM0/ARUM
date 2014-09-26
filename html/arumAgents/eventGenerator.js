@@ -41,7 +41,8 @@ EventGenerator.prototype.makeMachineEvent = function () {
     type: 'worker',
     assignment: 'makeMachine',
     operation: 'start',
-    id: this.eventID
+    jobId: this.eventID,
+    producitId: 1
   };
   this.rpc.request("agentGenerator",{method:'receiveEvent',params:event})
   setTimeout(this.pauseMachineEvent.bind(this), Math.random() * 2000 + 500);
@@ -54,11 +55,12 @@ EventGenerator.prototype.pauseMachineEvent = function () {
     type: 'worker',
     assignment: 'makeMachine',
     operation: 'pause',
-    id: this.eventID
+    jobId: this.eventID,
+    producitId: 1
   };
 
   this.rpc.request("agentGenerator",{method:'receiveEvent',params:event})
-  setTimeout(this.resumeMachineEvent.bind(this), Math.random() * 2000 + 500);
+  setTimeout(this.resumeMachineEvent.bind(this), Math.random() * 1000 + 500);
 }
 
 EventGenerator.prototype.resumeMachineEvent = function () {
@@ -68,11 +70,12 @@ EventGenerator.prototype.resumeMachineEvent = function () {
     type: 'worker',
     assignment: 'makeMachine',
     operation: 'resume',
-    id: this.eventID
+    jobId: this.eventID,
+    producitId: 1
   };
 
   this.rpc.request("agentGenerator",{method:'receiveEvent',params:event})
-  setTimeout(this.finishMachineEvent.bind(this), Math.random() * 2000 + 500);
+  setTimeout(this.finishMachineEvent.bind(this), Math.random() * 1000 + 500);
 }
 
 EventGenerator.prototype.finishMachineEvent = function () {
@@ -82,11 +85,12 @@ EventGenerator.prototype.finishMachineEvent = function () {
     type: 'worker',
     assignment: 'makeMachine',
     operation: 'finish',
-    id: this.eventID
+    jobId: this.eventID,
+    producitId: 1
   };
 
   this.rpc.request("agentGenerator",{method:'receiveEvent',params:event})
-  setTimeout(this.start.bind(this), Math.random() * 2000 + 500);
+  setTimeout(this.start.bind(this), Math.random() * 1000 + 1000);
 }
 
 

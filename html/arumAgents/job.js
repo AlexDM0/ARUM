@@ -64,7 +64,6 @@ Job.prototype.finalizePrerequisites = function() {
 }
 
 Job.prototype.finish = function(time) {
-  console.log("finish")
   this.finished = true;
   this.elapsedTime += time - this.timeResumed;
   this.finalizePrerequisites();
@@ -73,7 +72,6 @@ Job.prototype.finish = function(time) {
 }
 
 Job.prototype.pause = function(time, endOfDay) {
-  console.log("pause")
   if (endOfDay == true) {
     this.endOfDayTime = time;
     this.endOfDayPause = true;
@@ -84,7 +82,6 @@ Job.prototype.pause = function(time, endOfDay) {
 }
 
 Job.prototype.resume = function(time, startOfDay) {
-  console.log("resuming")
   if (this.endOfDayPause == true && startOfDay == true) {
     if (this.endOfDayTime != 0) {
       this.subtractionTime += time - this.endOfDayTime;

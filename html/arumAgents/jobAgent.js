@@ -161,6 +161,7 @@ JobAgent.prototype.rpcFunctions.update = function(params) {
       job.resume(params.time);
       break;
   }
+  return job.elapsedTime;
 };
 
 /**
@@ -280,7 +281,14 @@ JobAgent.prototype.rpcFunctions.addWatcherByAgentID = function(params, sender) {
  * @returns {*}
  */
 JobAgent.prototype.rpcFunctions.addWatcherByType = function(params, sender) {
-  return this.globalStats.getData();
+  // since we cannot watch a global type, we return the global stats at that point.
+  this.rpc.request(params.address, {method:'watchedJobFinished', params:{
+    uuid:                 params.uuid,
+    parentJobId:          params.parentJobId,
+    duration:             this.globalStats.getMeanData(), // we need the pure json data, not the class
+    oldData: true
+  }});
+  return this.globalStats.getData(); // we need the pure json data, not the class
 };
 
 

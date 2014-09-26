@@ -14,6 +14,29 @@
             height:110px !important;
             width:90px !important;
         }
+
+        .vis.timeline .item.pause{
+            top:30px !important;
+            border-color: #a6a6a6;
+            background-color: #ebebeb;
+        }
+
+        .vis.timeline .item.box.pause{
+            height:16px;
+            width:16px;
+            box-shadow: rgba(0,0,0,0.2) 0px 0px 10px;
+            padding:3px;
+        }
+
+        .vis.timeline .item.dot.pause{
+            top:-5px !important;
+            border-color: #7d807d;
+        }
+
+        img.icon{
+            width:16px;
+            height:16px;
+        }
     </style>
 
     <script type="text/javascript" src="vis.js"></script>
@@ -40,7 +63,8 @@
                 start: vis.moment().add(-30, 'seconds'), // changed so its faster
                 end: vis.moment().add(30, 'seconds'),
                 height:'170px',
-                autoResize:false
+                autoResize:false,
+                stack:false
             }
             timeline = new vis.Timeline(timelineContainer, timelineItems, timelineOptions, timelineGroups);
 
@@ -55,8 +79,8 @@
                 dataAxis: {width: '100px'}
             }
 
-            graph2d = new vis.Graph2d(graph2dContainer, graph2dDataset, graph2dOptions, graph2dGroups);
-            renderStep();
+//            graph2d = new vis.Graph2d(graph2dContainer, graph2dDataset, graph2dOptions, graph2dGroups);
+           // renderStep();
         }
 
         function renderStep() {
