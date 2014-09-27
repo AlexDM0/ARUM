@@ -19,6 +19,14 @@ function GenericAgent(id, type) {
   timelineGroups.add({id:id, content:id, className: 'timelineGroup'});
   graph2dGroups.add({id:id, content:id});
   this.delay = 0;
+
+
+  this.availableSubgroups = [0,1,2,3,4,5,6,7,8,9,10];
+  this.freeSubgroups = {};
+  for (var i = 0; i < this.availableSubgroups.length; i++) {
+    this.freeSubgroups[this.availableSubgroups[i]] = true;
+  }
+  this.usedSubgroups = {};
 }
 
 // extend the eve.Agent prototype
@@ -29,7 +37,23 @@ GenericAgent.prototype.constructor = GenericAgent;
 // exposed functions from local functions.
 GenericAgent.prototype.rpcFunctions = {};
 
-GenericAgent.prototype.newAssignment = function(id, type, time, prerequisites) {
+GenericAgent.prototype.allocateSubgroup = function() {
+  for (var i = 0; i < this.availableSubgroups.length; i++) {
+    if (this.freeSubgroups[this.availableSubgroups[i]] == true) {
+      this.usedSubgroups[type] = i;
+      this.freeSubgroups[this.availableSubgroups[i]] == false;
+      break;
+    }
+  }
+}
+
+GenericAgent.prototype.freeSubgroup = function(type) {
+  this.freeSubgroups[this.usedSubgroups[type]] = true;
+  delete this.usedSubgroups[type];
+}
+
+GenericAgent.prototype.newAssignment = function(id, type, time) {
+  this.allocateSubgroup();
   this.jobs.add(id, type, time, prerequisites);
 };
 

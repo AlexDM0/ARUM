@@ -32,7 +32,8 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
           start: time,
           end: new Date(time).getTime() + prediction.duration.mean,
           group: me.agent.id,
-          type: 'background'
+          type: 'background',
+          subgroup: me.agent.usedSubgroups[type]
         });
       }
 
@@ -54,9 +55,8 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
   this.openJobs[id] = {type: type};
 
 
-  var addQuery = [{id:id, start:time, group:this.agent.id, content:"started: "+ type}];
+  var addQuery = [{id:id, start:time, content:"started: "+ type, group:this.agent.id, subgroup: this.agent.usedSubgroups[type]}];
   this.agent.timelineDataset.add(addQuery);
-  this.agent.graph2dDataset.add({x:time, y:this.agent.delay, group: this.agent.id});
 };
 
 JobManager.prototype.finish = function(id, type, time) {
@@ -146,12 +146,12 @@ JobManager.prototype.updateDataSetsFinish = function(id, type, time, prediction)
   }
   // generate indicator
   if (prediction[field].mean != 0) {
-    var offsetItem = this.getOffsetItem(id,time,prediction[field], elapsedTime);
+    var offsetItem = this.getOffsetItem(id, type, time, prediction[field], elapsedTime);
     updateQuery.push(offsetItem);
   }
   updateQuery.push({id: id, end: time, content: type, type: 'range', className: 'finished'});
+  this.agent.freeSubgroup(type);
   this.agent.timelineDataset.update(updateQuery);
-  this.agent.graph2dDataset.add({x: time, y: this.agent.delay, group: this.agent.id});
 };
 
 JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, prediction, eventId) {
@@ -165,7 +165,7 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
   // this causes there to be only one flag for the end of day as well as a moon icon
   if (operation == 'endOfDay') {
     image = '<img src="./images/moon.png" class="icon"/>';
-    flagId = "endOfDayNotifier" + eventId;
+    flagId = id + "endOfDayNotifier" + eventId;
   }
 
   updateQuery.push({id: id, end: time, content: type, type: 'range'});
@@ -174,6 +174,7 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
     start: time,
     content: image,
     group: this.agent.id,
+    subgroup: this.agent.usedSubgroups[type],
     className: 'pause'
   });
 
@@ -193,7 +194,7 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
     updateQuery.push({id: id + "_predMean" + this.jobs.id[id].predictionCounter, end: time, group: this.agent.id})
   }
   if (predictedTimeLeft < 0 && predictionExists == true) {
-    var offsetItem = this.getOffsetItem(id,time,prediction.durationWithPause, this.jobs.id[id].elapsedTimeWithPause);
+    var offsetItem = this.getOffsetItem(id, type, time, prediction.durationWithPause, this.jobs.id[id].elapsedTimeWithPause);
     updateQuery.push(offsetItem);
   }
   this.agent.timelineDataset.update(updateQuery);
@@ -207,7 +208,7 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
   // this causes there to be only one flag for the start of day as well as a sun icon
   if (operation == 'startOfDay') {
     image = '<img src="./images/sun.png"  class="icon"/>';
-    flagId = "startOfDayNotifier_" + eventId;
+    flagId = id + "startOfDayNotifier_" + eventId;
   }
 
   updateQuery.push({id: id, end: time, content: type, type: 'range'});
@@ -216,6 +217,7 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
     start: time,
     content: image,
     group: this.agent.id,
+    subgroup: this.agent.usedSubgroups[type],
     className: 'pause'
   });
 
@@ -227,6 +229,7 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
       start: time,
       end: new Date(time).getTime() + predictedTimeLeft,
       group: this.agent.id,
+      subgroup: this.agent.usedSubgroups[type],
       type: 'background'
     });
   }
@@ -234,7 +237,7 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
   this.agent.timelineDataset.update(updateQuery);
 };
 
-JobManager.prototype.getOffsetItem = function(id,time,prediction,elapsedTime) {
+JobManager.prototype.getOffsetItem = function(id,type,time,prediction,elapsedTime) {
   if (prediction.mean != 0) {
     var predictedTimeLeft = prediction.mean - elapsedTime - this.jobs.id[id].delay;
     var offsetItem = {
@@ -242,7 +245,8 @@ JobManager.prototype.getOffsetItem = function(id,time,prediction,elapsedTime) {
       start: null,
       end: null,
       type: 'background',
-      group: this.agent.id
+      group: this.agent.id,
+      subgroup: this.agent.usedSubgroups[type]
     };
     if (predictedTimeLeft < 0) {
       offsetItem.start = new Date(time).getTime() + predictedTimeLeft;

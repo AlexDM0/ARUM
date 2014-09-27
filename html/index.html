@@ -70,6 +70,7 @@
         var graph2dDataset = new vis.DataSet();
         var graph2dGroups = new vis.DataSet();
         var eventCounter;
+
         function draw() {
             eventCounter = document.getElementById('eventCounter');
 
@@ -78,39 +79,11 @@
             var timelineOptions = {
                 start: '2014-09-21', // changed so its faster
                 end: '2014-09-27',
-                autoResize:false,
-                stack:true
+                autoResize: false,
+                stack: false
             }
             timeline = new vis.Timeline(timelineContainer, timelineItems, timelineOptions, timelineGroups);
-
-//            // add items to the DataSet
-//            var graph2dContainer = document.getElementById('graph2d');
-//            var graph2dOptions = {
-//                start: '2014-09-24', // changed so its faster
-//                end: '2014-10-01',
-//                catmullRom: false,
-//                graphHeight: "170px",
-//                legend: true,
-//                dataAxis: {width: '100px'}
-//            }
-
-//            graph2d = new vis.Graph2d(graph2dContainer, graph2dDataset, graph2dOptions, graph2dGroups);
-           // renderStep();
         }
-
-//        function renderStep() {
-//            // move the window (you can think of different strategies).
-//            var now = vis.moment().add(10,'seconds');
-//            var Trange = timeline.getWindow();
-//            var Grange = graph2d.getWindow();
-//            var Tinterval = Trange.end - Trange.start;
-//            var Ginterval = Grange.end - Grange.start;
-//            // continuously move the window
-//            timeline.setWindow(now - Tinterval, now, {animate: false});
-//            graph2d.setWindow(now - Tinterval, now, {animate: false});
-//            requestAnimationFrame(renderStep);
-//        }
-
 
         var JAVA_EVENTS_URL = 'ws://localhost:8082/ws/events';
         var conn;
