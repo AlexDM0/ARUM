@@ -14,12 +14,9 @@ function GenericAgent(id, type) {
   this.type = type;
   this.jobs = new JobManager(this);
   this.timelineDataset = timelineItems;
-  this.graph2dDataset = graph2dDataset;
 
   timelineGroups.add({id:id, content:id, className: 'timelineGroup'});
-  graph2dGroups.add({id:id, content:id});
   this.delay = 0;
-
 
   this.availableSubgroups = [0,1,2,3,4,5,6,7,8,9,10];
   this.freeSubgroups = {};
@@ -37,11 +34,11 @@ GenericAgent.prototype.constructor = GenericAgent;
 // exposed functions from local functions.
 GenericAgent.prototype.rpcFunctions = {};
 
-GenericAgent.prototype.allocateSubgroup = function() {
+GenericAgent.prototype.allocateSubgroup = function(type) {
   for (var i = 0; i < this.availableSubgroups.length; i++) {
     if (this.freeSubgroups[this.availableSubgroups[i]] == true) {
       this.usedSubgroups[type] = i;
-      this.freeSubgroups[this.availableSubgroups[i]] == false;
+      this.freeSubgroups[this.availableSubgroups[i]] = false;
       break;
     }
   }
@@ -52,8 +49,8 @@ GenericAgent.prototype.freeSubgroup = function(type) {
   delete this.usedSubgroups[type];
 }
 
-GenericAgent.prototype.newAssignment = function(id, type, time) {
-  this.allocateSubgroup();
+GenericAgent.prototype.newAssignment = function(id, type, time, prerequisites) {
+  this.allocateSubgroup(type);
   this.jobs.add(id, type, time, prerequisites);
 };
 

@@ -6,39 +6,42 @@
     <style type="text/css">
         .vis.timeline .item.background.negative {
             background-color: rgba(255, 120, 0, 0.2) !important;
+            z-index:99999 !important;
         }
         .vis.timeline .item.background.positive {
             background-color: rgba(113, 255, 34, 0.20) !important;
+            z-index:99999 !important;
         }
         .vis.timeline .item.background {
             background-color: rgba(40, 148, 255, 0.20) !important;
+            z-index:99999 !important;
         }
         .vis.timeline .labelset .timelineGroup .inner {
-            height:100px !important;
+            /*height:100px !important;*/
             width:90px !important;
         }
 
-        .vis.timeline .item.pause{
+
+        /*.vis.timeline .item.pause{*/
             /*top:20px !important;*/
-            border-color: #a6a6a6;
-            background-color: #ebebeb;
+            /*width:20px;*/
+            /*border-color: #a6a6a6;*/
+            /*background-color: #ebebeb;*/
+            /**/
+        /*}*/
+
+        .vis.timeline .item.range.pause{
+            height:34px !important;
+            width:26px !important;
+            box-shadow: rgba(0,0,0,0.2) 0px 0px 10px !important;
+            padding:3px !important;
+            z-index:9999;
         }
 
-        .vis.timeline .item.box.pause{
-            height:16px;
-            width:16px;
-            box-shadow: rgba(0,0,0,0.2) 0px 0px 10px;
-            padding:3px;
-        }
-
-        .vis.timeline .item.dot.pause{
-            top:-5px !important;
-            border-color: #7d807d;
-        }
 
         .vis.timeline .item.range.finished{
             border-color: #7d807d !important;
-            background-color: #b1ebb0 !important;
+            background-color: #ccf5c9 !important;
         }
 
         .vis.timeline .item {
@@ -86,6 +89,7 @@
         }
 
         var JAVA_EVENTS_URL = 'ws://localhost:8082/ws/events';
+        var AMOUNT_OF_INITIAL_EVENTS = 60;
         var conn;
 
         eve.system.init({
@@ -109,9 +113,7 @@
         var jobGen = new JobAgentGenerator("jobAgentGenerator");
         var eventGen = new EventGenerator("frank");
 
-        setTimeout(function () {
-            agentGen.getEvents(56);
-        }, 200);
+
 //        eventGen.start();
         function getNewEvent() {
             agentGen.getEvents(1);

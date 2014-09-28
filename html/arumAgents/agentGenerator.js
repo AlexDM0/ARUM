@@ -15,6 +15,7 @@ function AgentGenerator(id) {
       console.log('Connected to the JAVA_EVENTS');
       me.rpc.request(JAVA_EVENTS_URL,{method:"loadEvents", params:{filename:"events.csv", actuallySend: true}}).then(function (reply) {
         me.amountOfEvents = reply;
+        me.getEvents(AMOUNT_OF_INITIAL_EVENTS);
       });
     })
     .catch(function (err) {

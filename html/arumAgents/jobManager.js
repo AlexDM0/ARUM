@@ -27,6 +27,14 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
   }})
     .then(function (prediction) {
       if (prediction.duration.mean != 0) {
+        console.log({
+          id: id + "_predMean0",
+          start: time,
+          end: new Date(time).getTime() + prediction.duration.mean,
+          group: me.agent.id,
+          type: 'background',
+          subgroup: me.agent.usedSubgroups[type]
+        })
         me.agent.timelineDataset.update({
           id: id + "_predMean0",
           start: time,
@@ -144,6 +152,7 @@ JobManager.prototype.updateDataSetsFinish = function(id, type, time, prediction)
     field = 'durationWithPause';
     elapsedTime = this.jobs.id[id].elapsedTimeWithPause;
   }
+
   // generate indicator
   if (prediction[field].mean != 0) {
     var offsetItem = this.getOffsetItem(id, type, time, prediction[field], elapsedTime);
@@ -172,6 +181,7 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
   updateQuery.push({
     id: flagId,
     start: time,
+    end: time,
     content: image,
     group: this.agent.id,
     subgroup: this.agent.usedSubgroups[type],
@@ -215,6 +225,7 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
   updateQuery.push({
     id: flagId,
     start: time,
+    end: time,
     content: image,
     group: this.agent.id,
     subgroup: this.agent.usedSubgroups[type],
