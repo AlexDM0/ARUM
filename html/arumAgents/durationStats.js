@@ -4,6 +4,7 @@
 
 function DurationStats() {
   this.fields = ['duration','durationWithPause','durationWithStartup','durationWithBoth'];
+  var NSamples = 10;
   for (var i = 0; i < this.fields.length; i++) {
     this[this.fields[i]] = {mean: 0, std: 0};
   }

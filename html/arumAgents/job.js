@@ -67,11 +67,9 @@ Job.prototype.finish = function(time) {
   this.finished = true;
   this.elapsedTime += new Date(time).getTime() - new Date(this.timeResumed).getTime();
   this.elapsedTimeWithPause += new Date(time).getTime() - new Date(this.timeResumed).getTime();
-
   this.finalizePrerequisites();
 
   this.duration.calculateDuration(time, this.timeStart, this.elapsedTime, this.elapsedTimeWithPause, this.startupTime);
-  //console.log(this.type, this.duration, this.prerequisites)
 }
 
 Job.prototype.pause = function(time, endOfDay) {
@@ -92,8 +90,6 @@ Job.prototype.pause = function(time, endOfDay) {
     this.timePaused = time;
     this.paused = true;
   }
-
-
 }
 
 Job.prototype.resume = function(time, startOfDay) {

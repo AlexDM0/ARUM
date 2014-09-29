@@ -14,7 +14,6 @@ function GenericAgent(id, type) {
   this.type = type;
   this.jobs = new JobManager(this);
   this.timelineDataset = timelineItems;
-  this.endOfDay = false;
 
   timelineGroups.add({id:id, content:id, className: 'timelineGroup'});
   this.delay = 0;
@@ -77,7 +76,7 @@ GenericAgent.prototype.rpcFunctions.newEvent = function(params) {
   else if (params.operation == 'finish') {
     this.finishAssignment(params.jobId, params.assignment, params.time);
   }
-  else {
+  else if (params.operation == 'pause' || params.operation == 'resume') {
     this.updateAssignment(params.jobId,params.assignment,params.time, params.operation);
   }
 };

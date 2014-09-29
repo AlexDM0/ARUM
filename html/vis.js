@@ -13433,9 +13433,10 @@ return /******/ (function(modules) { // webpackBootstrap
       this.dom.box.style.height = height + 'px';
     }
     else {
-      var height = this.parent.height;
+      var height = Math.max(this.parent.height,
+          this.parent.itemSet.body.domProps.centerContainer.height);
       this.dom.box.style.top = onTop ? '0' : '';
-      //this.dom.box.style.bottom = onTop ? '' : '0';
+      this.dom.box.style.bottom = onTop ? '' : '0';
       this.dom.box.style.height = height + 'px';
     }
 

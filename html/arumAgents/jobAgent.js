@@ -137,7 +137,12 @@ JobAgent.prototype.rpcFunctions.finish = function(params) {
 
   this.updateStats();
 
-  return {elapsedTime: this.closedJobs[agentId][jobId].elapsedTime, elapsedTimeWithPause: this.closedJobs[agentId][jobId].elapsedTimeWithPause};
+  return {
+    elapsedTime: this.closedJobs[agentId][jobId].elapsedTime,
+    elapsedTimeWithPause: this.closedJobs[agentId][jobId].elapsedTimeWithPause,
+    duration: this.closedJobs[agentId][jobId].duration.getData(),
+    prediction: this.globalStats.getData()
+  };
 };
 
 /**
@@ -329,13 +334,13 @@ JobAgent.prototype.addWatchers = function(parentJobId, prerequisites) {
     else if (prereq.agentId !== undefined && prereq.type !== undefined) {
       // we now have an agentId and a jobType to watch.
       params.agentId = prereq.agentId;  // this is the job we want to watch
-      this.rpc.request('job_' + prereq.type, {method: 'addWatcherByAgentID', params: params})
+      this.rpc.request(prereq.type, {method: 'addWatcherByAgentID', params: params})
         .then(function (preliminaryStats) {
           me.allJobs[parentJobId].watchingPrerequisite(preliminaryStats, prereq.uuid);
         })
     }
     else if (prereq.type !== undefined) {
-      this.rpc.request('job_' + prereq.type, {method: 'addWatcherByType', params: params})
+      this.rpc.request(prereq.type, {method: 'addWatcherByType', params: params})
         .then(function (preliminaryStats) {
           me.allJobs[parentJobId].watchingPrerequisite(preliminaryStats, prereq.uuid);
         })

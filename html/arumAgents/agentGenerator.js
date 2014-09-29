@@ -8,6 +8,7 @@ function AgentGenerator(id) {
   this.amountOfEvents = 0;
   this.eventNumber = 0;
   this.eventsToFire = 0;
+  this.lastEndOfDayTime = null;
 
   conn = this.connect(eve.system.transports.getAll());
   conn[0].connect(JAVA_EVENTS_URL)
@@ -36,7 +37,7 @@ AgentGenerator.prototype.constructor = AgentGenerator;
 AgentGenerator.prototype.rpcFunctions = {};
 
 AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
-  console.log("event:",params);
+  console.log("event:",this.eventNumber, this.amountOfEvents, params);
 
   // setup timeline
   timeline.setCustomTime(params.time);
@@ -92,17 +93,35 @@ AgentGenerator.prototype.rpcFunctions.updateOpenJobs = function(params) {
 AgentGenerator.prototype.imposeWorkingHours = function(params) {
   var time = params.time;
   var operation = params.operation;
-  var eventId = uuid();
 
   for (var agentId in agentList) {
     if (agentList.hasOwnProperty(agentId)) {
       var agent = agentList[agentId];
       for (var jobId in agent.jobs.openJobs) {
         if (agent.jobs.openJobs.hasOwnProperty(jobId)) {
-          var job = agentList[agentId].jobs.openJobs[jobId];
-          agent.job.updateDataSetsOperation(job.id, job.type, time, operation, eventId)
+          var job = agent.jobs.openJobs[jobId];
+          agent.updateAssignment(jobId, job.type, time, operation);
         }
       }
     }
   }
+
+  if (operation == 'endOfDay') {
+    this.lastEndOfDayTime = time;
+  }
+  else {
+    if (this.lastEndOfDayTime !== null) {
+      timelineItems.update({
+        id: 'night' + uuid(),
+        start: this.lastEndOfDayTime,
+        end: time,
+        type: 'background',
+        group: 'Biagio',
+        className: 'night'
+      });
+      this.lastEndOfDayTime = null;
+    }
+  }
+
+
 }

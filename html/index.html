@@ -12,15 +12,25 @@
         .vis.timeline .item.background.negative {
             background-color: rgba(255, 120, 0, 0.2) !important;
             z-index:99999 !important;
+            height:34px !important;
         }
         .vis.timeline .item.background.positive {
             background-color: rgba(113, 255, 34, 0.20) !important;
             z-index:99999 !important;
+            height:34px !important;
         }
         .vis.timeline .item.background {
             background-color: rgba(40, 148, 255, 0.20) !important;
             z-index:99999 !important;
+        }
+        .vis.timeline .item.background.prediction {
+            background-color: rgba(40, 148, 255, 0.20) !important;
+            z-index:99999 !important;
             height:34px !important;
+        }
+        .vis.timeline .item.background.night {
+            background-color: rgba(143, 143, 143, 0.20) !important;
+            z-index:99999 !important;
         }
         .vis.timeline .labelset .timelineGroup .inner {
             /*height:100px !important;*/
@@ -70,6 +80,88 @@
             width:16px;
             height:16px;
         }
+
+        #multiselect {
+            width:200px;
+            height:500px;
+        }
+
+        #graph2d {
+
+        }
+
+        table.wrapper {
+            position:relative;
+            height:500px;
+            width:100%;
+        }
+
+        #selectTD {
+            width:200px;
+        }
+
+        #graphTD {
+
+        }
+
+        div.typeButtons {
+            height:50px;
+            width:100%;
+            overflow:hidden;
+        }
+
+        div.typeButton {
+            display:inline-block;
+            width:200px;
+            height:30px;
+            border:1px solid #000000;
+            text-align:center;
+            padding-top:10px;
+            background-color: #f5f5f5;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor:pointer;
+        }
+
+        div.typeButton.selected {
+            background-color: #b9ffc1;
+        }
+
+        div.graph2dContent{
+            display:inline-block;
+            height:450px;
+            width:100%;
+        }
+
+        #graphWrapper {
+            display:none;
+            border: 1px solid #dddddd;
+            padding:5px;
+        }
+
+        #timelineWrapper {
+            display:block;
+            border: 1px solid #dddddd;
+            padding:5px;
+        }
+
+        .prediction {
+            fill: #ff9f26;
+            fill-opacity:0;
+            stroke-width:2px;
+            stroke: #ff9f26;
+        }
+
+        .duration {
+            fill: #5992ff;
+            fill-opacity:0;
+            stroke-width:2px;
+            stroke: #5992ff;
+        }
     </style>
 
     <script type="text/javascript" src="vis.js"></script>
@@ -87,9 +179,16 @@
         var timelineGroups = new vis.DataSet();
 
         var graph2d;
-        var graph2dDataset = new vis.DataSet();
+        var graph2dDataset = [];
+        var graph2DItems = new vis.DataSet();
         var graph2dGroups = new vis.DataSet();
         var eventCounter;
+
+        var selectedGroups = ['duration'];
+        var showDuration = true;
+        var showPrediction = false;
+        var showTimeline = true;
+        var showGraph = false;
 
         function draw() {
             eventCounter = document.getElementById('eventCounter');
@@ -97,7 +196,7 @@
             // add items to the DataSet
             var timelineContainer = document.getElementById('timeline');
             var timelineOptions = {
-                start: '2014-09-21', // changed so its faster
+                start: '2014-09-21',
                 end: '2014-09-23',
                 autoResize: false,
                 showCustomTime: true,
@@ -105,10 +204,22 @@
                 stack: false
             }
             timeline = new vis.Timeline(timelineContainer, timelineItems, timelineOptions, timelineGroups);
+
+            var graph2dContainer = document.getElementById('graph2d');
+            var graph2dOptions = {
+                start: '2014-09-21',
+                end: '2014-09-23',
+                autoResize: false,
+                height: '450px',
+                showCurrentTime: false,
+                catmullRom: false,
+                drawPoints:{style:'circle'}
+            }
+            graph2d = new vis.Graph2d(graph2dContainer, graph2DItems, graph2dGroups, graph2dOptions);
         }
 
         var JAVA_EVENTS_URL = 'ws://localhost:8082/ws/events';
-        var AMOUNT_OF_INITIAL_EVENTS = 20;
+        var AMOUNT_OF_INITIAL_EVENTS = 150;
         var conn;
 
         eve.system.init({
@@ -143,7 +254,159 @@
         }
 
         function refreshJobs() {
+            var multiSelect = document.getElementById("multiselect");
+            while (multiSelect.firstChild) {
+                multiSelect.removeChild(multiSelect.firstChild);
+            }
+            var jobNames = jobGen.getAllJobNames();
+            for (var i = 0; i < jobNames.length; i++) {
+                var jobOption = new Option(jobNames[i], jobNames[i]);
+                multiSelect.appendChild(jobOption);
+            }
+        }
 
+        function updateGraph() {
+            var multiSelect = document.getElementById("multiselect");
+            var selection = [];
+            for (var i = 0; i < multiSelect.children.length; i++) {
+                if (multiSelect.children[i].selected) {
+                    selection.push(multiSelect.children[i].value);
+                }
+            }
+
+            var filteredValues = [];
+
+            for (var i = 0; i < graph2dDataset.length; i++) {
+                if (selection.indexOf(graph2dDataset[i].type) != -1) {
+                    for (var j = 0; j < selectedGroups.length; j++) {
+                        if (showDuration == true) {
+                            if (graph2dDataset[i].group == graph2dDataset[i].type + "_" + selectedGroups[j]) {
+                                filteredValues.push(graph2dDataset[i]);
+                                break;
+                            }
+                        }
+                        if (showPrediction == true) {
+                            if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroups[j]) {
+                                graph2dDataset[i].className = 'prediction';
+                                filteredValues.push(graph2dDataset[i]);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            graph2DItems.clear();
+            graph2DItems.add(filteredValues);
+            graph2d.fit();
+        }
+
+        function toggleIdeal() {
+            var btn = document.getElementById('toggleIdeal');
+            var idx = selectedGroups.indexOf("duration");
+            if (idx != -1) {
+                btn.className = btn.className.replace(" selected","");
+                selectedGroups.splice(idx,1);
+            }
+            else {
+                selectedGroups.push("duration");
+                btn.className += " selected";
+            }
+            updateGraph();
+        }
+        function togglePause() {
+            var btn = document.getElementById('togglePause');
+            var idx = selectedGroups.indexOf("durationWithPause");
+            if (idx != -1) {
+                btn.className = btn.className.replace("selected","");
+                selectedGroups.splice(idx,1);
+            }
+            else {
+                selectedGroups.push("durationWithPause");
+                btn.className += " selected";
+            }
+            updateGraph();
+        }
+        function togglePrereq() {
+            var btn = document.getElementById('togglePrereq');
+            var idx = selectedGroups.indexOf("durationWithStartup");
+            if (idx != -1) {
+                btn.className = btn.className.replace("selected","");
+                selectedGroups.splice(idx,1);
+            }
+            else {
+                selectedGroups.push("durationWithStartup");
+                btn.className += " selected";
+            }
+            updateGraph();
+        }
+        function toggleBoth() {
+            var btn = document.getElementById('toggleBoth');
+            var idx = selectedGroups.indexOf("durationWithBoth");
+            if (idx != -1) {
+                btn.className = btn.className.replace("selected","");
+                selectedGroups.splice(idx,1);
+            }
+            else {
+                selectedGroups.push("durationWithBoth");
+                btn.className += " selected";
+            }
+            updateGraph();
+        }
+        function togglePrediction() {
+            var btn = document.getElementById('togglePrediction');
+            if (showPrediction == true) {
+                btn.className = btn.className.replace("selected","");
+                showPrediction = false;
+            }
+            else {
+                showPrediction = true;
+                btn.className += " selected";
+            }
+            updateGraph();
+        }
+        function toggleDuration() {
+            var btn = document.getElementById('toggleDuration');
+            if (showDuration == true) {
+                btn.className = btn.className.replace("selected","");
+                showDuration = false;
+            }
+            else {
+                showDuration = true;
+                btn.className += " selected";
+            }
+            updateGraph();
+        }
+        function showTimelineBtn() {
+            var timelineBtn = document.getElementById('showTimeline');
+            var graphBtn = document.getElementById('showGraph');
+
+            if (showTimeline == false) {
+                graphBtn.className = graphBtn.className.replace("selected","");
+                timelineBtn.className += " selected";
+                var timelinewrapper = document.getElementById("timelineWrapper");
+                var graphwrapper = document.getElementById("graphWrapper");
+                graphwrapper.style.display = "none";
+                timelinewrapper.style.display = "block";
+                showTimeline = true;
+                showGraph = false;
+            }
+        }
+        function showGraphBtn() {
+            var timelineBtn = document.getElementById('showTimeline');
+            var graphBtn = document.getElementById('showGraph');
+
+            if (showGraph == false) {
+                timelineBtn.className = graphBtn.className.replace("selected","");
+                graphBtn.className += " selected";
+                var timelinewrapper = document.getElementById("timelineWrapper");
+                var graphwrapper = document.getElementById("graphWrapper");
+                timelinewrapper.style.display = "none";
+                graphwrapper.style.display = "block";
+                showTimeline = false;
+                showGraph = true;
+            }
         }
     </script>
 
@@ -151,12 +414,40 @@
 
 </head>
 <body onload="draw()">
-<input type="button" value="click me for new event!" onclick="getNewEvent()">
-eventNo:<div id="eventCounter" style="display:inline;">-1</div>
-<input type="button" value="get the rest of the events!" onclick="getAllEvents()">
-<div id="timeline"></div>
-<input type="button" value="refreshJobs" onclick="refreshJobs()">
-<div id="graph2d"></div>
+<h1>ARUM - Prague Demonstration</h1>
+<div class="typeButton selected" onclick="showTimelineBtn()" id="showTimeline">Show by Timeline</div>
+<div class="typeButton" onclick="showGraphBtn()" id="showGraph">Show by Job</div>
+<div id="timelineWrapper">
+    <input type="button" value="click me for new event!" onclick="getNewEvent()">
+    eventNo:<div id="eventCounter" style="display:inline;">-1</div>
+    <input type="button" value="get the rest of the events!" onclick="getAllEvents()"> <br>
+    <div id="timeline"></div>
+</div>
+
+
+<!--<input type="button" value="refreshJobs" onclick="refreshJobs()">-->
+<div id="graphWrapper">
+    <table class="wrapper">
+        <tr>
+            <td id="selectTD">
+                <select name="jobs" id="multiselect" multiple onclick="updateGraph()"></select>
+            </td>
+            <td id="graphTD">
+                <div class="typeButtons">
+                    <div class="typeButton selected" onclick="toggleIdeal()" id="toggleIdeal">Ideal</div>
+                    <div class="typeButton" onclick="togglePause()" id="togglePause">Ideal + Pause</div>
+                    <div class="typeButton" onclick="togglePrereq()" id="togglePrereq">Ideal + Prerequisites</div>
+                    <div class="typeButton" onclick="toggleBoth()" id="toggleBoth">Ideal + Both</div>
+                    <div class="typeButton" onclick="togglePrediction()" id="togglePrediction">Prediction</div>
+                    <div class="typeButton selected" onclick="toggleDuration()" id="toggleDuration">Duration</div>
+                </div>
+                <div class="graph2dContent">
+                    <div id="graph2d"></div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
 
 <p id="selection"></p>
 <p id="stabilization"></p>
