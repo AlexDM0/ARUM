@@ -23,6 +23,53 @@ JobAgentGenerator.prototype.rpcFunctions.createJob = function(params) {
 
     graph2dGroups.add([
       {
+        id: jobAgentName+'_pred_duration_std_lower',
+        content: "prediction",
+        className: 'prediction_std',
+        options: {drawPoints:false}
+      },
+      {
+        id: jobAgentName+'_pred_durationWithPause_std_lower',
+        content: "predWithPause",
+        className: 'prediction_std',
+        options: {drawPoints:false}
+      },
+      {
+        id: jobAgentName+'_pred_durationWithStartup_std_lower',
+        content: "predWithStartup",
+        className: 'prediction_std',
+        options: {drawPoints:false}
+      },
+      {
+        id: jobAgentName+'_pred_durationWithBoth_std_lower',
+        content: "predWithBoth",
+        className: 'prediction_std',
+        options: {drawPoints:false}
+      },
+      {
+        id: jobAgentName+'_pred_duration_std_higher',
+        content: "prediction",
+        className: 'prediction_std',
+        options: {drawPoints:false}
+      },
+      {
+        id: jobAgentName+'_pred_durationWithPause_std_higher',
+        content: "predWithPause",
+        className: 'prediction_std',
+        options: {drawPoints:false}
+      },
+      {
+        id: jobAgentName+'_pred_durationWithStartup_std_higher',
+        content: "predWithStartup",
+        className: 'prediction_std',
+        options: {drawPoints:false}
+      },
+      {
+        id: jobAgentName+'_pred_durationWithBoth_std_higher',
+        content: "predWithBoth",
+        className: 'prediction_std',
+        options: {drawPoints:false}
+      },{
         id: jobAgentName+'_pred_duration',
         content: "prediction",
         className: 'prediction'

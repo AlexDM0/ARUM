@@ -89,6 +89,16 @@ JobManager.prototype.finish = function(id, type, time) {
       graph2dDataset.push({x: time, y: prediction.durationWithPause.mean/3600000 ,group: type + '_pred_durationWithPause', type: type});
       graph2dDataset.push({x: time, y: prediction.durationWithStartup.mean/3600000 ,group: type + '_pred_durationWithStartup', type: type});
       graph2dDataset.push({x: time, y: prediction.durationWithBoth.mean/3600000 ,group: type + '_pred_durationWithBoth', type: type});
+      graph2dDataset.push({x: time, y: (prediction.duration.mean + prediction.duration.std)/3600000 ,group: type + '_pred_duration_std_higher', type: type});
+      graph2dDataset.push({x: time, y: (prediction.durationWithPause.mean + prediction.durationWithPause.std)/3600000 ,group: type + '_pred_durationWithPause_std_higher', type: type});
+      graph2dDataset.push({x: time, y: (prediction.durationWithStartup.mean + prediction.durationWithStartup.std)/3600000 ,group: type + '_pred_durationWithStartup_std_higher', type: type});
+      graph2dDataset.push({x: time, y: (prediction.durationWithBoth.mean + prediction.durationWithBoth.std)/3600000 ,group: type + '_pred_durationWithBoth_std_higher', type: type});
+      graph2dDataset.push({x: time, y: (prediction.duration.mean - prediction.duration.std)/3600000 ,group: type + '_pred_duration_std_lower', type: type});
+      graph2dDataset.push({x: time, y: (prediction.durationWithPause.mean - prediction.durationWithPause.std)/3600000 ,group: type + '_pred_durationWithPause_std_lower', type: type});
+      graph2dDataset.push({x: time, y: (prediction.durationWithStartup.mean - prediction.durationWithStartup.std)/3600000 ,group: type + '_pred_durationWithStartup_std_lower', type: type});
+      graph2dDataset.push({x: time, y: (prediction.durationWithBoth.mean - prediction.durationWithBoth.std)/3600000 ,group: type + '_pred_durationWithBoth_std_lower', type: type});
+
+
     });
 
   delete this.jobs.type.open[type][id];
@@ -164,13 +174,22 @@ JobManager.prototype.updateDataSetsFinish = function(id, type, time, prediction)
   }
 
   // generate indicator
+  var predictedTimeLeft = 0;
   if (prediction[field].mean != 0) {
+    predictedTimeLeft = prediction[field].mean - elapsedTime;
     var offsetItem = this.getOffsetItem(id, type, time, prediction[field], elapsedTime);
     if (offsetItem !== null) {
       updateQuery.push(offsetItem);
     }
   }
-  updateQuery.push({id: id, end: time, content: type, type: 'range', className: 'finished'});
+
+  if (predictedTimeLeft < 0) {
+    updateQuery.push({id: id, end: time, content: type, type: 'range', className: 'finished_delayed'});
+  }
+  else {
+    updateQuery.push({id: id, end: time, content: type, type: 'range', className: 'finished'});
+  }
+
   this.agent.freeSubgroup(type);
   this.agent.timelineDataset.update(updateQuery);
   this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})

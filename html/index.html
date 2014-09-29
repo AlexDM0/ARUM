@@ -63,6 +63,10 @@
             border-color: #7d807d !important;
             background-color: #ccf5c9 !important;
         }
+        .vis.timeline .item.range.finished_delayed{
+            border-color: #7d807d !important;
+            background-color: #f5cd84 !important;
+        }
 
         .vis.timeline .item {
             border-radius: 0px !important;
@@ -156,6 +160,13 @@
             stroke: #ff9f26;
         }
 
+        .prediction_std {
+            fill: rgba(255, 159, 38, 0.5);
+            fill-opacity:0;
+            stroke-width:2px;
+            stroke: rgba(255, 159, 38, 0.5);
+        }
+
         .duration {
             fill: #5992ff;
             fill-opacity:0;
@@ -184,7 +195,7 @@
         var graph2dGroups = new vis.DataSet();
         var eventCounter;
 
-        var selectedGroups = ['duration'];
+        var selectedGroup = 'duration';
         var showDuration = true;
         var showPrediction = false;
         var showTimeline = true;
@@ -278,82 +289,50 @@
 
             for (var i = 0; i < graph2dDataset.length; i++) {
                 if (selection.indexOf(graph2dDataset[i].type) != -1) {
-                    for (var j = 0; j < selectedGroups.length; j++) {
-                        if (showDuration == true) {
-                            if (graph2dDataset[i].group == graph2dDataset[i].type + "_" + selectedGroups[j]) {
-                                filteredValues.push(graph2dDataset[i]);
-                                break;
-                            }
+                    if (showDuration == true) {
+                        if (graph2dDataset[i].group == graph2dDataset[i].type + "_" + selectedGroup) {
+                            filteredValues.push(graph2dDataset[i]);
                         }
-                        if (showPrediction == true) {
-                            if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroups[j]) {
-                                graph2dDataset[i].className = 'prediction';
-                                filteredValues.push(graph2dDataset[i]);
-                                break;
-                            }
+                    }
+                    if (showPrediction == true) {
+                        if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroup) {
+                            filteredValues.push(graph2dDataset[i]);
+                        }
+                        if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroup + "_std_higher") {
+                            filteredValues.push(graph2dDataset[i]);
+                        }
+                        if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroup + "_std_lower") {
+                            filteredValues.push(graph2dDataset[i]);
                         }
                     }
                 }
             }
-
 
             graph2DItems.clear();
             graph2DItems.add(filteredValues);
             graph2d.fit();
         }
 
-        function toggleIdeal() {
-            var btn = document.getElementById('toggleIdeal');
-            var idx = selectedGroups.indexOf("duration");
-            if (idx != -1) {
-                btn.className = btn.className.replace(" selected","");
-                selectedGroups.splice(idx,1);
+        function turnOff(type) {
+            var btn = document.getElementById(type);
+            btn.className = btn.className.replace(" selected","");
+        }
+
+        function turnOffAll() {
+            var types = ['duration','durationWithPause','durationWithStartup','durationWithBoth'];
+            for (var i = 0; i < types.length; i++) {
+                turnOff(types[i]);
             }
-            else {
-                selectedGroups.push("duration");
-                btn.className += " selected";
-            }
+        }
+
+        function turnOn(type) {
+            turnOffAll();
+            var btn = document.getElementById(type);
+            selectedGroup = type;
+            btn.className += " selected";
             updateGraph();
         }
-        function togglePause() {
-            var btn = document.getElementById('togglePause');
-            var idx = selectedGroups.indexOf("durationWithPause");
-            if (idx != -1) {
-                btn.className = btn.className.replace("selected","");
-                selectedGroups.splice(idx,1);
-            }
-            else {
-                selectedGroups.push("durationWithPause");
-                btn.className += " selected";
-            }
-            updateGraph();
-        }
-        function togglePrereq() {
-            var btn = document.getElementById('togglePrereq');
-            var idx = selectedGroups.indexOf("durationWithStartup");
-            if (idx != -1) {
-                btn.className = btn.className.replace("selected","");
-                selectedGroups.splice(idx,1);
-            }
-            else {
-                selectedGroups.push("durationWithStartup");
-                btn.className += " selected";
-            }
-            updateGraph();
-        }
-        function toggleBoth() {
-            var btn = document.getElementById('toggleBoth');
-            var idx = selectedGroups.indexOf("durationWithBoth");
-            if (idx != -1) {
-                btn.className = btn.className.replace("selected","");
-                selectedGroups.splice(idx,1);
-            }
-            else {
-                selectedGroups.push("durationWithBoth");
-                btn.className += " selected";
-            }
-            updateGraph();
-        }
+
         function togglePrediction() {
             var btn = document.getElementById('togglePrediction');
             if (showPrediction == true) {
@@ -418,9 +397,9 @@
 <div class="typeButton selected" onclick="showTimelineBtn()" id="showTimeline">Show by Timeline</div>
 <div class="typeButton" onclick="showGraphBtn()" id="showGraph">Show by Job</div>
 <div id="timelineWrapper">
-    <input type="button" value="click me for new event!" onclick="getNewEvent()">
+    <input type="button" value="Next Event" onclick="getNewEvent()">
     eventNo:<div id="eventCounter" style="display:inline;">-1</div>
-    <input type="button" value="get the rest of the events!" onclick="getAllEvents()"> <br>
+    <input type="button" value="Get All Events." onclick="getAllEvents()"> <br>
     <div id="timeline"></div>
 </div>
 
@@ -434,10 +413,10 @@
             </td>
             <td id="graphTD">
                 <div class="typeButtons">
-                    <div class="typeButton selected" onclick="toggleIdeal()" id="toggleIdeal">Ideal</div>
-                    <div class="typeButton" onclick="togglePause()" id="togglePause">Ideal + Pause</div>
-                    <div class="typeButton" onclick="togglePrereq()" id="togglePrereq">Ideal + Prerequisites</div>
-                    <div class="typeButton" onclick="toggleBoth()" id="toggleBoth">Ideal + Both</div>
+                    <div class="typeButton selected" onclick="turnOn('duration')" id="duration">Ideal</div>
+                    <div class="typeButton" onclick="turnOn('durationWithPause')" id="durationWithPause">Ideal + Pause</div>
+                    <div class="typeButton" onclick="turnOn('durationWithStartup')" id="durationWithStartup">Ideal + Prerequisites</div>
+                    <div class="typeButton" onclick="turnOn('durationWithBoth')" id="durationWithBoth">Ideal + Both</div>
                     <div class="typeButton" onclick="togglePrediction()" id="togglePrediction">Prediction</div>
                     <div class="typeButton selected" onclick="toggleDuration()" id="toggleDuration">Duration</div>
                 </div>
