@@ -36,11 +36,25 @@ AgentGenerator.prototype.constructor = AgentGenerator;
 AgentGenerator.prototype.rpcFunctions = {};
 
 AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
-  console.log("event:",params)
-  if (agentList[params.performedBy] === undefined) {
-    agentList[params.performedBy] = new GenericAgent(params.performedBy, params.type);
+  console.log("event:",params);
+
+  // setup timeline
+  timeline.setCustomTime(params.time);
+  var range = timeline.getWindow();
+  var duration = range.end - range.start;
+  var cushion = 0.1 * duration;
+  var convertedTime = new Date(params.time).getTime();
+  timeline.setWindow(convertedTime - duration + cushion, convertedTime + cushion, {animate:false});
+
+  if (params.performedBy == "global") {
+    this.imposeWorkingHours(params);
   }
-  this.rpc.request(params.performedBy, {method:"newEvent", params:params});
+  else {
+    if (agentList[params.performedBy] === undefined) {
+      agentList[params.performedBy] = new GenericAgent(params.performedBy, params.type);
+    }
+    this.rpc.request(params.performedBy, {method: "newEvent", params: params});
+  }
 
   // check if we need to get another event, its done here to avoid raceconditions
   if (this.eventsToFire != 0) {
@@ -61,5 +75,34 @@ AgentGenerator.prototype.getEvents = function (count, delay) {
     this.eventNumber += 1;
     eventCounter.innerHTML = this.eventNumber + ""; // make string so it works
     this.eventsToFire -= 1;
+  }
+}
+
+AgentGenerator.prototype.rpcFunctions.updateOpenJobs = function(params) {
+  var skipJob = params.jobId;
+  var time = params.time;
+
+  for (var agentId in agentList) {
+    if (agentList.hasOwnProperty(agentId)) {
+      agentList[agentId].jobs.updateJobs(time, skipJob);
+    }
+  }
+}
+
+AgentGenerator.prototype.imposeWorkingHours = function(params) {
+  var time = params.time;
+  var operation = params.operation;
+  var eventId = uuid();
+
+  for (var agentId in agentList) {
+    if (agentList.hasOwnProperty(agentId)) {
+      var agent = agentList[agentId];
+      for (var jobId in agent.jobs.openJobs) {
+        if (agent.jobs.openJobs.hasOwnProperty(jobId)) {
+          var job = agentList[agentId].jobs.openJobs[jobId];
+          agent.job.updateDataSetsOperation(job.id, job.type, time, operation, eventId)
+        }
+      }
+    }
   }
 }

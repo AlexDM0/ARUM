@@ -13428,7 +13428,7 @@ return /******/ (function(modules) { // webpackBootstrap
       var height = 40;
       var subgroup = this.data.subgroup;
       var amountSubgroups = this.parent.visibleSubgroups - 1;
-      this.dom.box.style.top = (amountSubgroups - subgroup) * (2 + height) + this.parent.top + 'px';
+      this.dom.box.style.top = (amountSubgroups - subgroup) * (2 + height) + this.parent.top + 4 + 'px';
       //this.dom.box.style.bottom = onTop ? '' : '0';
       this.dom.box.style.height = height + 'px';
     }

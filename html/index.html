@@ -4,6 +4,11 @@
     <title></title>
 
     <style type="text/css">
+        body {
+            font-family: verdana;
+            font-size: 13px;
+        }
+
         .vis.timeline .item.background.negative {
             background-color: rgba(255, 120, 0, 0.2) !important;
             z-index:99999 !important;
@@ -15,10 +20,11 @@
         .vis.timeline .item.background {
             background-color: rgba(40, 148, 255, 0.20) !important;
             z-index:99999 !important;
+            height:34px !important;
         }
         .vis.timeline .labelset .timelineGroup .inner {
             /*height:100px !important;*/
-            width:90px !important;
+            width:120px !important;
         }
 
 
@@ -29,6 +35,10 @@
             /*background-color: #ebebeb;*/
             /**/
         /*}*/
+
+        .vis.timeline .item.range {
+            height:34px !important;
+        }
 
         .vis.timeline .item.range.pause{
             height:34px !important;
@@ -45,6 +55,13 @@
         }
 
         .vis.timeline .item {
+            border-radius: 0px !important;
+            border-color: #7d807d !important;
+            background-color: #f2f8ff !important;
+        }
+        .vis.timeline .item.box {
+            height:22px !important;
+            border-radius: 0px !important;
             border-color: #7d807d !important;
             background-color: #f2f8ff !important;
         }
@@ -81,15 +98,17 @@
             var timelineContainer = document.getElementById('timeline');
             var timelineOptions = {
                 start: '2014-09-21', // changed so its faster
-                end: '2014-09-27',
+                end: '2014-09-23',
                 autoResize: false,
+                showCustomTime: true,
+                showCurrentTime: false,
                 stack: false
             }
             timeline = new vis.Timeline(timelineContainer, timelineItems, timelineOptions, timelineGroups);
         }
 
         var JAVA_EVENTS_URL = 'ws://localhost:8082/ws/events';
-        var AMOUNT_OF_INITIAL_EVENTS = 60;
+        var AMOUNT_OF_INITIAL_EVENTS = 49;
         var conn;
 
         eve.system.init({

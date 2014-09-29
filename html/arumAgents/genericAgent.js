@@ -14,6 +14,7 @@ function GenericAgent(id, type) {
   this.type = type;
   this.jobs = new JobManager(this);
   this.timelineDataset = timelineItems;
+  this.endOfDay = false;
 
   timelineGroups.add({id:id, content:id, className: 'timelineGroup'});
   this.delay = 0;

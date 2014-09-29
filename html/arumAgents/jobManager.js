@@ -27,14 +27,6 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
   }})
     .then(function (prediction) {
       if (prediction.duration.mean != 0) {
-        console.log({
-          id: id + "_predMean0",
-          start: time,
-          end: new Date(time).getTime() + prediction.duration.mean,
-          group: me.agent.id,
-          type: 'background',
-          subgroup: me.agent.usedSubgroups[type]
-        })
         me.agent.timelineDataset.update({
           id: id + "_predMean0",
           start: time,
@@ -60,11 +52,12 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
   };
   if (this.jobs.type.open[type] === undefined) {this.jobs.type.open[type] = {}}
   this.jobs.type.open[type][id] = time;
-  this.openJobs[id] = {type: type};
+  this.openJobs[id] = this.jobs.id[id];
 
 
   var addQuery = [{id:id, start:time, content:"started: "+ type, group:this.agent.id, subgroup: this.agent.usedSubgroups[type]}];
   this.agent.timelineDataset.add(addQuery);
+  this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
 };
 
 JobManager.prototype.finish = function(id, type, time) {
@@ -125,19 +118,19 @@ JobManager.prototype.update = function(id, type, time, operation) {
 };
 
 
-JobManager.prototype.updateDataSetsOperation = function(id, type, time, operation, showFlag) {
+JobManager.prototype.updateDataSetsOperation = function(id, type, time, operation, eventId) {
   switch (operation) {
     case 'pause':
-      this.updateDataSetsPause(id, type, time, operation, this.jobs.id[id].prediction, showFlag);
+      this.updateDataSetsPause(id, type, time, operation, this.jobs.id[id].prediction, eventId);
       break;
     case 'endOfDay':
-      this.updateDataSetsPause(id, type, time, operation, this.jobs.id[id].prediction, showFlag);
+      this.updateDataSetsPause(id, type, time, operation, this.jobs.id[id].prediction, eventId);
       break;
     case 'startOfDay':
-      this.updateDataSetsResume(id, type, time, operation, this.jobs.id[id].prediction, showFlag);
+      this.updateDataSetsResume(id, type, time, operation, this.jobs.id[id].prediction, eventId);
       break;
     case 'resume':
-      this.updateDataSetsResume(id, type, time, operation, this.jobs.id[id].prediction, showFlag);
+      this.updateDataSetsResume(id, type, time, operation, this.jobs.id[id].prediction, eventId);
       break;
   }
 };
@@ -161,6 +154,7 @@ JobManager.prototype.updateDataSetsFinish = function(id, type, time, prediction)
   updateQuery.push({id: id, end: time, content: type, type: 'range', className: 'finished'});
   this.agent.freeSubgroup(type);
   this.agent.timelineDataset.update(updateQuery);
+  this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
 };
 
 JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, prediction, eventId) {
@@ -173,6 +167,11 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
 
   // this causes there to be only one flag for the end of day as well as a moon icon
   if (operation == 'endOfDay') {
+    // don't end-of-day agents twice
+    if (this.agent.endOfDay == true) {
+      return;
+    }
+    this.agent.endOfDay = true;
     image = '<img src="./images/moon.png" class="icon"/>';
     flagId = id + "endOfDayNotifier" + eventId;
   }
@@ -208,15 +207,22 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
     updateQuery.push(offsetItem);
   }
   this.agent.timelineDataset.update(updateQuery);
+  this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
 };
 
 JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, prediction, eventId) {
+  //console.log("here", arguments)
   var updateQuery = [];
   var image = '<img src="./images/control_play.png" class="icon"/>';
   var flagId = id + "_resumeNotifier" + eventId;
 
   // this causes there to be only one flag for the start of day as well as a sun icon
   if (operation == 'startOfDay') {
+    // don't start-of-day agents twice
+    if (this.agent.endOfDay == false) {
+      return;
+    }
+    this.agent.endOfDay = false;
     image = '<img src="./images/sun.png"  class="icon"/>';
     flagId = id + "startOfDayNotifier_" + eventId;
   }
@@ -233,6 +239,7 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
   });
 
   var predictedTimeLeft = prediction.durationWithPause.mean - this.jobs.id[id].elapsedTimeWithPause;
+  //console.log(predictedTimeLeft)
   if (predictedTimeLeft > 0) {
     this.jobs.id[id].predictionCounter += 1;
     updateQuery.push({
@@ -246,6 +253,7 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
   }
   this.jobs.id[id].pauseCount += 1;
   this.agent.timelineDataset.update(updateQuery);
+  this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
 };
 
 JobManager.prototype.getOffsetItem = function(id,type,time,prediction,elapsedTime) {
@@ -275,3 +283,35 @@ JobManager.prototype.getOffsetItem = function(id,type,time,prediction,elapsedTim
     return offsetItem;
   }
 };
+
+JobManager.prototype.updateJobs = function(time, skipId) {
+  var updateQuery = [];
+  for (var jobId in this.openJobs) {
+    if (this.openJobs.hasOwnProperty(jobId) && jobId != skipId) {
+      var type = this.openJobs[jobId].type;
+      var prediction  = this.openJobs[jobId].prediction;
+      var predictedTimeLeft;
+      var predictionExists = false;
+      // never been paused before
+      if (this.jobs.id[jobId].pauseCount == 0) {
+        predictedTimeLeft = prediction.duration.mean - this.jobs.id[jobId].elapsedTime;
+        predictionExists = prediction.duration.mean != 0;
+      }
+      else {
+        predictedTimeLeft = prediction.durationWithPause.mean - this.jobs.id[jobId].elapsedTimeWithPause;
+        predictionExists = prediction.durationWithPause.mean != 0;
+      }
+
+      if (predictedTimeLeft > 0 && predictionExists == true) {
+        updateQuery.push({id: jobId + "_predMean" + this.jobs.id[jobId].predictionCounter, end: time, group: this.agent.id})
+      }
+      if (predictedTimeLeft < 0 && predictionExists == true) {
+        var offsetItem = this.getOffsetItem(jobId, type, time, prediction.durationWithPause, this.jobs.id[jobId].elapsedTimeWithPause);
+        updateQuery.push(offsetItem);
+      }
+      updateQuery.push({id: jobId, end: time, content: type, type: 'range'});
+    }
+  }
+
+  this.agent.timelineDataset.update(updateQuery);
+}
