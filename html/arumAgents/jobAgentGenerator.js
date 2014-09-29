@@ -37,3 +37,13 @@ JobAgentGenerator.prototype.rpcFunctions.returnJobAddress = function(params) {
   }
   return "doesNotExist";
 }
+
+JobAgentGenerator.prototype.getAllJobNames = function() {
+  var list = [];
+  for (var jobAgentName in jobList) {
+    if (jobList.hasOwnProperty(jobAgentName)) {
+      list.push(jobAgentName);
+    }
+  }
+  return list;
+}

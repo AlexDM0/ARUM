@@ -149,7 +149,9 @@ JobManager.prototype.updateDataSetsFinish = function(id, type, time, prediction)
   // generate indicator
   if (prediction[field].mean != 0) {
     var offsetItem = this.getOffsetItem(id, type, time, prediction[field], elapsedTime);
-    updateQuery.push(offsetItem);
+    if (offsetItem !== null) {
+      updateQuery.push(offsetItem);
+    }
   }
   updateQuery.push({id: id, end: time, content: type, type: 'range', className: 'finished'});
   this.agent.freeSubgroup(type);
@@ -204,7 +206,9 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
   }
   if (predictedTimeLeft < 0 && predictionExists == true) {
     var offsetItem = this.getOffsetItem(id, type, time, prediction.durationWithPause, this.jobs.id[id].elapsedTimeWithPause);
-    updateQuery.push(offsetItem);
+    if (offsetItem !== null) {
+      updateQuery.push(offsetItem);
+    }
   }
   this.agent.timelineDataset.update(updateQuery);
   this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
@@ -273,9 +277,10 @@ JobManager.prototype.getOffsetItem = function(id,type,time,prediction,elapsedTim
       offsetItem.className = 'negative';
     }
     else {
-      offsetItem.start = time;
-      offsetItem.end = new Date(time).getTime() + predictedTimeLeft;
-      offsetItem.className = 'positive';
+      return null;
+      //offsetItem.start = time;
+      //offsetItem.end = new Date(time).getTime() + predictedTimeLeft;
+      //offsetItem.className = 'positive';
     }
     var delay = predictedTimeLeft;
     this.jobs.id[id].delay += delay;
@@ -307,7 +312,9 @@ JobManager.prototype.updateJobs = function(time, skipId) {
       }
       if (predictedTimeLeft < 0 && predictionExists == true) {
         var offsetItem = this.getOffsetItem(jobId, type, time, prediction.durationWithPause, this.jobs.id[jobId].elapsedTimeWithPause);
-        updateQuery.push(offsetItem);
+        if (offsetItem !== null) {
+          updateQuery.push(offsetItem);
+        }
       }
       updateQuery.push({id: jobId, end: time, content: type, type: 'range'});
     }

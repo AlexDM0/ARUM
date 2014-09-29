@@ -5,7 +5,7 @@
 
     <style type="text/css">
         body {
-            font-family: verdana;
+            font-family : Verdana, "Bitstream Vera Sans", "DejaVu Sans", Tahoma, Geneva, Arial, Sans-serif;
             font-size: 13px;
         }
 
@@ -108,7 +108,7 @@
         }
 
         var JAVA_EVENTS_URL = 'ws://localhost:8082/ws/events';
-        var AMOUNT_OF_INITIAL_EVENTS = 49;
+        var AMOUNT_OF_INITIAL_EVENTS = 20;
         var conn;
 
         eve.system.init({
@@ -141,6 +141,10 @@
         function getAllEvents() {
             agentGen.getEvents(agentGen.amountOfEvents);
         }
+
+        function refreshJobs() {
+
+        }
     </script>
 
     <link href="vis.css" rel="stylesheet" type="text/css" />
@@ -151,6 +155,7 @@
 eventNo:<div id="eventCounter" style="display:inline;">-1</div>
 <input type="button" value="get the rest of the events!" onclick="getAllEvents()">
 <div id="timeline"></div>
+<input type="button" value="refreshJobs" onclick="refreshJobs()">
 <div id="graph2d"></div>
 
 <p id="selection"></p>
