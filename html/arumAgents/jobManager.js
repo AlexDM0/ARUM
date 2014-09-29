@@ -77,6 +77,8 @@ JobManager.prototype.finish = function(id, type, time) {
   }})
     .then(function (reply) {
       var prediction = reply.prediction;
+      var originalPrediction = me.jobs.id[id].prediction;
+      console.log(originalPrediction);
       me.jobs.id[id].elapsedTime = reply.elapsedTime;
       me.jobs.id[id].elapsedTimeWithPause = reply.elapsedTimeWithPause;
       me.updateDataSetsFinish(id, type, time,  me.jobs.id[id].prediction);
@@ -97,7 +99,10 @@ JobManager.prototype.finish = function(id, type, time) {
       graph2dDataset.push({x: time, y: (prediction.durationWithPause.mean - prediction.durationWithPause.std)/3600000 ,group: type + '_pred_durationWithPause_std_lower', type: type});
       graph2dDataset.push({x: time, y: (prediction.durationWithStartup.mean - prediction.durationWithStartup.std)/3600000 ,group: type + '_pred_durationWithStartup_std_lower', type: type});
       graph2dDataset.push({x: time, y: (prediction.durationWithBoth.mean - prediction.durationWithBoth.std)/3600000 ,group: type + '_pred_durationWithBoth_std_lower', type: type});
-
+      graph2dDataset.push({x: time, y: originalPrediction.duration.mean/3600000 ,group: type + '_pred_duration_original', type: type});
+      graph2dDataset.push({x: time, y: originalPrediction.durationWithPause.mean/3600000 ,group: type + '_pred_durationWithPause_original', type: type});
+      graph2dDataset.push({x: time, y: originalPrediction.durationWithStartup.mean/3600000 ,group: type + '_pred_durationWithStartup_original', type: type});
+      graph2dDataset.push({x: time, y: originalPrediction.durationWithBoth.mean/3600000 ,group: type + '_pred_durationWithBoth_original', type: type});
 
     });
 

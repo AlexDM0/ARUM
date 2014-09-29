@@ -11,6 +11,8 @@ function JobAgent(id) {
   this.id = id;
   this.type = this.id.replace('job_','');
   this.globalStats = new DurationStats();
+  this.globalStats.getFakeStats(id);
+
   this.agentStats = {};
 
   this.allJobs = {};   // used to quickly look up a job ID
@@ -141,7 +143,7 @@ JobAgent.prototype.rpcFunctions.finish = function(params) {
     elapsedTime: this.closedJobs[agentId][jobId].elapsedTime,
     elapsedTimeWithPause: this.closedJobs[agentId][jobId].elapsedTimeWithPause,
     duration: this.closedJobs[agentId][jobId].duration.getData(),
-    prediction: this.globalStats.getData()
+    prediction: this.globalStats.getData(),
   };
 };
 

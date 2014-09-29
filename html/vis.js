@@ -1648,6 +1648,11 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   exports.drawBar = function (x, y, width, height, className, JSONcontainer, svgContainer) {
   //  if (height != 0) {
+      if (height < 0) {
+        height *= -1;
+        y -= height-1;
+      }
+      y -= 4;
       var rect = exports.getSVGElement('rect',JSONcontainer, svgContainer);
       rect.setAttributeNS(null, "x", x - 0.5 * width);
       rect.setAttributeNS(null, "y", y);

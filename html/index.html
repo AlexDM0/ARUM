@@ -7,6 +7,7 @@
         body {
             font-family : Verdana, "Bitstream Vera Sans", "DejaVu Sans", Tahoma, Geneva, Arial, Sans-serif;
             font-size: 13px;
+            min-width:1280px;
         }
 
         .vis.timeline .item.background.negative {
@@ -21,20 +22,33 @@
         }
         .vis.timeline .item.background {
             background-color: rgba(40, 148, 255, 0.20) !important;
-            z-index:99999 !important;
+            z-index:9999 !important;
         }
         .vis.timeline .item.background.prediction {
             background-color: rgba(40, 148, 255, 0.20) !important;
-            z-index:99999 !important;
+            z-index:9999 !important;
             height:34px !important;
         }
         .vis.timeline .item.background.night {
-            background-color: rgba(143, 143, 143, 0.20) !important;
-            z-index:99999 !important;
+            background-color: rgba(87, 87, 87, 0.45) !important;
+            z-index:9999 !important;
         }
         .vis.timeline .labelset .timelineGroup .inner {
-            /*height:100px !important;*/
-            width:120px !important;
+             /*height:100px !important;*/
+             width:140px !important;
+         }
+
+        .vis.timeline .labelset .timelineGroup.worker{
+             background-color: #f2f9ff;
+         }
+        .vis.timeline .labelset .timelineGroup.rao{
+            background-color: #c3e6e6;
+        }
+        .vis.timeline .labelset .timelineGroup.pm{
+            background-color: #d2f0b4;
+        }
+        .vis.timeline .labelset .timelineGroup.mt{
+            background-color: #ffd9b3;
         }
 
 
@@ -55,7 +69,7 @@
             width:26px !important;
             box-shadow: rgba(0,0,0,0.2) 0px 0px 10px !important;
             padding:3px !important;
-            z-index:9999;
+            z-index:99999;
         }
 
 
@@ -116,10 +130,11 @@
 
         div.typeButton {
             display:inline-block;
-            width:200px;
+            width:130px;
             height:30px;
             border:1px solid #000000;
             text-align:center;
+            font-size:12px;
             padding-top:10px;
             background-color: #f5f5f5;
             -webkit-touch-callout: none;
@@ -133,6 +148,27 @@
 
         div.typeButton.selected {
             background-color: #b9ffc1;
+        }
+
+        div.datatypeButton {
+            display:inline-block;
+            width:200px;
+            height:30px;
+            border:1px solid #000000;
+            text-align:center;
+            padding-top:10px;
+            background-color: #f2f9ff;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor:pointer;
+        }
+
+        div.datatypeButton.selected {
+            background-color: #a1d3ff;
         }
 
         div.graph2dContent{
@@ -160,6 +196,13 @@
             stroke: #ff9f26;
         }
 
+        .prediction_original {
+            fill: rgba(142, 255, 153, 0.40);
+            fill-opacity:0;
+            stroke-width:2px;
+            stroke: rgba(142, 255, 153, 0.40);
+        }
+
         .prediction_std {
             fill: rgba(255, 159, 38, 0.5);
             fill-opacity:0;
@@ -173,6 +216,103 @@
             stroke-width:2px;
             stroke: #5992ff;
         }
+
+        .fill {
+            fill-opacity:0.1;
+            stroke: none;
+        }
+
+
+        .bar {
+            fill-opacity:0.5;
+            stroke-width:1px;
+        }
+
+        .point {
+            stroke-width:2px;
+            fill-opacity:1.0;
+        }
+
+
+        .legendBackground {
+            stroke-width:1px;
+            fill-opacity:0.9;
+            fill: #ffffff;
+            stroke: #c2c2c2;
+        }
+
+
+        .outline {
+            stroke-width:1px;
+            fill-opacity:1;
+            fill: #ffffff;
+            stroke: #e5e5e5;
+        }
+
+        .iconFill {
+            fill-opacity:0.3;
+            stroke: none;
+        }
+
+        div.descriptionContainer {
+            float:left;
+            height:30px;
+            width:160px;
+            padding-left:5px;
+            padding-right:5px;
+            line-height: 30px;
+        }
+
+        div.iconContainer {
+            float:left;
+        }
+
+        div.legendElementContainer {
+            display:inline-block;
+            width:200px;
+            height:30px;
+            border-style:solid;
+            border-width:1px;
+            border-color: #e0e0e0;
+            background-color: #ffffff;
+            margin:4px;
+            padding:4px;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor:pointer;
+        }
+        div.legendElementContainer.hidden {
+            background-color: #d3e6ff;
+        }
+
+        svg.legendIcon {
+            width:30px;
+            height:30px;
+        }
+
+        div.externalLegend {
+            position:relative;
+            margin-top:-5px;
+            margin-left: 203px;
+            width: 900px;
+        }
+
+        .differencePositive {
+            fill: #afff33;
+            stroke-width:2px;
+            stroke: #96db22;
+        }
+
+        .differenceNegative {
+            fill: #ff9f00;
+            stroke-width:2px;
+            stroke: #e58f00;
+        }
+
     </style>
 
     <script type="text/javascript" src="vis.js"></script>
@@ -193,6 +333,20 @@
         var graph2dDataset = [];
         var graph2DItems = new vis.DataSet();
         var graph2dGroups = new vis.DataSet();
+        graph2dGroups.add({
+            id: 'differencePositive', content: 'differencePositive', className: "differencePositive", options: {
+                drawPoints: false,
+                style: 'bar',
+                barChart: {width: 50, align: 'center'} // align: left, center, right
+            }
+        })
+        graph2dGroups.add({
+            id: 'differenceNegative', content: 'differenceNegative', className: "differenceNegative", options: {
+                drawPoints: false,
+                style: 'bar',
+                barChart: {width: 50, align: 'center'} // align: left, center, right
+            }
+        })
         var eventCounter;
 
         var selectedGroup = 'duration';
@@ -200,6 +354,7 @@
         var showPrediction = false;
         var showTimeline = true;
         var showGraph = false;
+        var differenceWithPrediction = false;
 
         function draw() {
             eventCounter = document.getElementById('eventCounter');
@@ -218,6 +373,8 @@
 
             var graph2dContainer = document.getElementById('graph2d');
             var graph2dOptions = {
+//                style:'bar',
+//                barChart: {width:50, align:'center'}, // align: left, center, right
                 start: '2014-09-21',
                 end: '2014-09-23',
                 autoResize: false,
@@ -230,7 +387,7 @@
         }
 
         var JAVA_EVENTS_URL = 'ws://localhost:8082/ws/events';
-        var AMOUNT_OF_INITIAL_EVENTS = 150;
+        var AMOUNT_OF_INITIAL_EVENTS = 1;
         var conn;
 
         eve.system.init({
@@ -260,6 +417,10 @@
             agentGen.getEvents(1);
         }
 
+        function getTenNewEvents() {
+            agentGen.getEvents(10);
+        }
+
         function getAllEvents() {
             agentGen.getEvents(agentGen.amountOfEvents);
         }
@@ -286,31 +447,76 @@
             }
 
             var filteredValues = [];
-
+            var originalPredictionValues = [];
+            var durationValues = [];
+            var diffValues = [];
+            var graphGroup = null;
+            var stdGroup = null;
+            var predictionGroup = null;
+            var originalPredictionGroup = null;
             for (var i = 0; i < graph2dDataset.length; i++) {
                 if (selection.indexOf(graph2dDataset[i].type) != -1) {
                     if (showDuration == true) {
                         if (graph2dDataset[i].group == graph2dDataset[i].type + "_" + selectedGroup) {
                             filteredValues.push(graph2dDataset[i]);
+                            durationValues.push(graph2dDataset[i]);
+                            graphGroup =  graph2dDataset[i].group;
                         }
                     }
                     if (showPrediction == true) {
                         if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroup) {
                             filteredValues.push(graph2dDataset[i]);
+                            predictionGroup = graph2dDataset[i].group;
                         }
                         if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroup + "_std_higher") {
                             filteredValues.push(graph2dDataset[i]);
+                            stdGroup = graph2dDataset[i].group;
                         }
                         if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroup + "_std_lower") {
                             filteredValues.push(graph2dDataset[i]);
+                            stdGroup = graph2dDataset[i].group;
+                        }
+                        if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroup + "_original") {
+                            filteredValues.push(graph2dDataset[i]);
+                            originalPredictionValues.push(graph2dDataset[i]);
+                            originalPredictionGroup = graph2dDataset[i].group;
                         }
                     }
                 }
             }
 
             graph2DItems.clear();
-            graph2DItems.add(filteredValues);
+            if (differenceWithPrediction == true) {
+                for (var i = 0; i < durationValues.length; i++) {
+                    var item = {};
+                    item.x = durationValues[i].x;
+                    item.y = durationValues[i].y;
+                    item.type = durationValues[i].type;
+                    item.y -= originalPredictionValues[i].y;
+                    var group = 'differenceNegative';
+                    if (item.y < 0) {
+                        group = 'differencePositive'
+                    }
+                    item.group = group;
+                    diffValues.push(item);
+                }
+                var legendDiv = document.getElementById("Legend");
+                legendDiv.innerHTML = "";
+                populateExternalLegend('differencePositive', "Faster");
+                populateExternalLegend('differenceNegative', "Delay");
+                graph2DItems.add(diffValues);
+            }
+            else {
+                var legendDiv = document.getElementById("Legend");
+                legendDiv.innerHTML = "";
+                if (graphGroup != null)              {populateExternalLegend(graphGroup, selectedGroup);}
+                if (stdGroup != null)                {populateExternalLegend(stdGroup, "standard deviation");}
+                if (predictionGroup != null)         {populateExternalLegend(predictionGroup, "updated prediction");}
+                if (originalPredictionGroup != null) {populateExternalLegend(originalPredictionGroup, "prediction on start");}
+                graph2DItems.add(filteredValues);
+            }
             graph2d.fit();
+
         }
 
         function turnOff(type) {
@@ -334,26 +540,45 @@
         }
 
         function togglePrediction() {
-            var btn = document.getElementById('togglePrediction');
-            if (showPrediction == true) {
-                btn.className = btn.className.replace("selected","");
-                showPrediction = false;
+            if (differenceWithPrediction != true) {
+                var btn = document.getElementById('togglePrediction');
+                if (showPrediction == true) {
+                    btn.className = btn.className.replace("selected", "");
+                    showPrediction = false;
+                }
+                else {
+                    showPrediction = true;
+                    btn.className += " selected";
+                }
+                updateGraph();
             }
-            else {
+        }
+        function toggleDuration() {
+            if (differenceWithPrediction != true) {
+                var btn = document.getElementById('toggleDuration');
+                if (showDuration == true) {
+                    btn.className = btn.className.replace("selected", "");
+                    showDuration = false;
+                }
+                else {
+                    showDuration = true;
+                    btn.className += " selected";
+                }
+                updateGraph();
+            }
+        }
+
+        function toggleDifference() {
+            differenceWithPrediction = !differenceWithPrediction;
+            var btn = document.getElementById('togglePrediction');
+            if (showPrediction == false && differenceWithPrediction == true) {
                 showPrediction = true;
                 btn.className += " selected";
             }
-            updateGraph();
-        }
-        function toggleDuration() {
-            var btn = document.getElementById('toggleDuration');
-            if (showDuration == true) {
-                btn.className = btn.className.replace("selected","");
-                showDuration = false;
-            }
-            else {
+            var btn2 = document.getElementById('toggleDuration');
+            if (showDuration == false && differenceWithPrediction == true) {
                 showDuration = true;
-                btn.className += " selected";
+                btn2.className += " selected";
             }
             updateGraph();
         }
@@ -387,6 +612,50 @@
                 showGraph = true;
             }
         }
+
+        /**
+         * this function fills the external legend with content using the getLegend() function.
+         */
+        function populateExternalLegend(groupDataItem, description) {
+            var legendDiv = document.getElementById("Legend");
+            // create divs
+            var containerDiv = document.createElement("div");
+            var iconDiv = document.createElement("div");
+            var descriptionDiv = document.createElement("div");
+
+            // give divs classes and Ids where necessary
+            containerDiv.className = 'legendElementContainer';
+            containerDiv.id = groupDataItem + "_legendContainer"
+            iconDiv.className = "iconContainer";
+            descriptionDiv.className = "descriptionContainer";
+
+            // get the legend for this group.
+            var legend = graph2d.getLegend(groupDataItem,30,30);
+
+            // append class to icon. All styling classes from the vis.css have been copied over into the head here to be able to style the
+            // icons with the same classes if they are using the default ones.
+            legend.icon.setAttributeNS(null, "class", "legendIcon");
+
+            // append the legend to the corresponding divs
+            iconDiv.appendChild(legend.icon);
+            descriptionDiv.innerHTML = description;
+
+            // determine the order for left and right orientation
+            if (legend.orientation == 'left') {
+                descriptionDiv.style.textAlign = "left";
+                containerDiv.appendChild(iconDiv);
+                containerDiv.appendChild(descriptionDiv);
+            }
+            else {
+                descriptionDiv.style.textAlign = "right";
+                containerDiv.appendChild(descriptionDiv);
+                containerDiv.appendChild(iconDiv);
+            }
+
+            // append to the legend container div
+            legendDiv.appendChild(containerDiv);
+        }
+
     </script>
 
     <link href="vis.css" rel="stylesheet" type="text/css" />
@@ -399,6 +668,7 @@
 <div id="timelineWrapper">
     <input type="button" value="Next Event" onclick="getNewEvent()">
     eventNo:<div id="eventCounter" style="display:inline;">-1</div>
+    <input type="button" value="Next 10 Events" onclick="getTenNewEvents()">
     <input type="button" value="Get All Events." onclick="getAllEvents()"> <br>
     <div id="timeline"></div>
 </div>
@@ -416,9 +686,10 @@
                     <div class="typeButton selected" onclick="turnOn('duration')" id="duration">Ideal</div>
                     <div class="typeButton" onclick="turnOn('durationWithPause')" id="durationWithPause">Ideal + Pause</div>
                     <div class="typeButton" onclick="turnOn('durationWithStartup')" id="durationWithStartup">Ideal + Prerequisites</div>
-                    <div class="typeButton" onclick="turnOn('durationWithBoth')" id="durationWithBoth">Ideal + Both</div>
-                    <div class="typeButton" onclick="togglePrediction()" id="togglePrediction">Prediction</div>
-                    <div class="typeButton selected" onclick="toggleDuration()" id="toggleDuration">Duration</div>
+                    <div class="typeButton" onclick="turnOn('durationWithBoth')" id="durationWithBoth">Total Time</div>
+                    <div class="datatypeButton" onclick="togglePrediction()" id="togglePrediction">Prediction</div>
+                    <div class="datatypeButton selected" onclick="toggleDuration()" id="toggleDuration">Duration</div>
+                    <input type="button" onclick="toggleDifference()" id="difference" value="Switch View">
                 </div>
                 <div class="graph2dContent">
                     <div id="graph2d"></div>
@@ -426,6 +697,7 @@
             </td>
         </tr>
     </table>
+    <div id="Legend" class="externalLegend"></div>
 </div>
 
 <p id="selection"></p>

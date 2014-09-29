@@ -70,6 +70,26 @@ JobAgentGenerator.prototype.rpcFunctions.createJob = function(params) {
         className: 'prediction_std',
         options: {drawPoints:false}
       },{
+        id: jobAgentName+'_pred_duration_original',
+        content: "prediction",
+        className: 'prediction_original'
+      },
+      {
+        id: jobAgentName+'_pred_durationWithPause_original',
+        content: "predWithPause",
+        className: 'prediction_original'
+      },
+      {
+        id: jobAgentName+'_pred_durationWithStartup_original',
+        content: "predWithStartup",
+        className: 'prediction_original'
+      },
+      {
+        id: jobAgentName+'_pred_durationWithBoth_original',
+        content: "predWithBoth",
+        className: 'prediction_original'
+      },
+      {
         id: jobAgentName+'_pred_duration',
         content: "prediction",
         className: 'prediction'
