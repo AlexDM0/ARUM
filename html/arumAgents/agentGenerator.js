@@ -43,7 +43,7 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
   timeline.setCustomTime(params.time);
   var range = timeline.getWindow();
   var duration = range.end - range.start;
-  var cushion = 0.1 * duration;
+  var cushion = 0.15 * duration;
   var convertedTime = new Date(params.time).getTime();
   timeline.setWindow(convertedTime - duration + cushion, convertedTime + cushion, {animate:false});
 
