@@ -25,12 +25,12 @@
             z-index:9999 !important;
         }
         .vis.timeline .item.background.prediction {
-            background-color: rgba(40, 148, 255, 0.20) !important;
+            background-color: rgba(0, 164, 255, 0.10) !important;
             z-index:9999 !important;
             height:34px !important;
         }
         .vis.timeline .item.background.night {
-            background-color: rgba(87, 87, 87, 0.45) !important;
+            background-color: rgba(60, 60, 60, 0.3) !important;
             z-index:9999 !important;
         }
         .vis.timeline .labelset .timelineGroup .inner {
@@ -73,25 +73,17 @@
             background-color: #eeeeee !important;
         }
 
-
-        .vis.timeline .item.range.finished{
-            border-color: #7d807d !important;
-        }
-        .vis.timeline .item.range.finished_delayed{
-            border-color: #7d807d !important;
-            background-color: #f5cd84 !important;
-        }
-
-        .vis.timeline .item {
+            .vis.timeline .item {
             border-radius: 0px !important;
             border-color: #7d807d !important;
-            background-color: #c4e0ff !important;
+            background-color: #ffffff !important;
+            /*background-color: #c4e0ff !important;*/
         }
         .vis.timeline .item.box {
             height:22px !important;
             border-radius: 0px !important;
             border-color: #7d807d !important;
-            background-color: #c4e0ff !important;
+            background-color: #ffffff !important;
         }
 
         img.icon{
@@ -374,15 +366,25 @@
 
             var graph2dContainer = document.getElementById('graph2d');
             var graph2dOptions = {
-//                style:'bar',
-//                barChart: {width:50, align:'center'}, // align: left, center, right
+                style:'bar',
+                barChart: {width:50, align:'center', handleOverlap:'sideBySide'},
                 start: '2014-09-21',
                 end: '2014-09-23',
                 autoResize: false,
-                height: '450px',
+//                height: '450px',
                 showCurrentTime: false,
                 catmullRom: false,
-                drawPoints:{style:'circle'}
+                showMajorLabels: false,
+                showMinorLabels: false,
+                graphHeight:'450px',
+                dataAxis: {
+                    customRange: {
+                        left: {
+                            min:0
+                        }
+                    }
+                },
+                drawPoints:false //{style:'circle'}
             }
             graph2d = new vis.Graph2d(graph2dContainer, graph2DItems, graph2dGroups, graph2dOptions);
         }
@@ -450,6 +452,7 @@
             var filteredValues = [];
             var originalPredictionValues = [];
             var durationValues = [];
+            var predictionValues = [];
             var diffValues = [];
             var graphGroup = null;
             var stdGroup = null;
@@ -467,6 +470,7 @@
                     if (showPrediction == true) {
                         if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroup) {
                             filteredValues.push(graph2dDataset[i]);
+                            predictionValues.push(graph2dDataset[i]);
                             predictionGroup = graph2dDataset[i].group;
                         }
                         if (graph2dDataset[i].group == graph2dDataset[i].type + "_pred_" + selectedGroup + "_std_higher") {
@@ -508,10 +512,34 @@
                 graph2DItems.add(diffValues);
             }
             else {
+                var filteredValues = [];
+                for (var i = 0; i < durationValues.length; i++) {
+                    var durationItem = {};
+                    durationItem.x = i < 10 ? '2014-09-0' + i :'2014-09-' + i;
+                    durationItem.y = durationValues[i].y;
+                    durationItem.type = durationValues[i].type;
+                    durationItem.group = durationValues[i].group;
+                    filteredValues.push(durationItem);
+                    if (showPrediction == true) {
+                        var predItem = {};
+                        predItem.x =  i < 10 ? '2014-09-0' + i :'2014-09-' + i;
+                        predItem.y = predictionValues[i].y;
+                        predItem.type = predictionValues[i].type;
+                        predItem.group = predictionValues[i].group;
+                        filteredValues.push(predItem);
+
+                        var originalPred = {};
+                        originalPred.x =  i < 10 ? '2014-09-0' + i :'2014-09-' + i;
+                        originalPred.y = originalPredictionValues[i].y;
+                        originalPred.type = originalPredictionValues[i].type;
+                        originalPred.group = originalPredictionValues[i].group;
+                        filteredValues.push(originalPred);
+                    }
+                }
                 var legendDiv = document.getElementById("Legend");
                 legendDiv.innerHTML = "";
-                if (graphGroup != null)              {populateExternalLegend(graphGroup, selectedGroup);}
-                if (stdGroup != null)                {populateExternalLegend(stdGroup, "standard deviation");}
+                if (graphGroup != null)              {populateExternalLegend(graphGroup, selectedGroup + " (hours)");}
+//                if (stdGroup != null)                {populateExternalLegend(stdGroup, "standard deviation");}
                 if (predictionGroup != null)         {populateExternalLegend(predictionGroup, "updated prediction");}
                 if (originalPredictionGroup != null) {populateExternalLegend(originalPredictionGroup, "prediction on start");}
                 graph2DItems.add(filteredValues);

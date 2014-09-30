@@ -37,12 +37,7 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
           className: 'prediction'
         });
       }
-
       me.jobs.id[id].prediction = prediction;
-      //graph2dDataset.push({x: time, y: prediction.duration.mean/3600000 ,group: type + '_pred_duration', type: type});
-      //graph2dDataset.push({x: time, y: prediction.durationWithPause.mean/3600000 ,group: type + '_pred_durationWithPause', type: type});
-      //graph2dDataset.push({x: time, y: prediction.durationWithStartup.mean/3600000 ,group: type + '_pred_durationWithStartup', type: type});
-      //graph2dDataset.push({x: time, y: prediction.durationWithBoth.mean/3600000 ,group: type + '_pred_durationWithBoth', type: type});
   });
 
   this.jobs.id[id] = {
@@ -78,7 +73,6 @@ JobManager.prototype.finish = function(id, type, time) {
     .then(function (reply) {
       var prediction = reply.prediction;
       var originalPrediction = me.jobs.id[id].prediction;
-      console.log(originalPrediction);
       me.jobs.id[id].elapsedTime = reply.elapsedTime;
       me.jobs.id[id].elapsedTimeWithPause = reply.elapsedTimeWithPause;
       me.updateDataSetsFinish(id, type, time,  me.jobs.id[id].prediction);
@@ -185,26 +179,14 @@ JobManager.prototype.updateDataSetsFinish = function(id, type, time, prediction)
     this.getOffsetItem(id, type, time, prediction[field], elapsedTime,updateQuery);
   }
 
-  if (predictedTimeLeft < 0) {
-    updateQuery.push({
-      id: id,
-      end: time,
-      content: type,
-      type: 'range',
-      className: 'finished',
-      style: 'background-color: ' + this.generateColors(predictedTimeLeft, elapsedTime) + ' !important;'
-    });
-  }
-  else {
-    updateQuery.push({
-      id: id,
-      end: time,
-      content: type,
-      type: 'range',
-      className: 'finished',
-      style: "background-color: #ffffff !important; "
-    });
-  }
+  updateQuery.push({
+    id: id,
+    end: time,
+    content: type,
+    type: 'range',
+    className: 'finished',
+    style: 'background-color: ' + this.generateColors(predictedTimeLeft, elapsedTime) + ' !important;'
+  });
 
   this.agent.freeSubgroup(type);
   this.agent.timelineDataset.update(updateQuery);
@@ -258,7 +240,9 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
   var predictionExists = prediction[field].mean != 0;
 
   // update the predicted line if the job is not ALREADY pauseds
+  console.log(predictedTimeLeft, predictionExists, this.jobs.id[id].paused)
   if (predictedTimeLeft > 0 && predictionExists == true  && this.jobs.id[id].paused != true) {
+
     updateQuery.push({
       id: id + "_predMean" + this.jobs.id[id].predictionCounter,
       end: time,
@@ -418,14 +402,16 @@ JobManager.prototype.updateJobs = function(time, skipId) {
 
 
 JobManager.prototype.generateColors = function(predictedTime, elapsedTime) {
-  var ratio = predictedTime / elapsedTime;
+  var ratio = (elapsedTime + predictedTime) / elapsedTime;
+  console.log(ratio)
   if (ratio > 1) {
     ratio = Math.min(1.5,ratio) - 1; // 1.5 -- 1
-    var rgb = HSVToRGB(120/360,(2*ratio),1);
+    var rgb = HSVToRGB(120/360,(2*ratio)*0.3 + 0.1,1);
   }
   else {
     ratio = Math.max(0.5,ratio) - 0.5; // 1 -- 0.5
-    var rgb = HSVToRGB(30/360,(2*ratio),1);
+    var rgb = HSVToRGB(30/360,(1-(2*ratio))*0.2 + 0.1 ,1);
+    //rgb = {r:255,g:255,b:255};
   }
   return "rgb(" + rgb.r + "," + rgb.g + "," + rgb.b + ")";
 }

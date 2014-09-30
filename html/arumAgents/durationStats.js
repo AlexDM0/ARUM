@@ -109,9 +109,9 @@ DurationStats.prototype.getFakeStats = function(type) {
       var a = 15;
       this.generateData([3,3.5,a,a])
       break;
-    case "Go to NC Meeting":
-      var a = 10;
-      this.generateData([3,3.5,a,a])
+    case "Go to NC meeting":
+      var a = 12;
+      this.generateData([a,a,a,a])
       break;
     case "Organise drilling rework":
       var a = 2;
@@ -124,6 +124,9 @@ DurationStats.prototype.getFakeStats = function(type) {
     case  "Transport to delivery":
       var a = 0.4;
       this.generateData([a,a,a,a])
+      break;
+    default:
+      console.log("CANNOT MATCH", type);
       break;
 
   }
