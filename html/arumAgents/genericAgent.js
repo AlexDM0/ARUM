@@ -64,8 +64,8 @@ GenericAgent.prototype.finishAssignment = function(id, type, time) {
 };
 
 
-GenericAgent.prototype.updateAssignment = function(id, type, time, operation) {
-  this.jobs.update(id, type, time, operation);
+GenericAgent.prototype.updateAssignment = function(id, type, time, operation, description) {
+  this.jobs.update(id, type, time, operation, description);
 };
 
 GenericAgent.prototype.rpcFunctions.newEvent = function(params) {
@@ -77,7 +77,7 @@ GenericAgent.prototype.rpcFunctions.newEvent = function(params) {
     this.finishAssignment(params.jobId, params.assignment, params.time);
   }
   else if (params.operation == 'pause' || params.operation == 'resume') {
-    this.updateAssignment(params.jobId,params.assignment,params.time, params.operation);
+    this.updateAssignment(params.jobId,params.assignment,params.time, params.operation, params.description);
   }
 };
 

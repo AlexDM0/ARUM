@@ -112,7 +112,7 @@ JobManager.prototype.finish = function(id, type, time) {
   this.jobs.type.closed[type][id] = time;
 };
 
-JobManager.prototype.update = function(id, type, time, operation) {
+JobManager.prototype.update = function(id, type, time, operation, description) {
   var me = this;
   var eventId = uuid();
   if (operation == 'endOfDay' || operation == 'startOfDay') {
@@ -144,25 +144,25 @@ JobManager.prototype.update = function(id, type, time, operation) {
       .then(function (reply) {
         me.jobs.id[id].elapsedTime = reply.elapsedTime;
         me.jobs.id[id].elapsedTimeWithPause = reply.elapsedTimeWithPause;
-        me.updateDataSetsOperation(id, type, time, operation, eventId);
+        me.updateDataSetsOperation(id, type, time, operation, eventId, description);
     });
   }
 };
 
 
-JobManager.prototype.updateDataSetsOperation = function(id, type, time, operation, eventId) {
+JobManager.prototype.updateDataSetsOperation = function(id, type, time, operation, eventId, description) {
   switch (operation) {
     case 'pause':
-      this.updateDataSetsPause(id, type, time, operation, this.jobs.id[id].prediction, eventId);
+      this.updateDataSetsPause(id, type, time, operation, this.jobs.id[id].prediction, eventId, description);
       break;
     case 'endOfDay':
-      this.updateDataSetsPause(id, type, time, operation, this.jobs.id[id].prediction, eventId);
+      this.updateDataSetsPause(id, type, time, operation, this.jobs.id[id].prediction, eventId, description);
       break;
     case 'startOfDay':
-      this.updateDataSetsResume(id, type, time, operation, this.jobs.id[id].prediction, eventId);
+      this.updateDataSetsResume(id, type, time, operation, this.jobs.id[id].prediction, eventId, description);
       break;
     case 'resume':
-      this.updateDataSetsResume(id, type, time, operation, this.jobs.id[id].prediction, eventId);
+      this.updateDataSetsResume(id, type, time, operation, this.jobs.id[id].prediction, eventId, description);
       break;
   }
 };
@@ -200,7 +200,7 @@ JobManager.prototype.updateDataSetsFinish = function(id, type, time, prediction)
   this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
 };
 
-JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, prediction, eventId) {
+JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, prediction, eventId, description) {
   var updateQuery = [];
   var image = '<img src="./images/control_pause.png" class="icon"/>';
   var flagId = id + "_pauseNotifier" + eventId;
@@ -228,15 +228,20 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
   }
 
   updateQuery.push({id: id, end: time, content: type, type: 'range'});
-  updateQuery.push({
+  var imageUpdate = {
     id: flagId,
     start: time,
     end: time,
     content: image,
     group: this.agent.id,
     subgroup: this.agent.usedSubgroups[type],
-    className: 'pause'
-  });
+    className: 'pause',
+    title: 'Calling RAO for possible NC.'
+  };
+  if (this.agent.id == "Paolo") {
+    imageUpdate.title = "Going to inspect possible NC.";
+  }
+  updateQuery.push(imageUpdate);
 
   var predictedTimeLeft = prediction[field].mean - elapsedTime;
   var predictionExists = prediction[field].mean != 0;
