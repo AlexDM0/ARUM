@@ -11,10 +11,10 @@
         }
 
 
-        .vis.timeline .item.background {
-            background-color: rgba(40, 148, 255, 0.20) !important;
+        /*.vis.timeline .item.background {*/
+            /*background-color: rgba(40, 148, 255, 0.20) !important;*/
             /*z-index:9999 !important;*/
-        }
+        /*}*/
         .vis.timeline .item.background.prediction {
             border: 1px solid rgba(0, 164, 255, 0.50) !important;
             background-color: rgba(0, 164, 255, 0.10) !important;
@@ -44,15 +44,6 @@
             background-color: #b8d6e6;
         }
 
-
-        /*.vis.timeline .item.pause{*/
-            /*top:20px !important;*/
-            /*width:20px;*/
-            /*border-color: #a6a6a6;*/
-            /*background-color: #ebebeb;*/
-            /**/
-        /*}*/
-
         .vis.timeline .item.range {
             height:34px !important;
         }
@@ -64,7 +55,6 @@
             padding:3px !important;
             z-index:999999;
             background-color: #ffffff !important
-            background-color: #eeeeee !important;
         }
 
         .vis.timeline .item {
@@ -90,10 +80,6 @@
             height:500px;
         }
 
-        #graph2d {
-
-        }
-
         table.wrapper {
             position:relative;
             height:500px;
@@ -104,10 +90,6 @@
             width:200px;
         }
 
-        #graphTD {
-
-        }
-
         div.typeButtons {
             height:50px;
             width:100%;
@@ -116,13 +98,15 @@
 
         div.typeButton {
             display:inline-block;
-            width:130px;
-            height:30px;
-            border:1px solid #000000;
+            width:150px;
+            height:24px;
+            border:2px solid #ffffff;
+            border-radius: 40px;
             text-align:center;
             font-size:12px;
-            padding-top:10px;
-            background-color: #f5f5f5;
+            color: #848484;
+            padding-top:8px;
+            background-color: #dedede;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             -khtml-user-select: none;
@@ -130,21 +114,29 @@
             -ms-user-select: none;
             user-select: none;
             cursor:pointer;
+            margin:5px;
+            box-shadow: rgba(50,50,50,0.3) 0px 0px 3px;
         }
 
         div.typeButton.selected {
-            background-color: #b9ffc1;
+            background-color: #9aff4d;
+            color: #000000;
         }
 
-        div.datatypeButton {
+        div.toggleButton {
+            background-image: url("./images/toggleOff.png");
+            background-repeat: no-repeat;
+            background-position: 5px 4px;
             display:inline-block;
-            width:200px;
-            height:30px;
+            width:130px;
+            height:28px;
             font-size:12px;
-            border:1px solid #000000;
-            text-align:center;
-            padding-top:10px;
-            background-color: #f2f9ff;
+            border:1px solid #d0d0d0;
+            text-align:right;
+            padding-top:12px;
+            padding-right:40px;
+            border-radius: 40px;
+            background-color: #ffffff;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             -khtml-user-select: none;
@@ -154,8 +146,9 @@
             cursor:pointer;
         }
 
-        div.datatypeButton.selected {
-            background-color: #a1d3ff;
+        div.toggleButton.selected {
+            background-image: url("./images/toggleOn.png");
+            background-color: #ffffff;
         }
 
         div.graph2dContent{
@@ -176,32 +169,53 @@
             padding:5px;
         }
 
-        .prediction {
-            fill: #ff9f26;
-            fill-opacity:0;
-            stroke-width:2px;
-            stroke: #ff9f26;
-        }
+        /*.prediction {*/
+            /*fill: #ff9f26;*/
+            /*fill-opacity:0;*/
+            /*stroke-width:2px;*/
+            /*stroke: #ff9f26;*/
+        /*}*/
+
+        /*.prediction_original {*/
+            /*fill: #77da2e;*/
+            /*fill-opacity:0;*/
+            /*stroke-width:2px;*/
+            /*stroke: #77da2e;*/
+        /*}*/
+
+        /*.prediction_std {*/
+            /*fill: rgba(255, 159, 38, 0.5);*/
+            /*fill-opacity:0;*/
+            /*stroke-width:2px;*/
+            /*stroke: rgba(255, 159, 38, 0.5);*/
+        /*}*/
+
+        /*.duration {*/
+            /*fill: #5992ff;*/
+            /*fill-opacity:0;*/
+            /*stroke-width:2px;*/
+            /*stroke: #5992ff;*/
+        /*}*/
 
         .prediction_original {
-            fill: rgba(142, 255, 153, 0.40);
+            fill: rgb(123, 199, 255);
             fill-opacity:0;
             stroke-width:2px;
-            stroke: rgba(142, 255, 153, 0.40);
+            stroke: rgb(123, 199, 255);
         }
 
-        .prediction_std {
-            fill: rgba(255, 159, 38, 0.5);
+        .prediction {
+            fill: #77da2e;
             fill-opacity:0;
             stroke-width:2px;
-            stroke: rgba(255, 159, 38, 0.5);
+            stroke: #77da2e;
         }
 
         .duration {
-            fill: #5992ff;
+            fill: rgb(170, 34, 206);
             fill-opacity:0;
             stroke-width:2px;
-            stroke: #5992ff;
+            stroke: rgb(170, 34, 206);
         }
 
         .fill {
@@ -244,7 +258,7 @@
         div.descriptionContainer {
             float:left;
             height:30px;
-            width:160px;
+            min-width:160px;
             padding-left:5px;
             padding-right:5px;
             line-height: 30px;
@@ -256,7 +270,6 @@
 
         div.legendElementContainer {
             display:inline-block;
-            width:200px;
             height:30px;
             border-style:solid;
             border-width:1px;
@@ -271,9 +284,6 @@
             -ms-user-select: none;
             user-select: none;
             cursor:pointer;
-        }
-        div.legendElementContainer.hidden {
-            background-color: #d3e6ff;
         }
 
         svg.legendIcon {
@@ -362,8 +372,8 @@
             var graph2dOptions = {
                 style:'bar',
                 barChart: {width:50, align:'center', handleOverlap:'sideBySide'},
-                start: '2014-09-21',
-                end: '2014-09-23',
+                start: '2014-08-25',
+                end: '2014-09-25',
                 autoResize: false,
 //                height: '450px',
                 showCurrentTime: false,
@@ -374,7 +384,7 @@
                 dataAxis: {
                     customRange: {
                         left: {
-                            min:0
+                            min:-0.1
                         }
                     }
                 },
@@ -488,12 +498,13 @@
             if (differenceWithPrediction == true) {
                 for (var i = 0; i < durationValues.length; i++) {
                     var item = {};
-                    item.x = durationValues[i].x;
+                    item.x = i < 10 ? '2014-09-0' + i :'2014-09-' + i;
                     item.y = durationValues[i].y;
                     item.type = durationValues[i].type;
                     item.y -= originalPredictionValues[i].y;
                     var group = 'differenceNegative';
                     if (item.y < 0) {
+                        item.y *= -1;
                         group = 'differencePositive'
                     }
                     item.group = group;
@@ -501,8 +512,8 @@
                 }
                 var legendDiv = document.getElementById("Legend");
                 legendDiv.innerHTML = "";
-                populateExternalLegend('differencePositive', "Faster");
-                populateExternalLegend('differenceNegative', "Delay");
+                populateExternalLegend('differencePositive', "Faster than predicted (hours)");
+                populateExternalLegend('differenceNegative', "Slower than predicted (hours)");
                 graph2DItems.add(diffValues);
             }
             else {
@@ -532,10 +543,10 @@
                 }
                 var legendDiv = document.getElementById("Legend");
                 legendDiv.innerHTML = "";
-                if (graphGroup != null)              {populateExternalLegend(graphGroup, selectedGroup + " (hours)");}
+                if (graphGroup != null)              {populateExternalLegend(graphGroup, "duration (hours)");}
 //                if (stdGroup != null)                {populateExternalLegend(stdGroup, "standard deviation");}
-                if (predictionGroup != null)         {populateExternalLegend(predictionGroup, "updated prediction");}
-                if (originalPredictionGroup != null) {populateExternalLegend(originalPredictionGroup, "prediction on start");}
+                if (predictionGroup != null)         {populateExternalLegend(predictionGroup, "updated prediction (hours)");}
+                if (originalPredictionGroup != null) {populateExternalLegend(originalPredictionGroup, "initial prediction (hours)");}
                 graph2DItems.add(filteredValues);
             }
             graph2d.fit();
@@ -710,8 +721,7 @@
                     <div class="typeButton" onclick="turnOn('durationWithPause')" id="durationWithPause">Ideal + Pause</div>
                     <div class="typeButton" onclick="turnOn('durationWithStartup')" id="durationWithStartup">Ideal + Prerequisites</div>
                     <div class="typeButton" onclick="turnOn('durationWithBoth')" id="durationWithBoth">Total Time</div>
-                    <div class="datatypeButton" onclick="togglePrediction()" id="togglePrediction">Prediction</div>
-                    <div class="datatypeButton selected" onclick="toggleDuration()" id="toggleDuration">Duration</div>
+                    <div class="toggleButton" onclick="togglePrediction()" id="togglePrediction">Prediction</div>
                     <input type="button" onclick="toggleDifference()" id="difference" value="Switch View">
                 </div>
                 <div class="graph2dContent">

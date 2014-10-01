@@ -16,7 +16,6 @@ function GenericAgent(id, type) {
   this.timelineDataset = timelineItems;
 
   timelineGroups.add({id:id, content:type + ": " + id, className: 'timelineGroup ' + type});
-  this.delay = 0;
 
   this.availableSubgroups = [0,1,2,3,4,5,6,7,8,9,10];
   this.freeSubgroups = {};

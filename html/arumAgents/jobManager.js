@@ -48,7 +48,6 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
     elapsedTime: 0,
     elapsedTimeWithPause: 0,
     pauseCount: 0,
-    delay: 0,
     endOfDay: false,
     paused: false
   };
@@ -176,7 +175,7 @@ JobManager.prototype.updateDataSetsFinish = function(id, type, time, prediction)
   var predictedTimeLeft = 0;
   if (prediction[field].mean != 0) {
     predictedTimeLeft = prediction[field].mean - elapsedTime;
-    this.getOffsetItem(id, type, time, prediction[field], elapsedTime,updateQuery);
+    this.updatePredictionOnFinish(id, type, time, prediction[field], elapsedTime);
   }
 
   updateQuery.push({
@@ -240,9 +239,7 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
   var predictionExists = prediction[field].mean != 0;
 
   // update the predicted line if the job is not ALREADY pauseds
-  console.log(predictedTimeLeft, predictionExists, this.jobs.id[id].paused)
   if (predictedTimeLeft > 0 && predictionExists == true  && this.jobs.id[id].paused != true) {
-
     updateQuery.push({
       id: id + "_predMean" + this.jobs.id[id].predictionCounter,
       end: time,
@@ -250,15 +247,6 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
       className: 'prediction'
     })
   }
-
-  // update the deficiency line if the job is not ALREADY paused
-  //if (predictedTimeLeft < 0 && predictionExists == true && this.jobs.id[id].paused != true) {
-  //  var offsetItem = this.getOffsetItem(id, type, time, prediction[field], elapsedTime);
-  //  if (offsetItem !== null) {
-  //    updateQuery.push(offsetItem);
-  //  }
-  //}
-
 
   // set the status to paused if needed
   if (operation != 'endOfDay') {
@@ -328,39 +316,12 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
   this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
 };
 
-JobManager.prototype.getOffsetItem = function(id,type,time,prediction,elapsedTime, updateQuery) {
+JobManager.prototype.updatePredictionOnFinish = function(id,type,time,prediction,elapsedTime) {
   if (prediction.mean != 0) {
     var predictedTimeLeft = prediction.mean - elapsedTime;
-    if (predictedTimeLeft < 0) {
-      //offsetItem = {
-      //  id: id + '_prediction_' + this.jobs.id[id].pauseCount,
-      //  start: new Date(time).getTime() + predictedTimeLeft,
-      //  end: new Date(time).getTime(),
-      //  group: this.agent.id,
-      //  subgroup: this.agent.usedSubgroups[type],
-      //  type: 'background',
-      //  className: 'negative'
-      //};
-      //this.jobs.id[id].pauseCount += 1;
-      //offsetItem = null;
-    }
-    else {
+    if (predictedTimeLeft > 0) {
       this.agent.timelineDataset.remove({id: id + "_predMean" + this.jobs.id[id].predictionCounter})
-      //offsetItem = {
-      //  id: id + "_predMean" + this.jobs.id[id].predictionCounter,
-      //    end: time,
-      //    type: 'background',
-      //    group: this.agent.id,
-      //    subgroup: this.agent.usedSubgroups[type],
-      //    className: 'prediction'
-      //}
-      //offsetItem.start = time;
-      //offsetItem.end = new Date(time).getTime() + predictedTimeLeft;
-      //offsetItem.className = 'positive';
     }
-    this.jobs.id[id].delay += predictedTimeLeft;
-    this.agent.delay += predictedTimeLeft;
-    //updateQuery.push(offsetItem);
   }
 };
 
@@ -382,17 +343,6 @@ JobManager.prototype.updateJobs = function(time, skipId) {
         predictionExists = prediction.durationWithPause.mean != 0;
       }
 
-
-      //if (predictedTimeLeft > 0 && predictionExists == true) {
-      //  updateQuery.push({id: jobId + "_predMean" + this.jobs.id[jobId].predictionCounter, end: time, group: this.agent.id, className: 'prediction'})
-      //}
-      //this.jobs.id[jobId].predictionCounter += 1;
-      //if (predictedTimeLeft < 0 && predictionExists == true) {
-      //  var offsetItem = this.getOffsetItem(jobId, type, time, prediction.durationWithPause, this.jobs.id[jobId].elapsedTimeWithPause);
-      //  if (offsetItem !== null) {
-      //    updateQuery.push(offsetItem);
-      //  }
-      //}
       updateQuery.push({id: jobId, end: time, content: type, type: 'range'});
     }
   }
@@ -403,15 +353,13 @@ JobManager.prototype.updateJobs = function(time, skipId) {
 
 JobManager.prototype.generateColors = function(predictedTime, elapsedTime) {
   var ratio = (elapsedTime + predictedTime) / elapsedTime;
-  console.log(ratio)
   if (ratio > 1) {
     ratio = Math.min(1.5,ratio) - 1; // 1.5 -- 1
-    var rgb = HSVToRGB(120/360,(2*ratio)*0.4 + 0.1,1);
+    var rgb = HSVToRGB(94/360,(2*ratio)*0.6 + 0.2,1);
   }
   else {
     ratio = Math.max(0.5,ratio) - 0.5; // 1 -- 0.5
-    var rgb = HSVToRGB(40/360,(1-(2*ratio))*0.4 + 0.1 ,1);
-    //rgb = {r:255,g:255,b:255};
+    var rgb = HSVToRGB(40/360,(1-(2*ratio))*0.6 + 0.1 ,1);
   }
   return "rgb(" + rgb.r + "," + rgb.g + "," + rgb.b + ")";
 }

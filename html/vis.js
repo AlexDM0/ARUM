@@ -1709,7 +1709,6 @@ return /******/ (function(modules) { // webpackBootstrap
         height *= -1;
         y -= height;
       }
-      //y -= 4;
       var rect = exports.getSVGElement('rect',JSONcontainer, svgContainer);
       rect.setAttributeNS(null, "x", x - 0.5 * width);
       rect.setAttributeNS(null, "y", y);
