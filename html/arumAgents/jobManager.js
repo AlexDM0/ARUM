@@ -406,11 +406,11 @@ JobManager.prototype.generateColors = function(predictedTime, elapsedTime) {
   console.log(ratio)
   if (ratio > 1) {
     ratio = Math.min(1.5,ratio) - 1; // 1.5 -- 1
-    var rgb = HSVToRGB(120/360,(2*ratio)*0.3 + 0.1,1);
+    var rgb = HSVToRGB(120/360,(2*ratio)*0.4 + 0.1,1);
   }
   else {
     ratio = Math.max(0.5,ratio) - 0.5; // 1 -- 0.5
-    var rgb = HSVToRGB(30/360,(1-(2*ratio))*0.2 + 0.1 ,1);
+    var rgb = HSVToRGB(40/360,(1-(2*ratio))*0.4 + 0.1 ,1);
     //rgb = {r:255,g:255,b:255};
   }
   return "rgb(" + rgb.r + "," + rgb.g + "," + rgb.b + ")";
