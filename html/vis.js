@@ -4,8 +4,8 @@
  *
  * A dynamic, browser-based visualization library.
  *
- * @version 3.5.0
- * @date    2014-09-30
+ * @version 3.6.2-SNAPSHOT
+ * @date    2014-10-23
  *
  * @license
  * Copyright (C) 2011-2014 Almende B.V, http://almende.com
@@ -81,18 +81,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
   // utils
   exports.util = __webpack_require__(1);
-  exports.DOMutil = __webpack_require__(2);
+  exports.DOMutil = __webpack_require__(3);
 
   // data
-  exports.DataSet = __webpack_require__(3);
+  exports.DataSet = __webpack_require__(2);
   exports.DataView = __webpack_require__(4);
 
   // Graph3d
   exports.Graph3d = __webpack_require__(5);
   exports.graph3d = {
-    Camera: __webpack_require__(6),
+    Camera: __webpack_require__(8),
     Filter: __webpack_require__(7),
-    Point2d: __webpack_require__(8),
+    Point2d: __webpack_require__(6),
     Point3d: __webpack_require__(9),
     Slider: __webpack_require__(10),
     StepNumber: __webpack_require__(11)
@@ -102,43 +102,45 @@ return /******/ (function(modules) { // webpackBootstrap
   exports.Timeline = __webpack_require__(12);
   exports.Graph2d = __webpack_require__(13);
   exports.timeline = {
-    DataStep: __webpack_require__(14),
-    Range: __webpack_require__(15),
-    stack: __webpack_require__(16),
-    TimeStep: __webpack_require__(17),
+    DateUtil: __webpack_require__(14),
+    DataStep: __webpack_require__(15),
+    Range: __webpack_require__(16),
+    stack: __webpack_require__(17),
+    TimeStep: __webpack_require__(18),
 
     components: {
       items: {
-        Item: __webpack_require__(28),
-        BackgroundItem: __webpack_require__(29),
-        BoxItem: __webpack_require__(30),
-        PointItem: __webpack_require__(31),
-        RangeItem: __webpack_require__(32)
+        Item: __webpack_require__(30),
+        BackgroundItem: __webpack_require__(31),
+        BoxItem: __webpack_require__(32),
+        PointItem: __webpack_require__(34),
+        RangeItem: __webpack_require__(33)
       },
 
-      Component: __webpack_require__(18),
-      CurrentTime: __webpack_require__(19),
-      CustomTime: __webpack_require__(20),
-      DataAxis: __webpack_require__(21),
+      Component: __webpack_require__(19),
+      CurrentTime: __webpack_require__(20),
+      CustomTime: __webpack_require__(21),
+      DataAxis: __webpack_require__(25),
       GraphGroup: __webpack_require__(22),
       Group: __webpack_require__(23),
-      ItemSet: __webpack_require__(24),
-      Legend: __webpack_require__(25),
-      LineGraph: __webpack_require__(26),
-      TimeAxis: __webpack_require__(27)
+      BackgroundGroup: __webpack_require__(24),
+      ItemSet: __webpack_require__(26),
+      Legend: __webpack_require__(27),
+      LineGraph: __webpack_require__(28),
+      TimeAxis: __webpack_require__(29)
     }
   };
 
   // Network
-  exports.Network = __webpack_require__(33);
+  exports.Network = __webpack_require__(35);
   exports.network = {
-    Edge: __webpack_require__(34),
-    Groups: __webpack_require__(35),
-    Images: __webpack_require__(36),
-    Node: __webpack_require__(37),
-    Popup: __webpack_require__(38),
-    dotparser: __webpack_require__(39),
-    gephiParser: __webpack_require__(40)
+    Edge: __webpack_require__(36),
+    Groups: __webpack_require__(37),
+    Images: __webpack_require__(38),
+    Node: __webpack_require__(39),
+    Popup: __webpack_require__(40),
+    dotparser: __webpack_require__(41),
+    gephiParser: __webpack_require__(42)
   };
 
   // Deprecated since v3.0.0
@@ -147,8 +149,8 @@ return /******/ (function(modules) { // webpackBootstrap
   };
 
   // bundled external libraries
-  exports.moment = __webpack_require__(41);
-  exports.hammer = __webpack_require__(42);
+  exports.moment = __webpack_require__(44);
+  exports.hammer = __webpack_require__(43);
 
 
 /***/ },
@@ -159,7 +161,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
   // first check if moment.js is already loaded in the browser window, if so,
   // use this instance. Else, load via commonjs.
-  var moment = __webpack_require__(41);
+  var moment = __webpack_require__(44);
 
   /**
    * Test whether given object is a number
@@ -583,7 +585,7 @@ return /******/ (function(modules) { // webpackBootstrap
       if (object instanceof String) {
         return 'String';
       }
-      if (object instanceof Array) {
+      if (Array.isArray(object)) {
         return 'Array';
       }
       if (object instanceof Date) {
@@ -663,7 +665,7 @@ return /******/ (function(modules) { // webpackBootstrap
   exports.forEach = function(object, callback) {
     var i,
         len;
-    if (object instanceof Array) {
+    if (Array.isArray(object)) {
       // array
       for (i = 0, len = object.length; i < len; i++) {
         callback(object[i], i, object);
@@ -1540,186 +1542,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-  // DOM utility methods
-
-  /**
-   * this prepares the JSON container for allocating SVG elements
-   * @param JSONcontainer
-   * @private
-   */
-  exports.prepareElements = function(JSONcontainer) {
-    // cleanup the redundant svgElements;
-    for (var elementType in JSONcontainer) {
-      if (JSONcontainer.hasOwnProperty(elementType)) {
-        JSONcontainer[elementType].redundant = JSONcontainer[elementType].used;
-        JSONcontainer[elementType].used = [];
-      }
-    }
-  };
-
-  /**
-   * this cleans up all the unused SVG elements. By asking for the parentNode, we only need to supply the JSON container from
-   * which to remove the redundant elements.
-   *
-   * @param JSONcontainer
-   * @private
-   */
-  exports.cleanupElements = function(JSONcontainer) {
-    // cleanup the redundant svgElements;
-    for (var elementType in JSONcontainer) {
-      if (JSONcontainer.hasOwnProperty(elementType)) {
-        if (JSONcontainer[elementType].redundant) {
-          for (var i = 0; i < JSONcontainer[elementType].redundant.length; i++) {
-            JSONcontainer[elementType].redundant[i].parentNode.removeChild(JSONcontainer[elementType].redundant[i]);
-          }
-          JSONcontainer[elementType].redundant = [];
-        }
-      }
-    }
-  };
-
-  /**
-   * Allocate or generate an SVG element if needed. Store a reference to it in the JSON container and draw it in the svgContainer
-   * the JSON container and the SVG container have to be supplied so other svg containers (like the legend) can use this.
-   *
-   * @param elementType
-   * @param JSONcontainer
-   * @param svgContainer
-   * @returns {*}
-   * @private
-   */
-  exports.getSVGElement = function (elementType, JSONcontainer, svgContainer) {
-    var element;
-    // allocate SVG element, if it doesnt yet exist, create one.
-    if (JSONcontainer.hasOwnProperty(elementType)) { // this element has been created before
-      // check if there is an redundant element
-      if (JSONcontainer[elementType].redundant.length > 0) {
-        element = JSONcontainer[elementType].redundant[0];
-        JSONcontainer[elementType].redundant.shift();
-      }
-      else {
-        // create a new element and add it to the SVG
-        element = document.createElementNS('http://www.w3.org/2000/svg', elementType);
-        svgContainer.appendChild(element);
-      }
-    }
-    else {
-      // create a new element and add it to the SVG, also create a new object in the svgElements to keep track of it.
-      element = document.createElementNS('http://www.w3.org/2000/svg', elementType);
-      JSONcontainer[elementType] = {used: [], redundant: []};
-      svgContainer.appendChild(element);
-    }
-    JSONcontainer[elementType].used.push(element);
-    return element;
-  };
-
-
-  /**
-   * Allocate or generate an SVG element if needed. Store a reference to it in the JSON container and draw it in the svgContainer
-   * the JSON container and the SVG container have to be supplied so other svg containers (like the legend) can use this.
-   *
-   * @param elementType
-   * @param JSONcontainer
-   * @param DOMContainer
-   * @returns {*}
-   * @private
-   */
-  exports.getDOMElement = function (elementType, JSONcontainer, DOMContainer, insertBefore) {
-    var element;
-    // allocate DOM element, if it doesnt yet exist, create one.
-    if (JSONcontainer.hasOwnProperty(elementType)) { // this element has been created before
-      // check if there is an redundant element
-      if (JSONcontainer[elementType].redundant.length > 0) {
-        element = JSONcontainer[elementType].redundant[0];
-        JSONcontainer[elementType].redundant.shift();
-      }
-      else {
-        // create a new element and add it to the SVG
-        element = document.createElement(elementType);
-        if (insertBefore !== undefined) {
-          DOMContainer.insertBefore(element, insertBefore);
-        }
-        else {
-          DOMContainer.appendChild(element);
-        }
-      }
-    }
-    else {
-      // create a new element and add it to the SVG, also create a new object in the svgElements to keep track of it.
-      element = document.createElement(elementType);
-      JSONcontainer[elementType] = {used: [], redundant: []};
-      if (insertBefore !== undefined) {
-        DOMContainer.insertBefore(element, insertBefore);
-      }
-      else {
-        DOMContainer.appendChild(element);
-      }
-    }
-    JSONcontainer[elementType].used.push(element);
-    return element;
-  };
-
-
-
-
-  /**
-   * draw a point object. this is a seperate function because it can also be called by the legend.
-   * The reason the JSONcontainer and the target SVG svgContainer have to be supplied is so the legend can use these functions
-   * as well.
-   *
-   * @param x
-   * @param y
-   * @param group
-   * @param JSONcontainer
-   * @param svgContainer
-   * @returns {*}
-   */
-  exports.drawPoint = function(x, y, group, JSONcontainer, svgContainer) {
-    var point;
-    if (group.options.drawPoints.style == 'circle') {
-      point = exports.getSVGElement('circle',JSONcontainer,svgContainer);
-      point.setAttributeNS(null, "cx", x);
-      point.setAttributeNS(null, "cy", y);
-      point.setAttributeNS(null, "r", 0.5 * group.options.drawPoints.size);
-      point.setAttributeNS(null, "class", group.className + " point");
-    }
-    else {
-      point = exports.getSVGElement('rect',JSONcontainer,svgContainer);
-      point.setAttributeNS(null, "x", x - 0.5*group.options.drawPoints.size);
-      point.setAttributeNS(null, "y", y - 0.5*group.options.drawPoints.size);
-      point.setAttributeNS(null, "width", group.options.drawPoints.size);
-      point.setAttributeNS(null, "height", group.options.drawPoints.size);
-      point.setAttributeNS(null, "class", group.className + " point");
-    }
-    return point;
-  };
-
-  /**
-   * draw a bar SVG element centered on the X coordinate
-   *
-   * @param x
-   * @param y
-   * @param className
-   */
-  exports.drawBar = function (x, y, width, height, className, JSONcontainer, svgContainer) {
-    if (height != 0) {
-      if (height < 0) {
-        height *= -1;
-        y -= height;
-      }
-      var rect = exports.getSVGElement('rect',JSONcontainer, svgContainer);
-      rect.setAttributeNS(null, "x", x - 0.5 * width);
-      rect.setAttributeNS(null, "y", y);
-      rect.setAttributeNS(null, "width", width);
-      rect.setAttributeNS(null, "height", height);
-      rect.setAttributeNS(null, "class", className);
-    }
-  };
-
-/***/ },
-/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
@@ -2673,11 +2495,191 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+  // DOM utility methods
+
+  /**
+   * this prepares the JSON container for allocating SVG elements
+   * @param JSONcontainer
+   * @private
+   */
+  exports.prepareElements = function(JSONcontainer) {
+    // cleanup the redundant svgElements;
+    for (var elementType in JSONcontainer) {
+      if (JSONcontainer.hasOwnProperty(elementType)) {
+        JSONcontainer[elementType].redundant = JSONcontainer[elementType].used;
+        JSONcontainer[elementType].used = [];
+      }
+    }
+  };
+
+  /**
+   * this cleans up all the unused SVG elements. By asking for the parentNode, we only need to supply the JSON container from
+   * which to remove the redundant elements.
+   *
+   * @param JSONcontainer
+   * @private
+   */
+  exports.cleanupElements = function(JSONcontainer) {
+    // cleanup the redundant svgElements;
+    for (var elementType in JSONcontainer) {
+      if (JSONcontainer.hasOwnProperty(elementType)) {
+        if (JSONcontainer[elementType].redundant) {
+          for (var i = 0; i < JSONcontainer[elementType].redundant.length; i++) {
+            JSONcontainer[elementType].redundant[i].parentNode.removeChild(JSONcontainer[elementType].redundant[i]);
+          }
+          JSONcontainer[elementType].redundant = [];
+        }
+      }
+    }
+  };
+
+  /**
+   * Allocate or generate an SVG element if needed. Store a reference to it in the JSON container and draw it in the svgContainer
+   * the JSON container and the SVG container have to be supplied so other svg containers (like the legend) can use this.
+   *
+   * @param elementType
+   * @param JSONcontainer
+   * @param svgContainer
+   * @returns {*}
+   * @private
+   */
+  exports.getSVGElement = function (elementType, JSONcontainer, svgContainer) {
+    var element;
+    // allocate SVG element, if it doesnt yet exist, create one.
+    if (JSONcontainer.hasOwnProperty(elementType)) { // this element has been created before
+      // check if there is an redundant element
+      if (JSONcontainer[elementType].redundant.length > 0) {
+        element = JSONcontainer[elementType].redundant[0];
+        JSONcontainer[elementType].redundant.shift();
+      }
+      else {
+        // create a new element and add it to the SVG
+        element = document.createElementNS('http://www.w3.org/2000/svg', elementType);
+        svgContainer.appendChild(element);
+      }
+    }
+    else {
+      // create a new element and add it to the SVG, also create a new object in the svgElements to keep track of it.
+      element = document.createElementNS('http://www.w3.org/2000/svg', elementType);
+      JSONcontainer[elementType] = {used: [], redundant: []};
+      svgContainer.appendChild(element);
+    }
+    JSONcontainer[elementType].used.push(element);
+    return element;
+  };
+
+
+  /**
+   * Allocate or generate an SVG element if needed. Store a reference to it in the JSON container and draw it in the svgContainer
+   * the JSON container and the SVG container have to be supplied so other svg containers (like the legend) can use this.
+   *
+   * @param elementType
+   * @param JSONcontainer
+   * @param DOMContainer
+   * @returns {*}
+   * @private
+   */
+  exports.getDOMElement = function (elementType, JSONcontainer, DOMContainer, insertBefore) {
+    var element;
+    // allocate DOM element, if it doesnt yet exist, create one.
+    if (JSONcontainer.hasOwnProperty(elementType)) { // this element has been created before
+      // check if there is an redundant element
+      if (JSONcontainer[elementType].redundant.length > 0) {
+        element = JSONcontainer[elementType].redundant[0];
+        JSONcontainer[elementType].redundant.shift();
+      }
+      else {
+        // create a new element and add it to the SVG
+        element = document.createElement(elementType);
+        if (insertBefore !== undefined) {
+          DOMContainer.insertBefore(element, insertBefore);
+        }
+        else {
+          DOMContainer.appendChild(element);
+        }
+      }
+    }
+    else {
+      // create a new element and add it to the SVG, also create a new object in the svgElements to keep track of it.
+      element = document.createElement(elementType);
+      JSONcontainer[elementType] = {used: [], redundant: []};
+      if (insertBefore !== undefined) {
+        DOMContainer.insertBefore(element, insertBefore);
+      }
+      else {
+        DOMContainer.appendChild(element);
+      }
+    }
+    JSONcontainer[elementType].used.push(element);
+    return element;
+  };
+
+
+
+
+  /**
+   * draw a point object. this is a seperate function because it can also be called by the legend.
+   * The reason the JSONcontainer and the target SVG svgContainer have to be supplied is so the legend can use these functions
+   * as well.
+   *
+   * @param x
+   * @param y
+   * @param group
+   * @param JSONcontainer
+   * @param svgContainer
+   * @returns {*}
+   */
+  exports.drawPoint = function(x, y, group, JSONcontainer, svgContainer) {
+    var point;
+    if (group.options.drawPoints.style == 'circle') {
+      point = exports.getSVGElement('circle',JSONcontainer,svgContainer);
+      point.setAttributeNS(null, "cx", x);
+      point.setAttributeNS(null, "cy", y);
+      point.setAttributeNS(null, "r", 0.5 * group.options.drawPoints.size);
+      point.setAttributeNS(null, "class", group.className + " point");
+    }
+    else {
+      point = exports.getSVGElement('rect',JSONcontainer,svgContainer);
+      point.setAttributeNS(null, "x", x - 0.5*group.options.drawPoints.size);
+      point.setAttributeNS(null, "y", y - 0.5*group.options.drawPoints.size);
+      point.setAttributeNS(null, "width", group.options.drawPoints.size);
+      point.setAttributeNS(null, "height", group.options.drawPoints.size);
+      point.setAttributeNS(null, "class", group.className + " point");
+    }
+    return point;
+  };
+
+  /**
+   * draw a bar SVG element centered on the X coordinate
+   *
+   * @param x
+   * @param y
+   * @param className
+   */
+  exports.drawBar = function (x, y, width, height, className, JSONcontainer, svgContainer) {
+    if (height != 0) {
+      if (height < 0) {
+        height *= -1;
+        y -= height;
+      }
+      var rect = exports.getSVGElement('rect',JSONcontainer, svgContainer);
+      rect.setAttributeNS(null, "x", x - 0.5 * width);
+      rect.setAttributeNS(null, "y", y);
+      rect.setAttributeNS(null, "width", width);
+      rect.setAttributeNS(null, "height", height);
+      rect.setAttributeNS(null, "class", className);
+    }
+  };
+
+/***/ },
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var DataSet = __webpack_require__(3);
+  var DataSet = __webpack_require__(2);
 
   /**
    * DataView
@@ -2982,13 +2984,13 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Emitter = __webpack_require__(50);
-  var DataSet = __webpack_require__(3);
+  var Emitter = __webpack_require__(52);
+  var DataSet = __webpack_require__(2);
   var DataView = __webpack_require__(4);
   var util = __webpack_require__(1);
   var Point3d = __webpack_require__(9);
-  var Point2d = __webpack_require__(8);
-  var Camera = __webpack_require__(6);
+  var Point2d = __webpack_require__(6);
+  var Camera = __webpack_require__(8);
   var Filter = __webpack_require__(7);
   var Slider = __webpack_require__(10);
   var StepNumber = __webpack_require__(11);
@@ -5266,141 +5268,18 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Point3d = __webpack_require__(9);
-
   /**
-   * @class Camera
-   * The camera is mounted on a (virtual) camera arm. The camera arm can rotate
-   * The camera is always looking in the direction of the origin of the arm.
-   * This way, the camera always rotates around one fixed point, the location
-   * of the camera arm.
-   *
-   * Documentation:
-   *   http://en.wikipedia.org/wiki/3D_projection
+   * @prototype Point2d
+   * @param {Number} [x]
+   * @param {Number} [y]
    */
-  Camera = function () {
-    this.armLocation = new Point3d();
-    this.armRotation = {};
-    this.armRotation.horizontal = 0;
-    this.armRotation.vertical = 0;
-    this.armLength = 1.7;
-
-    this.cameraLocation = new Point3d();
-    this.cameraRotation =  new Point3d(0.5*Math.PI, 0, 0);
-
-    this.calculateCameraOrientation();
+  Point2d = function (x, y) {
+    this.x = x !== undefined ? x : 0;
+    this.y = y !== undefined ? y : 0;
   };
 
-  /**
-   * Set the location (origin) of the arm
-   * @param {Number} x  Normalized value of x
-   * @param {Number} y  Normalized value of y
-   * @param {Number} z  Normalized value of z
-   */
-  Camera.prototype.setArmLocation = function(x, y, z) {
-    this.armLocation.x = x;
-    this.armLocation.y = y;
-    this.armLocation.z = z;
+  module.exports = Point2d;
 
-    this.calculateCameraOrientation();
-  };
-
-  /**
-   * Set the rotation of the camera arm
-   * @param {Number} horizontal   The horizontal rotation, between 0 and 2*PI.
-   *                Optional, can be left undefined.
-   * @param {Number} vertical   The vertical rotation, between 0 and 0.5*PI
-   *                if vertical=0.5*PI, the graph is shown from the
-   *                top. Optional, can be left undefined.
-   */
-  Camera.prototype.setArmRotation = function(horizontal, vertical) {
-    if (horizontal !== undefined) {
-      this.armRotation.horizontal = horizontal;
-    }
-
-    if (vertical !== undefined) {
-      this.armRotation.vertical = vertical;
-      if (this.armRotation.vertical < 0) this.armRotation.vertical = 0;
-      if (this.armRotation.vertical > 0.5*Math.PI) this.armRotation.vertical = 0.5*Math.PI;
-    }
-
-    if (horizontal !== undefined || vertical !== undefined) {
-      this.calculateCameraOrientation();
-    }
-  };
-
-  /**
-   * Retrieve the current arm rotation
-   * @return {object}   An object with parameters horizontal and vertical
-   */
-  Camera.prototype.getArmRotation = function() {
-    var rot = {};
-    rot.horizontal = this.armRotation.horizontal;
-    rot.vertical = this.armRotation.vertical;
-
-    return rot;
-  };
-
-  /**
-   * Set the (normalized) length of the camera arm.
-   * @param {Number} length A length between 0.71 and 5.0
-   */
-  Camera.prototype.setArmLength = function(length) {
-    if (length === undefined)
-      return;
-
-    this.armLength = length;
-
-    // Radius must be larger than the corner of the graph,
-    // which has a distance of sqrt(0.5^2+0.5^2) = 0.71 from the center of the
-    // graph
-    if (this.armLength < 0.71) this.armLength = 0.71;
-    if (this.armLength > 5.0) this.armLength = 5.0;
-
-    this.calculateCameraOrientation();
-  };
-
-  /**
-   * Retrieve the arm length
-   * @return {Number} length
-   */
-  Camera.prototype.getArmLength = function() {
-    return this.armLength;
-  };
-
-  /**
-   * Retrieve the camera location
-   * @return {Point3d} cameraLocation
-   */
-  Camera.prototype.getCameraLocation = function() {
-    return this.cameraLocation;
-  };
-
-  /**
-   * Retrieve the camera rotation
-   * @return {Point3d} cameraRotation
-   */
-  Camera.prototype.getCameraRotation = function() {
-    return this.cameraRotation;
-  };
-
-  /**
-   * Calculate the location and rotation of the camera based on the
-   * position and orientation of the camera arm
-   */
-  Camera.prototype.calculateCameraOrientation = function() {
-    // calculate location of the camera
-    this.cameraLocation.x = this.armLocation.x - this.armLength * Math.sin(this.armRotation.horizontal) * Math.cos(this.armRotation.vertical);
-    this.cameraLocation.y = this.armLocation.y - this.armLength * Math.cos(this.armRotation.horizontal) * Math.cos(this.armRotation.vertical);
-    this.cameraLocation.z = this.armLocation.z + this.armLength * Math.sin(this.armRotation.vertical);
-
-    // calculate rotation of the camera
-    this.cameraRotation.x = Math.PI/2 - this.armRotation.vertical;
-    this.cameraRotation.y = 0;
-    this.cameraRotation.z = -this.armRotation.horizontal;
-  };
-
-  module.exports = Camera;
 
 /***/ },
 /* 7 */
@@ -5630,18 +5509,141 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
+  var Point3d = __webpack_require__(9);
+
   /**
-   * @prototype Point2d
-   * @param {Number} [x]
-   * @param {Number} [y]
+   * @class Camera
+   * The camera is mounted on a (virtual) camera arm. The camera arm can rotate
+   * The camera is always looking in the direction of the origin of the arm.
+   * This way, the camera always rotates around one fixed point, the location
+   * of the camera arm.
+   *
+   * Documentation:
+   *   http://en.wikipedia.org/wiki/3D_projection
    */
-  Point2d = function (x, y) {
-    this.x = x !== undefined ? x : 0;
-    this.y = y !== undefined ? y : 0;
+  Camera = function () {
+    this.armLocation = new Point3d();
+    this.armRotation = {};
+    this.armRotation.horizontal = 0;
+    this.armRotation.vertical = 0;
+    this.armLength = 1.7;
+
+    this.cameraLocation = new Point3d();
+    this.cameraRotation =  new Point3d(0.5*Math.PI, 0, 0);
+
+    this.calculateCameraOrientation();
   };
 
-  module.exports = Point2d;
+  /**
+   * Set the location (origin) of the arm
+   * @param {Number} x  Normalized value of x
+   * @param {Number} y  Normalized value of y
+   * @param {Number} z  Normalized value of z
+   */
+  Camera.prototype.setArmLocation = function(x, y, z) {
+    this.armLocation.x = x;
+    this.armLocation.y = y;
+    this.armLocation.z = z;
 
+    this.calculateCameraOrientation();
+  };
+
+  /**
+   * Set the rotation of the camera arm
+   * @param {Number} horizontal   The horizontal rotation, between 0 and 2*PI.
+   *                Optional, can be left undefined.
+   * @param {Number} vertical   The vertical rotation, between 0 and 0.5*PI
+   *                if vertical=0.5*PI, the graph is shown from the
+   *                top. Optional, can be left undefined.
+   */
+  Camera.prototype.setArmRotation = function(horizontal, vertical) {
+    if (horizontal !== undefined) {
+      this.armRotation.horizontal = horizontal;
+    }
+
+    if (vertical !== undefined) {
+      this.armRotation.vertical = vertical;
+      if (this.armRotation.vertical < 0) this.armRotation.vertical = 0;
+      if (this.armRotation.vertical > 0.5*Math.PI) this.armRotation.vertical = 0.5*Math.PI;
+    }
+
+    if (horizontal !== undefined || vertical !== undefined) {
+      this.calculateCameraOrientation();
+    }
+  };
+
+  /**
+   * Retrieve the current arm rotation
+   * @return {object}   An object with parameters horizontal and vertical
+   */
+  Camera.prototype.getArmRotation = function() {
+    var rot = {};
+    rot.horizontal = this.armRotation.horizontal;
+    rot.vertical = this.armRotation.vertical;
+
+    return rot;
+  };
+
+  /**
+   * Set the (normalized) length of the camera arm.
+   * @param {Number} length A length between 0.71 and 5.0
+   */
+  Camera.prototype.setArmLength = function(length) {
+    if (length === undefined)
+      return;
+
+    this.armLength = length;
+
+    // Radius must be larger than the corner of the graph,
+    // which has a distance of sqrt(0.5^2+0.5^2) = 0.71 from the center of the
+    // graph
+    if (this.armLength < 0.71) this.armLength = 0.71;
+    if (this.armLength > 5.0) this.armLength = 5.0;
+
+    this.calculateCameraOrientation();
+  };
+
+  /**
+   * Retrieve the arm length
+   * @return {Number} length
+   */
+  Camera.prototype.getArmLength = function() {
+    return this.armLength;
+  };
+
+  /**
+   * Retrieve the camera location
+   * @return {Point3d} cameraLocation
+   */
+  Camera.prototype.getCameraLocation = function() {
+    return this.cameraLocation;
+  };
+
+  /**
+   * Retrieve the camera rotation
+   * @return {Point3d} cameraRotation
+   */
+  Camera.prototype.getCameraRotation = function() {
+    return this.cameraRotation;
+  };
+
+  /**
+   * Calculate the location and rotation of the camera based on the
+   * position and orientation of the camera arm
+   */
+  Camera.prototype.calculateCameraOrientation = function() {
+    // calculate location of the camera
+    this.cameraLocation.x = this.armLocation.x - this.armLength * Math.sin(this.armRotation.horizontal) * Math.cos(this.armRotation.vertical);
+    this.cameraLocation.y = this.armLocation.y - this.armLength * Math.cos(this.armRotation.horizontal) * Math.cos(this.armRotation.vertical);
+    this.cameraLocation.z = this.armLocation.z + this.armLength * Math.sin(this.armRotation.vertical);
+
+    // calculate rotation of the camera
+    this.cameraRotation.x = Math.PI/2 - this.armRotation.vertical;
+    this.cameraRotation.y = 0;
+    this.cameraRotation.z = -this.armRotation.horizontal;
+  };
+
+  module.exports = Camera;
 
 /***/ },
 /* 9 */
@@ -6236,17 +6238,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Emitter = __webpack_require__(50);
-  var Hammer = __webpack_require__(42);
+  var Emitter = __webpack_require__(52);
+  var Hammer = __webpack_require__(43);
   var util = __webpack_require__(1);
-  var DataSet = __webpack_require__(3);
+  var DataSet = __webpack_require__(2);
   var DataView = __webpack_require__(4);
-  var Range = __webpack_require__(15);
-  var Core = __webpack_require__(43);
-  var TimeAxis = __webpack_require__(27);
-  var CurrentTime = __webpack_require__(19);
-  var CustomTime = __webpack_require__(20);
-  var ItemSet = __webpack_require__(24);
+  var Range = __webpack_require__(16);
+  var Core = __webpack_require__(45);
+  var TimeAxis = __webpack_require__(29);
+  var CurrentTime = __webpack_require__(20);
+  var CustomTime = __webpack_require__(21);
+  var ItemSet = __webpack_require__(26);
 
   /**
    * Create a timeline visualization
@@ -6262,7 +6264,7 @@ return /******/ (function(modules) { // webpackBootstrap
     }
 
     // if the third element is options, the forth is groups (optionally);
-    if (!(groups instanceof Array || groups instanceof DataSet) && groups instanceof Object) {
+    if (!(Array.isArray(groups) || groups instanceof DataSet) && groups instanceof Object) {
       var forthArgument = options;
       options = groups;
       groups = forthArgument;
@@ -6272,7 +6274,7 @@ return /******/ (function(modules) { // webpackBootstrap
     this.defaultOptions = {
       start: null,
       end:   null,
-      amountOfSubgroups:0,
+
       autoResize: true,
 
       orientation: 'bottom',
@@ -6297,6 +6299,7 @@ return /******/ (function(modules) { // webpackBootstrap
         off: this.off.bind(this),
         emit: this.emit.bind(this)
       },
+      hiddenDates: [],
       util: {
         snap: null, // will be specified after TimeAxis is created
         toScreen: me._toScreen.bind(me),
@@ -6550,17 +6553,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Emitter = __webpack_require__(50);
-  var Hammer = __webpack_require__(42);
+  var Emitter = __webpack_require__(52);
+  var Hammer = __webpack_require__(43);
   var util = __webpack_require__(1);
-  var DataSet = __webpack_require__(3);
+  var DataSet = __webpack_require__(2);
   var DataView = __webpack_require__(4);
-  var Range = __webpack_require__(15);
-  var Core = __webpack_require__(43);
-  var TimeAxis = __webpack_require__(27);
-  var CurrentTime = __webpack_require__(19);
-  var CustomTime = __webpack_require__(20);
-  var LineGraph = __webpack_require__(26);
+  var Range = __webpack_require__(16);
+  var Core = __webpack_require__(45);
+  var TimeAxis = __webpack_require__(29);
+  var CurrentTime = __webpack_require__(20);
+  var CustomTime = __webpack_require__(21);
+  var LineGraph = __webpack_require__(28);
 
   /**
    * Create a timeline visualization
@@ -6572,7 +6575,7 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   function Graph2d (container, items, groups, options) {
     // if the third element is options, the forth is groups (optionally);
-    if (!(groups instanceof Array || groups instanceof DataSet) && groups instanceof Object) {
+    if (!(Array.isArray(groups) || groups instanceof DataSet) && groups instanceof Object) {
       var forthArgument = options;
       options = groups;
       groups = forthArgument;
@@ -6607,6 +6610,7 @@ return /******/ (function(modules) { // webpackBootstrap
         off: this.off.bind(this),
         emit: this.emit.bind(this)
       },
+      hiddenDates: [],
       util: {
         snap: null, // will be specified after TimeAxis is created
         toScreen: me._toScreen.bind(me),
@@ -6797,6 +6801,464 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+  /**
+   * Created by Alex on 10/3/2014.
+   */
+  var moment = __webpack_require__(44);
+
+
+  /**
+   * used in Core to convert the options into a volatile variable
+   * 
+   * @param Core
+   */
+  exports.convertHiddenOptions = function(body, hiddenDates) {
+    body.hiddenDates = [];
+    if (hiddenDates) {
+      if (Array.isArray(hiddenDates) == true) {
+        for (var i = 0; i < hiddenDates.length; i++) {
+          if (hiddenDates[i].repeat === undefined) {
+            var dateItem = {};
+            dateItem.start = moment(hiddenDates[i].start).toDate().valueOf();
+            dateItem.end = moment(hiddenDates[i].end).toDate().valueOf();
+            body.hiddenDates.push(dateItem);
+          }
+        }
+        body.hiddenDates.sort(function (a, b) {
+          return a.start - b.start;
+        }); // sort by start time
+      }
+    }
+  };
+
+
+  /**
+   * create new entrees for the repeating hidden dates
+   * @param body
+   * @param hiddenDates
+   */
+  exports.updateHiddenDates = function (body, hiddenDates) {
+    if (hiddenDates && body.domProps.centerContainer.width !== undefined) {
+      exports.convertHiddenOptions(body, hiddenDates);
+
+      var start = moment(body.range.start);
+      var end = moment(body.range.end);
+
+      var totalRange = (body.range.end - body.range.start);
+      var pixelTime = totalRange / body.domProps.centerContainer.width;
+
+      for (var i = 0; i < hiddenDates.length; i++) {
+        if (hiddenDates[i].repeat !== undefined) {
+          var startDate = moment(hiddenDates[i].start);
+          var endDate = moment(hiddenDates[i].end);
+
+          if (startDate._d == "Invalid Date") {
+            throw new Error("Supplied start date is not valid: " + hiddenDates[i].start);
+          }
+          if (endDate._d == "Invalid Date") {
+            throw new Error("Supplied end date is not valid: " + hiddenDates[i].end);
+          }
+
+          var duration = endDate - startDate;
+          if (duration >= 4 * pixelTime) {
+
+            var offset = 0;
+            var runUntil = end.clone();
+            switch (hiddenDates[i].repeat) {
+              case "daily": // case of time
+                if (startDate.day() != endDate.day()) {
+                  offset = 1;
+                }
+                startDate.dayOfYear(start.dayOfYear());
+                startDate.year(start.year());
+                startDate.subtract(7,'days');
+
+                endDate.dayOfYear(start.dayOfYear());
+                endDate.year(start.year());
+                endDate.subtract(7 - offset,'days');
+
+                runUntil.add(1, 'weeks');
+                break;
+              case "weekly":
+                var dayOffset = endDate.diff(startDate,'days')
+                var day = startDate.day();
+
+                // set the start date to the range.start
+                startDate.date(start.date());
+                startDate.month(start.month());
+                startDate.year(start.year());
+                endDate = startDate.clone();
+
+                // force
+                startDate.day(day);
+                endDate.day(day);
+                endDate.add(dayOffset,'days');
+
+                startDate.subtract(1,'weeks');
+                endDate.subtract(1,'weeks');
+
+                runUntil.add(1, 'weeks');
+                break
+              case "monthly":
+                if (startDate.month() != endDate.month()) {
+                  offset = 1;
+                }
+                startDate.month(start.month());
+                startDate.year(start.year());
+                startDate.subtract(1,'months');
+
+                endDate.month(start.month());
+                endDate.year(start.year());
+                endDate.subtract(1,'months');
+                endDate.add(offset,'months');
+
+                runUntil.add(1, 'months');
+                break;
+              case "yearly":
+                if (startDate.year() != endDate.year()) {
+                  offset = 1;
+                }
+                startDate.year(start.year());
+                startDate.subtract(1,'years');
+                endDate.year(start.year());
+                endDate.subtract(1,'years');
+                endDate.add(offset,'years');
+
+                runUntil.add(1, 'years');
+                break;
+              default:
+                console.log("Wrong repeat format, allowed are: daily, weekly, monthly, yearly. Given:", hiddenDates[i].repeat);
+                return;
+            }
+            while (startDate < runUntil) {
+              body.hiddenDates.push({start: startDate.valueOf(), end: endDate.valueOf()});
+              switch (hiddenDates[i].repeat) {
+                case "daily":
+                  startDate.add(1, 'days');
+                  endDate.add(1, 'days');
+                  break;
+                case "weekly":
+                  startDate.add(1, 'weeks');
+                  endDate.add(1, 'weeks');
+                  break
+                case "monthly":
+                  startDate.add(1, 'months');
+                  endDate.add(1, 'months');
+                  break;
+                case "yearly":
+                  startDate.add(1, 'y');
+                  endDate.add(1, 'y');
+                  break;
+                default:
+                  console.log("Wrong repeat format, allowed are: daily, weekly, monthly, yearly. Given:", hiddenDates[i].repeat);
+                  return;
+              }
+            }
+            body.hiddenDates.push({start: startDate.valueOf(), end: endDate.valueOf()});
+          }
+        }
+      }
+      // remove duplicates, merge where possible
+      exports.removeDuplicates(body);
+      // ensure the new positions are not on hidden dates
+      var startHidden = exports.isHidden(body.range.start, body.hiddenDates);
+      var endHidden = exports.isHidden(body.range.end,body.hiddenDates);
+      var rangeStart = body.range.start;
+      var rangeEnd = body.range.end;
+      if (startHidden.hidden == true) {rangeStart = body.range.startToFront == true ? startHidden.startDate - 1 : startHidden.endDate + 1;}
+      if (endHidden.hidden == true)   {rangeEnd   = body.range.endToFront == true ?   endHidden.startDate - 1   : endHidden.endDate + 1;}
+      if (startHidden.hidden == true || endHidden.hidden == true) {
+        body.range._applyRange(rangeStart, rangeEnd);
+      }
+    }
+
+  }
+
+
+  /**
+   * remove duplicates from the hidden dates list. Duplicates are evil. They mess everything up.
+   * Scales with N^2
+   * @param body
+   */
+  exports.removeDuplicates = function(body) {
+    var hiddenDates = body.hiddenDates;
+    var safeDates = [];
+    for (var i = 0; i < hiddenDates.length; i++) {
+      for (var j = 0; j < hiddenDates.length; j++) {
+        if (i != j && hiddenDates[j].remove != true && hiddenDates[i].remove != true) {
+          // j inside i
+          if (hiddenDates[j].start >= hiddenDates[i].start && hiddenDates[j].end <= hiddenDates[i].end) {
+            hiddenDates[j].remove = true;
+          }
+          // j start inside i
+          else if (hiddenDates[j].start >= hiddenDates[i].start && hiddenDates[j].start <= hiddenDates[i].end) {
+            hiddenDates[i].end = hiddenDates[j].end;
+            hiddenDates[j].remove = true;
+          }
+          // j end inside i
+          else if (hiddenDates[j].end >= hiddenDates[i].start && hiddenDates[j].end <= hiddenDates[i].end) {
+            hiddenDates[i].start = hiddenDates[j].start;
+            hiddenDates[j].remove = true;
+          }
+        }
+      }
+    }
+
+    for (var i = 0; i < hiddenDates.length; i++) {
+      if (hiddenDates[i].remove !== true) {
+        safeDates.push(hiddenDates[i]);
+      }
+    }
+
+    body.hiddenDates = safeDates;
+    body.hiddenDates.sort(function (a, b) {
+      return a.start - b.start;
+    }); // sort by start time
+  }
+
+  exports.printDates = function(dates) {
+    for (var i =0; i < dates.length; i++) {
+      console.log(i, new Date(dates[i].start),new Date(dates[i].end), dates[i].start, dates[i].end, dates[i].remove);
+    }
+  }
+
+  /**
+   * Used in TimeStep to avoid the hidden times.
+   * @param timeStep
+   * @param previousTime
+   */
+  exports.stepOverHiddenDates = function(timeStep, previousTime) {
+    var stepInHidden = false;
+    var currentValue = timeStep.current.valueOf();
+    for (var i = 0; i < timeStep.hiddenDates.length; i++) {
+      var startDate = timeStep.hiddenDates[i].start;
+      var endDate = timeStep.hiddenDates[i].end;
+      if (currentValue >= startDate && currentValue < endDate) {
+        stepInHidden = true;
+        break;
+      }
+    }
+
+    if (stepInHidden == true && currentValue < timeStep._end.valueOf() && currentValue != previousTime) {
+      var prevValue = moment(previousTime);
+      var newValue = moment(endDate);
+      //check if the next step should be major
+      if (prevValue.year() != newValue.year()) {timeStep.switchedYear = true;}
+      else if (prevValue.month() != newValue.month()) {timeStep.switchedMonth = true;}
+      else if (prevValue.dayOfYear() != newValue.dayOfYear()) {timeStep.switchedDay = true;}
+
+      timeStep.current = newValue.toDate();
+    }
+  };
+
+
+  /**
+   * Used in TimeStep to avoid the hidden times.
+   * @param timeStep
+   * @param previousTime
+   */
+  exports.checkFirstStep = function(timeStep) {
+    var stepInHidden = false;
+    var currentValue = timeStep.current.valueOf();
+    for (var i = 0; i < timeStep.hiddenDates.length; i++) {
+      var startDate = timeStep.hiddenDates[i].start;
+      var endDate = timeStep.hiddenDates[i].end;
+      if (currentValue >= startDate && currentValue < endDate) {
+        stepInHidden = true;
+        break;
+      }
+    }
+
+    if (stepInHidden == true && currentValue <= timeStep._end.valueOf()) {
+      var newValue = moment(endDate);
+      timeStep.current = newValue.toDate();
+    }
+  };
+
+  /**
+   * replaces the Core toScreen methods
+   * @param Core
+   * @param time
+   * @param width
+   * @returns {number}
+   */
+  exports.toScreen = function(Core, time, width) {
+    var hidden = exports.isHidden(time, Core.body.hiddenDates)
+    if (hidden.hidden == true) {
+      time = hidden.startDate;
+    }
+
+    var duration = exports.getHiddenDurationBetween(Core.body.hiddenDates, Core.range.start, Core.range.end);
+    time = exports.correctTimeForHidden(Core.body.hiddenDates, Core.range, time);
+
+    var conversion = Core.range.conversion(width, duration);
+    return (time.valueOf() - conversion.offset) * conversion.scale;
+  };
+
+
+  /**
+   * Replaces the core toTime methods
+   * @param body
+   * @param range
+   * @param x
+   * @param width
+   * @returns {Date}
+   */
+  exports.toTime = function(body, range, x, width) {
+    var hiddenDuration = exports.getHiddenDurationBetween(body.hiddenDates, range.start, range.end);
+    var totalDuration = range.end - range.start - hiddenDuration;
+    var partialDuration = totalDuration * x / width;
+    var accumulatedHiddenDuration = exports.getAccumulatedHiddenDuration(body.hiddenDates,range, partialDuration);
+
+    var newTime = new Date(accumulatedHiddenDuration + partialDuration + range.start);
+    return newTime;
+  };
+
+
+  /**
+   * Support function
+   *
+   * @param hiddenDates
+   * @param range
+   * @returns {number}
+   */
+  exports.getHiddenDurationBetween = function(hiddenDates, start, end) {
+    var duration = 0;
+    for (var i = 0; i < hiddenDates.length; i++) {
+      var startDate = hiddenDates[i].start;
+      var endDate = hiddenDates[i].end;
+      // if time after the cutout, and the
+      if (startDate >= start && endDate < end) {
+        duration += endDate - startDate;
+      }
+    }
+    return duration;
+  };
+
+
+  /**
+   * Support function
+   * @param hiddenDates
+   * @param range
+   * @param time
+   * @returns {{duration: number, time: *, offset: number}}
+   */
+  exports.correctTimeForHidden = function(hiddenDates, range, time) {
+    time = moment(time).toDate().valueOf();
+    time -= exports.getHiddenDurationBefore(hiddenDates,range,time);
+    return time;
+  };
+
+  exports.getHiddenDurationBefore = function(hiddenDates, range, time) {
+    var timeOffset = 0;
+    time = moment(time).toDate().valueOf();
+
+    for (var i = 0; i < hiddenDates.length; i++) {
+      var startDate = hiddenDates[i].start;
+      var endDate = hiddenDates[i].end;
+      // if time after the cutout, and the
+      if (startDate >= range.start && endDate < range.end) {
+        if (time >= endDate) {
+          timeOffset += (endDate - startDate);
+        }
+      }
+    }
+    return timeOffset;
+  }
+
+  /**
+   * sum the duration from start to finish, including the hidden duration,
+   * until the required amount has been reached, return the accumulated hidden duration
+   * @param hiddenDates
+   * @param range
+   * @param time
+   * @returns {{duration: number, time: *, offset: number}}
+   */
+  exports.getAccumulatedHiddenDuration = function(hiddenDates, range, requiredDuration) {
+    var hiddenDuration = 0;
+    var duration = 0;
+    var previousPoint = range.start;
+    //exports.printDates(hiddenDates)
+    for (var i = 0; i < hiddenDates.length; i++) {
+      var startDate = hiddenDates[i].start;
+      var endDate = hiddenDates[i].end;
+      // if time after the cutout, and the
+      if (startDate >= range.start && endDate < range.end) {
+        duration += startDate - previousPoint;
+        previousPoint = endDate;
+        if (duration >= requiredDuration) {
+          break;
+        }
+        else {
+          hiddenDuration += endDate - startDate;
+        }
+      }
+    }
+
+    return hiddenDuration;
+  };
+
+
+
+  /**
+   * used to step over to either side of a hidden block. Correction is disabled on tablets, might be set to true
+   * @param hiddenDates
+   * @param time
+   * @param direction
+   * @param correctionEnabled
+   * @returns {*}
+   */
+  exports.snapAwayFromHidden = function(hiddenDates, time, direction, correctionEnabled) {
+    var isHidden = exports.isHidden(time, hiddenDates);
+    if (isHidden.hidden == true) {
+      if (direction < 0) {
+        if (correctionEnabled == true) {
+          return isHidden.startDate - (isHidden.endDate - time) - 1;
+        }
+        else {
+          return isHidden.startDate - 1;
+        }
+      }
+      else {
+        if (correctionEnabled == true) {
+          return isHidden.endDate + (time - isHidden.startDate) + 1;
+        }
+        else {
+          return isHidden.endDate + 1;
+        }
+      }
+    }
+    else {
+      return time;
+    }
+
+  }
+
+
+  /**
+   * Check if a time is hidden
+   *
+   * @param time
+   * @param hiddenDates
+   * @returns {{hidden: boolean, startDate: Window.start, endDate: *}}
+   */
+  exports.isHidden = function(time, hiddenDates) {
+    for (var i = 0; i < hiddenDates.length; i++) {
+      var startDate = hiddenDates[i].start;
+      var endDate = hiddenDates[i].end;
+
+      if (time >= startDate && time < endDate) { // if the start is entering a hidden zone
+        return {hidden: true, startDate: startDate, endDate: endDate};
+        break;
+      }
+    }
+    return {hidden: false, startDate: startDate, endDate: endDate};
+  }
+
+/***/ },
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -7024,13 +7486,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var hammerUtil = __webpack_require__(44);
-  var moment = __webpack_require__(41);
-  var Component = __webpack_require__(18);
+  var hammerUtil = __webpack_require__(47);
+  var moment = __webpack_require__(44);
+  var Component = __webpack_require__(19);
+  var DateUtil = __webpack_require__(14);
 
   /**
    * @constructor Range
@@ -7046,6 +7509,10 @@ return /******/ (function(modules) { // webpackBootstrap
     this.end = now.clone().add(4, 'days').valueOf();   // Number
 
     this.body = body;
+    this.deltaDifference = 0;
+    this.scaleOffset = 0;
+    this.startToFront = false;
+    this.endToFront = true;
 
     // default options
     this.defaultOptions = {
@@ -7106,7 +7573,7 @@ return /******/ (function(modules) { // webpackBootstrap
   Range.prototype.setOptions = function (options) {
     if (options) {
       // copy the options that we know
-      var fields = ['direction', 'min', 'max', 'zoomMin', 'zoomMax', 'moveable', 'zoomable', 'activate'];
+      var fields = ['direction', 'min', 'max', 'zoomMin', 'zoomMax', 'moveable', 'zoomable', 'activate', 'hiddenDates'];
       util.selectiveExtend(fields, this.options, options);
 
       if ('start' in options || 'end' in options) {
@@ -7141,7 +7608,6 @@ return /******/ (function(modules) { // webpackBootstrap
   Range.prototype.setRange = function(start, end, animate) {
     var _start = start != undefined ? util.convert(start, 'Date').valueOf() : null;
     var _end   = end != undefined   ? util.convert(end, 'Date').valueOf()   : null;
-
     this._cancelAnimation();
 
     if (animate) {
@@ -7161,6 +7627,7 @@ return /******/ (function(modules) { // webpackBootstrap
           var e = (done || _end === null)   ? _end   : util.easeInOutQuad(time, initEnd, _end, duration);
 
           changed = me._applyRange(s, e);
+          DateUtil.updateHiddenDates(me.body, me.options.hiddenDates);
           anyChanged = anyChanged || changed;
           if (changed) {
             me.body.emitter.emit('rangechange', {start: new Date(me.start), end: new Date(me.end)});
@@ -7183,6 +7650,7 @@ return /******/ (function(modules) { // webpackBootstrap
     }
     else {
       var changed = this._applyRange(_start, _end);
+      DateUtil.updateHiddenDates(this.body, this.options.hiddenDates);
       if (changed) {
         var params = {start: new Date(this.start), end: new Date(this.end)};
         this.body.emitter.emit('rangechange', params);
@@ -7309,7 +7777,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
     this.start = newStart;
     this.end = newEnd;
-
     return changed;
   };
 
@@ -7330,8 +7797,8 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {Number} width
    * @returns {{offset: number, scale: number}} conversion
    */
-  Range.prototype.conversion = function (width) {
-    return Range.conversion(this.start, this.end, width);
+  Range.prototype.conversion = function (width, totalHidden) {
+    return Range.conversion(this.start, this.end, width, totalHidden);
   };
 
   /**
@@ -7342,11 +7809,14 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {Number} width
    * @returns {{offset: number, scale: number}} conversion
    */
-  Range.conversion = function (start, end, width) {
+  Range.conversion = function (start, end, width, totalHidden) {
+    if (totalHidden === undefined) {
+      totalHidden = 0;
+    }
     if (width != 0 && (end - start != 0)) {
       return {
         offset: start,
-        scale: width / (end - start)
+        scale: width / (end - start - totalHidden)
       }
     }
     else {
@@ -7363,6 +7833,8 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   Range.prototype._onDragStart = function(event) {
+    this.deltaDifference = 0;
+    this.previousDelta = 0;
     // only allow dragging when configured as movable
     if (!this.options.moveable) return;
 
@@ -7387,18 +7859,40 @@ return /******/ (function(modules) { // webpackBootstrap
   Range.prototype._onDrag = function (event) {
     // only allow dragging when configured as movable
     if (!this.options.moveable) return;
-    var direction = this.options.direction;
-    validateDirection(direction);
-
     // refuse to drag when we where pinching to prevent the timeline make a jump
     // when releasing the fingers in opposite order from the touch screen
     if (!this.props.touch.allowDragging) return;
 
+    var direction = this.options.direction;
+    validateDirection(direction);
+
     var delta = (direction == 'horizontal') ? event.gesture.deltaX : event.gesture.deltaY;
+    delta -= this.deltaDifference;
     var interval = (this.props.touch.end - this.props.touch.start);
+
+    // normalize dragging speed if cutout is in between.
+    var duration = DateUtil.getHiddenDurationBetween(this.body.hiddenDates, this.start, this.end);
+    interval -= duration;
+
     var width = (direction == 'horizontal') ? this.body.domProps.center.width : this.body.domProps.center.height;
     var diffRange = -delta / width * interval;
-    this._applyRange(this.props.touch.start + diffRange, this.props.touch.end + diffRange);
+    var newStart = this.props.touch.start + diffRange;
+    var newEnd = this.props.touch.end + diffRange;
+
+
+    // snapping times away from hidden zones
+    var safeStart = DateUtil.snapAwayFromHidden(this.body.hiddenDates, newStart, this.previousDelta-delta, true);
+    var safeEnd = DateUtil.snapAwayFromHidden(this.body.hiddenDates, newEnd, this.previousDelta-delta, true);
+    if (safeStart != newStart || safeEnd != newEnd) {
+      this.deltaDifference += delta;
+      this.props.touch.start = safeStart;
+      this.props.touch.end = safeEnd;
+      this._onDrag(event);
+      return;
+    }
+
+    this.previousDelta = delta;
+    this._applyRange(newStart, newEnd);
 
     // fire a rangechange event
     this.body.emitter.emit('rangechange', {
@@ -7473,7 +7967,7 @@ return /******/ (function(modules) { // webpackBootstrap
           pointer = getPointer(gesture.center, this.body.dom.center),
           pointerDate = this._pointerToDate(pointer);
 
-      this.zoom(scale, pointerDate);
+      this.zoom(scale, pointerDate, delta);
     }
 
     // Prevent default actions caused by mouse wheel
@@ -7490,6 +7984,8 @@ return /******/ (function(modules) { // webpackBootstrap
     this.props.touch.end = this.end;
     this.props.touch.allowDragging = true;
     this.props.touch.center = null;
+    this.scaleOffset = 0;
+    this.deltaDifference = 0;
   };
 
   /**
@@ -7516,15 +8012,35 @@ return /******/ (function(modules) { // webpackBootstrap
         this.props.touch.center = getPointer(event.gesture.center, this.body.dom.center);
       }
 
-      var scale = 1 / event.gesture.scale,
-          initDate = this._pointerToDate(this.props.touch.center);
+      var scale = 1 / (event.gesture.scale + this.scaleOffset);
+      var center = this._pointerToDate(this.props.touch.center);
+
+      var hiddenDuration = DateUtil.getHiddenDurationBetween(this.body.hiddenDates, this.start, this.end);
+      var hiddenDurationBefore = DateUtil.getHiddenDurationBefore(this.body.hiddenDates, this, center);
+      var hiddenDurationAfter = hiddenDuration - hiddenDurationBefore;
 
       // calculate new start and end
-      var newStart = parseInt(initDate + (this.props.touch.start - initDate) * scale);
-      var newEnd = parseInt(initDate + (this.props.touch.end - initDate) * scale);
+      var newStart = (center-hiddenDurationBefore) + (this.start - (center-hiddenDurationBefore)) * scale;
+      var newEnd   = (center+hiddenDurationAfter) + (this.end - (center+hiddenDurationAfter)) * scale;
 
-      // apply new range
+      // snapping times away from hidden zones
+      this.startToFront = 1 - scale > 0 ? false : true; // used to do the right autocorrection with periodic hidden times
+      this.endToFront   = scale - 1 > 0 ? false : true; // used to do the right autocorrection with periodic hidden times
+
+      var safeStart = DateUtil.snapAwayFromHidden(this.body.hiddenDates, newStart, 1 - scale, true);
+      var safeEnd = DateUtil.snapAwayFromHidden(this.body.hiddenDates, newEnd, scale - 1, true);
+      if (safeStart != newStart || safeEnd != newEnd) {
+        this.props.touch.start = safeStart;
+        this.props.touch.end = safeEnd;
+        this.scaleOffset = 1 - event.gesture.scale;
+        newStart = safeStart;
+        newEnd = safeEnd;
+      }
+
       this.setRange(newStart, newEnd);
+
+      this.startToFront = false; // revert to default
+      this.endToFront = true; // revert to default
     }
   };
 
@@ -7541,9 +8057,7 @@ return /******/ (function(modules) { // webpackBootstrap
     validateDirection(direction);
 
     if (direction == 'horizontal') {
-      var width = this.body.domProps.center.width;
-      conversion = this.conversion(width);
-      return pointer.x / conversion.scale + conversion.offset;
+      return this.body.util.toTime(pointer.x).valueOf();
     }
     else {
       var height = this.body.domProps.center.height;
@@ -7576,18 +8090,37 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {Number} [center]   Value representing a date around which will
    *                            be zoomed.
    */
-  Range.prototype.zoom = function(scale, center) {
+  Range.prototype.zoom = function(scale, center, delta) {
     // if centerDate is not provided, take it half between start Date and end Date
     if (center == null) {
       center = (this.start + this.end) / 2;
     }
 
+    var hiddenDuration = DateUtil.getHiddenDurationBetween(this.body.hiddenDates, this.start, this.end);
+    var hiddenDurationBefore = DateUtil.getHiddenDurationBefore(this.body.hiddenDates, this, center);
+    var hiddenDurationAfter = hiddenDuration - hiddenDurationBefore;
+
     // calculate new start and end
-    var newStart = center + (this.start - center) * scale;
-    var newEnd = center + (this.end - center) * scale;
+    var newStart = (center-hiddenDurationBefore) + (this.start - (center-hiddenDurationBefore)) * scale;
+    var newEnd   = (center+hiddenDurationAfter) + (this.end - (center+hiddenDurationAfter)) * scale;
+
+    // snapping times away from hidden zones
+    this.startToFront = delta > 0 ? false : true; // used to do the right autocorrection with periodic hidden times
+    this.endToFront = -delta  > 0 ? false : true; // used to do the right autocorrection with periodic hidden times
+    var safeStart = DateUtil.snapAwayFromHidden(this.body.hiddenDates, newStart, delta, true);
+    var safeEnd = DateUtil.snapAwayFromHidden(this.body.hiddenDates, newEnd, -delta, true);
+    if (safeStart != newStart || safeEnd != newEnd) {
+      newStart = safeStart;
+      newEnd = safeEnd;
+    }
 
     this.setRange(newStart, newEnd);
+
+    this.startToFront = false; // revert to default
+    this.endToFront = true; // revert to default
   };
+
+
 
   /**
    * Move the range with a given delta to the left or right. Start and end
@@ -7629,7 +8162,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
   // Utility functions for ordering and stacking of items
@@ -7683,7 +8216,7 @@ return /******/ (function(modules) { // webpackBootstrap
     // calculate new, non-overlapping positions
     for (i = 0, iMax = items.length; i < iMax; i++) {
       var item = items[i];
-      if (item.top === null) {
+      if (item.stack && item.top === null) {
         // initialize top position
         item.top = margin.axis;
 
@@ -7693,7 +8226,7 @@ return /******/ (function(modules) { // webpackBootstrap
           var collidingItem = null;
           for (var j = 0, jj = items.length; j < jj; j++) {
             var other = items[j];
-            if (other.top !== null && other !== item && other.ignoreStacking == false && exports.collision(item, other, margin.item)) {
+            if (other.top !== null && other !== item && other.stack && exports.collision(item, other, margin.item)) {
               collidingItem = other;
               break;
             }
@@ -7709,7 +8242,6 @@ return /******/ (function(modules) { // webpackBootstrap
   };
 
 
-
   /**
    * Adjust vertical positions of the items without stacking them
    * @param {Item[]} items
@@ -7717,14 +8249,21 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {{item: {horizontal: number, vertical: number}, axis: number}} margin
    *            Margins between items and between items and the axis.
    */
-  exports.nostack = function(items, margin) {
-    var i, iMax;
+  exports.nostack = function(items, margin, subgroups) {
+    var i, iMax, newTop;
 
     // reset top position of all items
     for (i = 0, iMax = items.length; i < iMax; i++) {
       if (items[i].data.subgroup !== undefined) {
-        //console.log(items[i].top, items[i].height, margin.item.vertical, items[i].data.subgroup)
-        items[i].top = margin.axis + (40) * items[i].data.subgroup;
+        newTop = margin.axis;
+        for (var subgroup in subgroups) {
+          if (subgroups.hasOwnProperty(subgroup)) {
+            if (subgroups[subgroup].visible == true && subgroups[subgroup].index < subgroups[items[i].data.subgroup].index) {
+              newTop += subgroups[subgroup].height + margin.item.vertical;
+            }
+          }
+        }
+        items[i].top = newTop;
       }
       else {
         items[i].top = margin.axis;
@@ -7751,10 +8290,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var moment = __webpack_require__(41);
+  var moment = __webpack_require__(44);
+  var DateUtil = __webpack_require__(14);
 
   /**
    * @constructor  TimeStep
@@ -7782,7 +8322,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {Date} [end]           The end date
    * @param {Number} [minimumStep] Optional. Minimum step size in milliseconds
    */
-  function TimeStep(start, end, minimumStep) {
+  function TimeStep(start, end, minimumStep, hiddenDates) {
     // variables
     this.current = new Date();
     this._start = new Date();
@@ -7794,6 +8334,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
     // initialize the range
     this.setRange(start, end, minimumStep);
+
+    // hidden Dates options
+    this.switchedDay = false;
+    this.switchedMonth = false;
+    this.switchedYear = false;
+    this.hiddenDates = hiddenDates;
+    if (hiddenDates === undefined) {
+      this.hiddenDates = [];
+    }
   }
 
   /// enum scale
@@ -7946,6 +8495,8 @@ return /******/ (function(modules) { // webpackBootstrap
     if (this.current.valueOf() == prev) {
       this.current = new Date(this._end.valueOf());
     }
+
+    DateUtil.stepOverHiddenDates(this, prev);
   };
 
 
@@ -7997,6 +8548,8 @@ return /******/ (function(modules) { // webpackBootstrap
     if (minimumStep == undefined) {
       return;
     }
+
+    //var b = asc + ds;
 
     var stepYear       = (1000 * 60 * 60 * 24 * 30 * 12);
     var stepMonth      = (1000 * 60 * 60 * 24 * 30);
@@ -8150,6 +8703,49 @@ return /******/ (function(modules) { // webpackBootstrap
    * @return {boolean} true if current date is major, else false.
    */
   TimeStep.prototype.isMajor = function() {
+    if (this.switchedYear == true) {
+      this.switchedYear = false;
+      switch (this.scale) {
+        case TimeStep.SCALE.YEAR:
+        case TimeStep.SCALE.MONTH:
+        case TimeStep.SCALE.WEEKDAY:
+        case TimeStep.SCALE.DAY:
+        case TimeStep.SCALE.HOUR:
+        case TimeStep.SCALE.MINUTE:
+        case TimeStep.SCALE.SECOND:
+        case TimeStep.SCALE.MILLISECOND:
+          return true;
+        default:
+          return false;
+      }
+    }
+    else if (this.switchedMonth == true) {
+      this.switchedMonth = false;
+      switch (this.scale) {
+        case TimeStep.SCALE.WEEKDAY:
+        case TimeStep.SCALE.DAY:
+        case TimeStep.SCALE.HOUR:
+        case TimeStep.SCALE.MINUTE:
+        case TimeStep.SCALE.SECOND:
+        case TimeStep.SCALE.MILLISECOND:
+          return true;
+        default:
+          return false;
+      }
+    }
+    else if (this.switchedDay == true) {
+      this.switchedDay = false;
+      switch (this.scale) {
+        case TimeStep.SCALE.MILLISECOND:
+        case TimeStep.SCALE.SECOND:
+        case TimeStep.SCALE.MINUTE:
+        case TimeStep.SCALE.HOUR:
+          return true;
+        default:
+          return false;
+      }
+    }
+
     switch (this.scale) {
       case TimeStep.SCALE.MILLISECOND:
         return (this.current.getMilliseconds() == 0);
@@ -8157,7 +8753,6 @@ return /******/ (function(modules) { // webpackBootstrap
         return (this.current.getSeconds() == 0);
       case TimeStep.SCALE.MINUTE:
         return (this.current.getHours() == 0) && (this.current.getMinutes() == 0);
-      // Note: this is no bug. Major label is equal for both minute and hour scale
       case TimeStep.SCALE.HOUR:
         return (this.current.getHours() == 0);
       case TimeStep.SCALE.WEEKDAY: // intentional fall through
@@ -8227,7 +8822,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -8287,13 +8882,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var Component = __webpack_require__(18);
-  var moment = __webpack_require__(41);
-  var locales = __webpack_require__(45);
+  var Component = __webpack_require__(19);
+  var moment = __webpack_require__(44);
+  var locales = __webpack_require__(46);
 
   /**
    * A current time bar
@@ -8456,14 +9051,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(42);
+  var Hammer = __webpack_require__(43);
   var util = __webpack_require__(1);
-  var Component = __webpack_require__(18);
-  var moment = __webpack_require__(41);
-  var locales = __webpack_require__(45);
+  var Component = __webpack_require__(19);
+  var moment = __webpack_require__(44);
+  var locales = __webpack_require__(46);
 
   /**
    * A custom time bar
@@ -8658,13 +9253,729 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var DOMutil = __webpack_require__(2);
-  var Component = __webpack_require__(18);
-  var DataStep = __webpack_require__(14);
+  var DOMutil = __webpack_require__(3);
+
+  /**
+   * @constructor Group
+   * @param {Number | String} groupId
+   * @param {Object} data
+   * @param {ItemSet} itemSet
+   */
+  function GraphGroup (group, groupId, options, groupsUsingDefaultStyles) {
+    this.id = groupId;
+    var fields = ['sampling','style','sort','yAxisOrientation','barChart','drawPoints','shaded','catmullRom']
+    this.options = util.selectiveBridgeObject(fields,options);
+    this.usingDefaultStyle = group.className === undefined;
+    this.groupsUsingDefaultStyles = groupsUsingDefaultStyles;
+    this.zeroPosition = 0;
+    this.update(group);
+    if (this.usingDefaultStyle == true) {
+      this.groupsUsingDefaultStyles[0] += 1;
+    }
+    this.itemsData = [];
+    this.visible = group.visible === undefined ? true : group.visible;
+  }
+
+  GraphGroup.prototype.setItems = function(items) {
+    if (items != null) {
+      this.itemsData = items;
+      if (this.options.sort == true) {
+        this.itemsData.sort(function (a,b) {return a.x - b.x;})
+      }
+    }
+    else {
+      this.itemsData = [];
+    }
+  };
+
+  GraphGroup.prototype.setZeroPosition = function(pos) {
+    this.zeroPosition = pos;
+  };
+
+  GraphGroup.prototype.setOptions = function(options) {
+    if (options !== undefined) {
+      var fields = ['sampling','style','sort','yAxisOrientation','barChart'];
+      util.selectiveDeepExtend(fields, this.options, options);
+
+      util.mergeOptions(this.options, options,'catmullRom');
+      util.mergeOptions(this.options, options,'drawPoints');
+      util.mergeOptions(this.options, options,'shaded');
+
+      if (options.catmullRom) {
+        if (typeof options.catmullRom == 'object') {
+          if (options.catmullRom.parametrization) {
+            if (options.catmullRom.parametrization == 'uniform') {
+              this.options.catmullRom.alpha = 0;
+            }
+            else if (options.catmullRom.parametrization == 'chordal') {
+              this.options.catmullRom.alpha = 1.0;
+            }
+            else {
+              this.options.catmullRom.parametrization = 'centripetal';
+              this.options.catmullRom.alpha = 0.5;
+            }
+          }
+        }
+      }
+    }
+  };
+
+  GraphGroup.prototype.update = function(group) {
+    this.group = group;
+    this.content = group.content || 'graph';
+    this.className = group.className || this.className || "graphGroup" + this.groupsUsingDefaultStyles[0] % 10;
+    this.visible = group.visible === undefined ? true : group.visible;
+    this.setOptions(group.options);
+  };
+
+  GraphGroup.prototype.drawIcon = function(x, y, JSONcontainer, SVGcontainer, iconWidth, iconHeight) {
+    var fillHeight = iconHeight * 0.5;
+    var path, fillPath;
+
+    var outline = DOMutil.getSVGElement("rect", JSONcontainer, SVGcontainer);
+    outline.setAttributeNS(null, "x", x);
+    outline.setAttributeNS(null, "y", y - fillHeight);
+    outline.setAttributeNS(null, "width", iconWidth);
+    outline.setAttributeNS(null, "height", 2*fillHeight);
+    outline.setAttributeNS(null, "class", "outline");
+
+    if (this.options.style == 'line') {
+      path = DOMutil.getSVGElement("path", JSONcontainer, SVGcontainer);
+      path.setAttributeNS(null, "class", this.className);
+      path.setAttributeNS(null, "d", "M" + x + ","+y+" L" + (x + iconWidth) + ","+y+"");
+      if (this.options.shaded.enabled == true) {
+        fillPath = DOMutil.getSVGElement("path", JSONcontainer, SVGcontainer);
+        if (this.options.shaded.orientation == 'top') {
+          fillPath.setAttributeNS(null, "d", "M"+x+", " + (y - fillHeight) +
+            "L"+x+","+y+" L"+ (x + iconWidth) + ","+y+" L"+ (x + iconWidth) + "," + (y - fillHeight));
+        }
+        else {
+          fillPath.setAttributeNS(null, "d", "M"+x+","+y+" " +
+            "L"+x+"," + (y + fillHeight) + " " +
+            "L"+ (x + iconWidth) + "," + (y + fillHeight) +
+            "L"+ (x + iconWidth) + ","+y);
+        }
+        fillPath.setAttributeNS(null, "class", this.className + " iconFill");
+      }
+
+      if (this.options.drawPoints.enabled == true) {
+        DOMutil.drawPoint(x + 0.5 * iconWidth,y, this, JSONcontainer, SVGcontainer);
+      }
+    }
+    else {
+      var barWidth = Math.round(0.3 * iconWidth);
+      var bar1Height = Math.round(0.4 * iconHeight);
+      var bar2Height = Math.round(0.75 * iconHeight);
+
+      var offset = Math.round((iconWidth - (2 * barWidth))/3);
+
+      DOMutil.drawBar(x + 0.5*barWidth + offset    , y + fillHeight - bar1Height - 1, barWidth, bar1Height, this.className + ' bar', JSONcontainer, SVGcontainer);
+      DOMutil.drawBar(x + 1.5*barWidth + offset + 2, y + fillHeight - bar2Height - 1, barWidth, bar2Height, this.className + ' bar', JSONcontainer, SVGcontainer);
+    }
+  };
+
+  /**
+   *
+   * @param iconWidth
+   * @param iconHeight
+   * @returns {{icon: HTMLElement, label: (group.content|*|string), orientation: (.options.yAxisOrientation|*)}}
+   */
+  GraphGroup.prototype.getLegend = function(iconWidth, iconHeight) {
+    var svg = document.createElementNS('http://www.w3.org/2000/svg',"svg");
+    this.drawIcon(0,0.5*iconHeight,[],svg,iconWidth,iconHeight);
+    return {icon: svg, label: this.content, orientation:this.options.yAxisOrientation};
+  }
+
+  module.exports = GraphGroup;
+
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+  var util = __webpack_require__(1);
+  var stack = __webpack_require__(17);
+  var RangeItem = __webpack_require__(33);
+
+  /**
+   * @constructor Group
+   * @param {Number | String} groupId
+   * @param {Object} data
+   * @param {ItemSet} itemSet
+   */
+  function Group (groupId, data, itemSet) {
+    this.groupId = groupId;
+    this.subgroups = {};
+    this.subgroupIndex = 0;
+    this.subgroupOrderer = data && data.subgroupOrder;
+    this.itemSet = itemSet;
+
+    this.dom = {};
+    this.props = {
+      label: {
+        width: 0,
+        height: 0
+      }
+    };
+    this.className = null;
+
+    this.items = {};        // items filtered by groupId of this group
+    this.visibleItems = []; // items currently visible in window
+    this.orderedItems = {   // items sorted by start and by end
+      byStart: [],
+      byEnd: []
+    };
+
+    this._create();
+
+    this.setData(data);
+  }
+
+  /**
+   * Create DOM elements for the group
+   * @private
+   */
+  Group.prototype._create = function() {
+    var label = document.createElement('div');
+    label.className = 'vlabel';
+    this.dom.label = label;
+
+    var inner = document.createElement('div');
+    inner.className = 'inner';
+    label.appendChild(inner);
+    this.dom.inner = inner;
+
+    var foreground = document.createElement('div');
+    foreground.className = 'group';
+    foreground['timeline-group'] = this;
+    this.dom.foreground = foreground;
+
+    this.dom.background = document.createElement('div');
+    this.dom.background.className = 'group';
+
+    this.dom.axis = document.createElement('div');
+    this.dom.axis.className = 'group';
+
+    // create a hidden marker to detect when the Timelines container is attached
+    // to the DOM, or the style of a parent of the Timeline is changed from
+    // display:none is changed to visible.
+    this.dom.marker = document.createElement('div');
+    this.dom.marker.style.visibility = 'hidden'; // TODO: ask jos why this is not none?
+    this.dom.marker.innerHTML = '?';
+    this.dom.background.appendChild(this.dom.marker);
+  };
+
+  /**
+   * Set the group data for this group
+   * @param {Object} data   Group data, can contain properties content and className
+   */
+  Group.prototype.setData = function(data) {
+    // update contents
+    var content = data && data.content;
+    if (content instanceof Element) {
+      this.dom.inner.appendChild(content);
+    }
+    else if (content !== undefined && content !== null) {
+      this.dom.inner.innerHTML = content;
+    }
+    else {
+      this.dom.inner.innerHTML = this.groupId || ''; // groupId can be null
+    }
+
+    // update title
+    this.dom.label.title = data && data.title || '';
+
+    if (!this.dom.inner.firstChild) {
+      util.addClassName(this.dom.inner, 'hidden');
+    }
+    else {
+      util.removeClassName(this.dom.inner, 'hidden');
+    }
+
+    // update className
+    var className = data && data.className || null;
+    if (className != this.className) {
+      if (this.className) {
+        util.removeClassName(this.dom.label, this.className);
+        util.removeClassName(this.dom.foreground, this.className);
+        util.removeClassName(this.dom.background, this.className);
+        util.removeClassName(this.dom.axis, this.className);
+      }
+      util.addClassName(this.dom.label, className);
+      util.addClassName(this.dom.foreground, className);
+      util.addClassName(this.dom.background, className);
+      util.addClassName(this.dom.axis, className);
+      this.className = className;
+    }
+
+    // update style
+    if (this.style) {
+      util.removeCssText(this.dom.label, this.style);
+      this.style = null;
+    }
+    if (data && data.style) {
+      util.addCssText(this.dom.label, data.style);
+      this.style = data.style;
+    }
+  };
+
+  /**
+   * Get the width of the group label
+   * @return {number} width
+   */
+  Group.prototype.getLabelWidth = function() {
+    return this.props.label.width;
+  };
+
+
+  /**
+   * Repaint this group
+   * @param {{start: number, end: number}} range
+   * @param {{item: {horizontal: number, vertical: number}, axis: number}} margin
+   * @param {boolean} [restack=false]  Force restacking of all items
+   * @return {boolean} Returns true if the group is resized
+   */
+  Group.prototype.redraw = function(range, margin, restack) {
+    var resized = false;
+
+    this.visibleItems = this._updateVisibleItems(this.orderedItems, this.visibleItems, range);
+
+    // force recalculation of the height of the items when the marker height changed
+    // (due to the Timeline being attached to the DOM or changed from display:none to visible)
+    var markerHeight = this.dom.marker.clientHeight;
+    if (markerHeight != this.lastMarkerHeight) {
+      this.lastMarkerHeight = markerHeight;
+
+      util.forEach(this.items, function (item) {
+        item.dirty = true;
+        if (item.displayed) item.redraw();
+      });
+
+      restack = true;
+    }
+
+    // reposition visible items vertically
+    if (this.itemSet.options.stack) { // TODO: ugly way to access options...
+      stack.stack(this.visibleItems, margin, restack);
+    }
+    else { // no stacking
+      stack.nostack(this.visibleItems, margin, this.subgroups);
+    }
+
+    // recalculate the height of the group
+    var height = this._calculateHeight(margin);
+
+    // calculate actual size and position
+    var foreground = this.dom.foreground;
+    this.top = foreground.offsetTop;
+    this.left = foreground.offsetLeft;
+    this.width = foreground.offsetWidth;
+    resized = util.updateProperty(this, 'height', height) || resized;
+
+    // recalculate size of label
+    resized = util.updateProperty(this.props.label, 'width', this.dom.inner.clientWidth) || resized;
+    resized = util.updateProperty(this.props.label, 'height', this.dom.inner.clientHeight) || resized;
+
+    // apply new height
+    this.dom.background.style.height  = height + 'px';
+    this.dom.foreground.style.height  = height + 'px';
+    this.dom.label.style.height = height + 'px';
+
+    // update vertical position of items after they are re-stacked and the height of the group is calculated
+    for (var i = 0, ii = this.visibleItems.length; i < ii; i++) {
+      var item = this.visibleItems[i];
+      item.repositionY(margin);
+    }
+
+    return resized;
+  };
+
+  /**
+   * recalculate the height of the group
+   * @param {{item: {horizontal: number, vertical: number}, axis: number}} margin
+   * @returns {number} Returns the height
+   * @private
+   */
+  Group.prototype._calculateHeight = function (margin) {
+    // recalculate the height of the group
+    var height;
+    var visibleItems = this.visibleItems;
+    //var visibleSubgroups = [];
+    //this.visibleSubgroups = 0;
+    this.resetSubgroups();
+    var me = this;
+    if (visibleItems.length) {
+      var min = visibleItems[0].top;
+      var max = visibleItems[0].top + visibleItems[0].height;
+      util.forEach(visibleItems, function (item) {
+        min = Math.min(min, item.top);
+        max = Math.max(max, (item.top + item.height));
+        if (item.data.subgroup !== undefined) {
+          me.subgroups[item.data.subgroup].height = Math.max(me.subgroups[item.data.subgroup].height,item.height);
+          me.subgroups[item.data.subgroup].visible = true;
+          //if (visibleSubgroups.indexOf(item.data.subgroup) == -1){
+          //  visibleSubgroups.push(item.data.subgroup);
+          //  me.visibleSubgroups += 1;
+          //}
+        }
+      });
+      if (min > margin.axis) {
+        // there is an empty gap between the lowest item and the axis
+        var offset = min - margin.axis;
+        max -= offset;
+        util.forEach(visibleItems, function (item) {
+          item.top -= offset;
+        });
+      }
+      height = max + margin.item.vertical / 2;
+    }
+    else {
+      height = margin.axis + margin.item.vertical;
+    }
+    height = Math.max(height, this.props.label.height);
+
+    return height;
+  };
+
+  /**
+   * Show this group: attach to the DOM
+   */
+  Group.prototype.show = function() {
+    if (!this.dom.label.parentNode) {
+      this.itemSet.dom.labelSet.appendChild(this.dom.label);
+    }
+
+    if (!this.dom.foreground.parentNode) {
+      this.itemSet.dom.foreground.appendChild(this.dom.foreground);
+    }
+
+    if (!this.dom.background.parentNode) {
+      this.itemSet.dom.background.appendChild(this.dom.background);
+    }
+
+    if (!this.dom.axis.parentNode) {
+      this.itemSet.dom.axis.appendChild(this.dom.axis);
+    }
+  };
+
+  /**
+   * Hide this group: remove from the DOM
+   */
+  Group.prototype.hide = function() {
+    var label = this.dom.label;
+    if (label.parentNode) {
+      label.parentNode.removeChild(label);
+    }
+
+    var foreground = this.dom.foreground;
+    if (foreground.parentNode) {
+      foreground.parentNode.removeChild(foreground);
+    }
+
+    var background = this.dom.background;
+    if (background.parentNode) {
+      background.parentNode.removeChild(background);
+    }
+
+    var axis = this.dom.axis;
+    if (axis.parentNode) {
+      axis.parentNode.removeChild(axis);
+    }
+  };
+
+  /**
+   * Add an item to the group
+   * @param {Item} item
+   */
+  Group.prototype.add = function(item) {
+    this.items[item.id] = item;
+    item.setParent(this);
+
+    // add to
+    if (item.data.subgroup !== undefined) {
+      if (this.subgroups[item.data.subgroup] === undefined) {
+        this.subgroups[item.data.subgroup] = {height:0, visible: false, index:this.subgroupIndex, items: []};
+        this.subgroupIndex++;
+      }
+      this.subgroups[item.data.subgroup].items.push(item);
+    }
+    this.orderSubgroups();
+
+    if (this.visibleItems.indexOf(item) == -1) {
+      var range = this.itemSet.body.range; // TODO: not nice accessing the range like this
+      this._checkIfVisible(item, this.visibleItems, range);
+    }
+  };
+
+  Group.prototype.orderSubgroups = function() {
+    if (this.subgroupOrderer !== undefined) {
+      var sortArray = [];
+      if (typeof this.subgroupOrderer == 'string') {
+        for (var subgroup in this.subgroups) {
+          sortArray.push({subgroup: subgroup, sortField: this.subgroups[subgroup].items[0].data[this.subgroupOrderer]})
+        }
+        sortArray.sort(function (a, b) {
+          return a.sortField - b.sortField;
+        })
+      }
+      else if (typeof this.subgroupOrderer == 'function') {
+        for (var subgroup in this.subgroups) {
+          sortArray.push(this.subgroups[subgroup].items[0].data);
+        }
+        sortArray.sort(this.subgroupOrderer);
+      }
+
+      if (sortArray.length > 0) {
+        for (var i = 0; i < sortArray.length; i++) {
+          this.subgroups[sortArray[i].subgroup].index = i;
+        }
+      }
+    }
+  }
+
+  Group.prototype.resetSubgroups = function() {
+    for (var subgroup in this.subgroups) {
+      if (this.subgroups.hasOwnProperty(subgroup)) {
+        this.subgroups[subgroup].visible = false;
+      }
+    }
+  };
+
+  /**
+   * Remove an item from the group
+   * @param {Item} item
+   */
+  Group.prototype.remove = function(item) {
+    delete this.items[item.id];
+    item.setParent(this.itemSet);
+
+    // remove from visible items
+    var index = this.visibleItems.indexOf(item);
+    if (index != -1) this.visibleItems.splice(index, 1);
+
+    // TODO: also remove from ordered items?
+  };
+
+  /**
+   * Remove an item from the corresponding DataSet
+   * @param {Item} item
+   */
+  Group.prototype.removeFromDataSet = function(item) {
+    this.itemSet.removeItem(item.id);
+  };
+
+  /**
+   * Reorder the items
+   */
+  Group.prototype.order = function() {
+    var array = util.toArray(this.items);
+    this.orderedItems.byStart = array;
+    this.orderedItems.byEnd = this._constructByEndArray(array);
+
+    stack.orderByStart(this.orderedItems.byStart);
+    stack.orderByEnd(this.orderedItems.byEnd);
+  };
+
+  /**
+   * Create an array containing all items being a range (having an end date)
+   * @param {Item[]} array
+   * @returns {RangeItem[]}
+   * @private
+   */
+  Group.prototype._constructByEndArray = function(array) {
+    var endArray = [];
+
+    for (var i = 0; i < array.length; i++) {
+      if (array[i] instanceof RangeItem) {
+        endArray.push(array[i]);
+      }
+    }
+    return endArray;
+  };
+
+  /**
+   * Update the visible items
+   * @param {{byStart: Item[], byEnd: Item[]}} orderedItems   All items ordered by start date and by end date
+   * @param {Item[]} visibleItems                             The previously visible items.
+   * @param {{start: number, end: number}} range              Visible range
+   * @return {Item[]} visibleItems                            The new visible items.
+   * @private
+   */
+  Group.prototype._updateVisibleItems = function(orderedItems, visibleItems, range) {
+    var initialPosByStart,
+        newVisibleItems = [],
+        i;
+
+    // first check if the items that were in view previously are still in view.
+    // this handles the case for the RangeItem that is both before and after the current one.
+    if (visibleItems.length > 0) {
+      for (i = 0; i < visibleItems.length; i++) {
+        this._checkIfVisible(visibleItems[i], newVisibleItems, range);
+      }
+    }
+
+    // If there were no visible items previously, use binarySearch to find a visible PointItem or RangeItem (based on startTime)
+    if (newVisibleItems.length == 0) {
+      initialPosByStart = util.binarySearch(orderedItems.byStart, range, 'data','start');
+    }
+    else {
+      initialPosByStart = orderedItems.byStart.indexOf(newVisibleItems[0]);
+    }
+
+    // use visible search to find a visible RangeItem (only based on endTime)
+    var initialPosByEnd = util.binarySearch(orderedItems.byEnd, range, 'data','end');
+
+    // if we found a initial ID to use, trace it up and down until we meet an invisible item.
+    if (initialPosByStart != -1) {
+      for (i = initialPosByStart; i >= 0; i--) {
+        if (this._checkIfInvisible(orderedItems.byStart[i], newVisibleItems, range)) {break;}
+      }
+      for (i = initialPosByStart + 1; i < orderedItems.byStart.length; i++) {
+        if (this._checkIfInvisible(orderedItems.byStart[i], newVisibleItems, range)) {break;}
+      }
+    }
+
+    // if we found a initial ID to use, trace it up and down until we meet an invisible item.
+    if (initialPosByEnd != -1) {
+      for (i = initialPosByEnd; i >= 0; i--) {
+        if (this._checkIfInvisible(orderedItems.byEnd[i], newVisibleItems, range)) {break;}
+      }
+      for (i = initialPosByEnd + 1; i < orderedItems.byEnd.length; i++) {
+        if (this._checkIfInvisible(orderedItems.byEnd[i], newVisibleItems, range)) {break;}
+      }
+    }
+
+    return newVisibleItems;
+  };
+
+
+
+  /**
+   * this function checks if an item is invisible. If it is NOT we make it visible
+   * and add it to the global visible items. If it is, return true.
+   *
+   * @param {Item} item
+   * @param {Item[]} visibleItems
+   * @param {{start:number, end:number}} range
+   * @returns {boolean}
+   * @private
+   */
+  Group.prototype._checkIfInvisible = function(item, visibleItems, range) {
+      if (item.isVisible(range)) {
+        if (!item.displayed) item.show();
+        item.repositionX();
+        if (visibleItems.indexOf(item) == -1) {
+          visibleItems.push(item);
+        }
+        return false;
+      }
+      else {
+        if (item.displayed) item.hide();
+        return true;
+      }
+  };
+
+  /**
+   * this function is very similar to the _checkIfInvisible() but it does not
+   * return booleans, hides the item if it should not be seen and always adds to
+   * the visibleItems.
+   * this one is for brute forcing and hiding.
+   *
+   * @param {Item} item
+   * @param {Array} visibleItems
+   * @param {{start:number, end:number}} range
+   * @private
+   */
+  Group.prototype._checkIfVisible = function(item, visibleItems, range) {
+      if (item.isVisible(range)) {
+        if (!item.displayed) item.show();
+        // reposition item horizontally
+        item.repositionX();
+        visibleItems.push(item);
+      }
+      else {
+        if (item.displayed) item.hide();
+      }
+  };
+
+  module.exports = Group;
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+  var util = __webpack_require__(1);
+  var Group = __webpack_require__(23);
+
+  /**
+   * @constructor BackgroundGroup
+   * @param {Number | String} groupId
+   * @param {Object} data
+   * @param {ItemSet} itemSet
+   */
+  function BackgroundGroup (groupId, data, itemSet) {
+    Group.call(this, groupId, data, itemSet);
+
+    this.width = 0;
+    this.height = 0;
+    this.top = 0;
+    this.left = 0;
+  }
+
+  BackgroundGroup.prototype = Object.create(Group.prototype);
+
+  /**
+   * Repaint this group
+   * @param {{start: number, end: number}} range
+   * @param {{item: {horizontal: number, vertical: number}, axis: number}} margin
+   * @param {boolean} [restack=false]  Force restacking of all items
+   * @return {boolean} Returns true if the group is resized
+   */
+  BackgroundGroup.prototype.redraw = function(range, margin, restack) {
+    var resized = false;
+
+    this.visibleItems = this._updateVisibleItems(this.orderedItems, this.visibleItems, range);
+
+    // calculate actual size
+    this.width = this.dom.background.offsetWidth;
+
+    // apply new height (just always zero for BackgroundGroup
+    this.dom.background.style.height  = '0';
+
+    // update vertical position of items after they are re-stacked and the height of the group is calculated
+    for (var i = 0, ii = this.visibleItems.length; i < ii; i++) {
+      var item = this.visibleItems[i];
+      item.repositionY(margin);
+    }
+
+    return resized;
+  };
+
+  /**
+   * Show this group: attach to the DOM
+   */
+  BackgroundGroup.prototype.show = function() {
+    if (!this.dom.background.parentNode) {
+      this.itemSet.dom.background.appendChild(this.dom.background);
+    }
+  };
+
+  module.exports = BackgroundGroup;
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+  var util = __webpack_require__(1);
+  var DOMutil = __webpack_require__(3);
+  var Component = __webpack_require__(19);
+  var DataStep = __webpack_require__(15);
 
   /**
    * A horizontal time axis
@@ -9165,605 +10476,24 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 22 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
+  var Hammer = __webpack_require__(43);
   var util = __webpack_require__(1);
-  var DOMutil = __webpack_require__(2);
-
-  /**
-   * @constructor Group
-   * @param {Number | String} groupId
-   * @param {Object} data
-   * @param {ItemSet} itemSet
-   */
-  function GraphGroup (group, groupId, options, groupsUsingDefaultStyles) {
-    this.id = groupId;
-    var fields = ['sampling','style','sort','yAxisOrientation','barChart','drawPoints','shaded','catmullRom']
-    this.options = util.selectiveBridgeObject(fields,options);
-    this.usingDefaultStyle = group.className === undefined;
-    this.groupsUsingDefaultStyles = groupsUsingDefaultStyles;
-    this.zeroPosition = 0;
-    this.update(group);
-    if (this.usingDefaultStyle == true) {
-      this.groupsUsingDefaultStyles[0] += 1;
-    }
-    this.itemsData = [];
-    this.visible = group.visible === undefined ? true : group.visible;
-  }
-
-  GraphGroup.prototype.setItems = function(items) {
-    if (items != null) {
-      this.itemsData = items;
-      if (this.options.sort == true) {
-        this.itemsData.sort(function (a,b) {return a.x - b.x;})
-      }
-    }
-    else {
-      this.itemsData = [];
-    }
-  };
-
-  GraphGroup.prototype.setZeroPosition = function(pos) {
-    this.zeroPosition = pos;
-  };
-
-  GraphGroup.prototype.setOptions = function(options) {
-    if (options !== undefined) {
-      var fields = ['sampling','style','sort','yAxisOrientation','barChart'];
-      util.selectiveDeepExtend(fields, this.options, options);
-
-      util.mergeOptions(this.options, options,'catmullRom');
-      util.mergeOptions(this.options, options,'drawPoints');
-      util.mergeOptions(this.options, options,'shaded');
-
-      if (options.catmullRom) {
-        if (typeof options.catmullRom == 'object') {
-          if (options.catmullRom.parametrization) {
-            if (options.catmullRom.parametrization == 'uniform') {
-              this.options.catmullRom.alpha = 0;
-            }
-            else if (options.catmullRom.parametrization == 'chordal') {
-              this.options.catmullRom.alpha = 1.0;
-            }
-            else {
-              this.options.catmullRom.parametrization = 'centripetal';
-              this.options.catmullRom.alpha = 0.5;
-            }
-          }
-        }
-      }
-    }
-  };
-
-  GraphGroup.prototype.update = function(group) {
-    this.group = group;
-    this.content = group.content || 'graph';
-    this.className = group.className || this.className || "graphGroup" + this.groupsUsingDefaultStyles[0] % 10;
-    this.visible = group.visible === undefined ? true : group.visible;
-    this.setOptions(group.options);
-  };
-
-  GraphGroup.prototype.drawIcon = function(x, y, JSONcontainer, SVGcontainer, iconWidth, iconHeight) {
-    var fillHeight = iconHeight * 0.5;
-    var path, fillPath;
-
-    var outline = DOMutil.getSVGElement("rect", JSONcontainer, SVGcontainer);
-    outline.setAttributeNS(null, "x", x);
-    outline.setAttributeNS(null, "y", y - fillHeight);
-    outline.setAttributeNS(null, "width", iconWidth);
-    outline.setAttributeNS(null, "height", 2*fillHeight);
-    outline.setAttributeNS(null, "class", "outline");
-
-    if (this.options.style == 'line') {
-      path = DOMutil.getSVGElement("path", JSONcontainer, SVGcontainer);
-      path.setAttributeNS(null, "class", this.className);
-      path.setAttributeNS(null, "d", "M" + x + ","+y+" L" + (x + iconWidth) + ","+y+"");
-      if (this.options.shaded.enabled == true) {
-        fillPath = DOMutil.getSVGElement("path", JSONcontainer, SVGcontainer);
-        if (this.options.shaded.orientation == 'top') {
-          fillPath.setAttributeNS(null, "d", "M"+x+", " + (y - fillHeight) +
-            "L"+x+","+y+" L"+ (x + iconWidth) + ","+y+" L"+ (x + iconWidth) + "," + (y - fillHeight));
-        }
-        else {
-          fillPath.setAttributeNS(null, "d", "M"+x+","+y+" " +
-            "L"+x+"," + (y + fillHeight) + " " +
-            "L"+ (x + iconWidth) + "," + (y + fillHeight) +
-            "L"+ (x + iconWidth) + ","+y);
-        }
-        fillPath.setAttributeNS(null, "class", this.className + " iconFill");
-      }
-
-      if (this.options.drawPoints.enabled == true) {
-        DOMutil.drawPoint(x + 0.5 * iconWidth,y, this, JSONcontainer, SVGcontainer);
-      }
-    }
-    else {
-      var barWidth = Math.round(0.3 * iconWidth);
-      var bar1Height = Math.round(0.4 * iconHeight);
-      var bar2Height = Math.round(0.75 * iconHeight);
-
-      var offset = Math.round((iconWidth - (2 * barWidth))/3);
-
-      DOMutil.drawBar(x + 0.5*barWidth + offset    , y + fillHeight - bar1Height - 1, barWidth, bar1Height, this.className + ' bar', JSONcontainer, SVGcontainer);
-      DOMutil.drawBar(x + 1.5*barWidth + offset + 2, y + fillHeight - bar2Height - 1, barWidth, bar2Height, this.className + ' bar', JSONcontainer, SVGcontainer);
-    }
-  };
-
-  /**
-   *
-   * @param iconWidth
-   * @param iconHeight
-   * @returns {{icon: HTMLElement, label: (group.content|*|string), orientation: (.options.yAxisOrientation|*)}}
-   */
-  GraphGroup.prototype.getLegend = function(iconWidth, iconHeight) {
-    var svg = document.createElementNS('http://www.w3.org/2000/svg',"svg");
-    this.drawIcon(0,0.5*iconHeight,[],svg,iconWidth,iconHeight);
-    return {icon: svg, label: this.content, orientation:this.options.yAxisOrientation};
-  }
-
-  module.exports = GraphGroup;
-
-
-/***/ },
-/* 23 */
-/***/ function(module, exports, __webpack_require__) {
-
-  var util = __webpack_require__(1);
-  var stack = __webpack_require__(16);
-  var RangeItem = __webpack_require__(32);
-
-  /**
-   * @constructor Group
-   * @param {Number | String} groupId
-   * @param {Object} data
-   * @param {ItemSet} itemSet
-   */
-  function Group (groupId, data, itemSet) {
-    this.groupId = groupId;
-    this.amountSubgroups = 0;
-    this.subgroups = {};
-    this.visibleSubgroups = 0;
-    this.itemSet = itemSet;
-
-    this.dom = {};
-    this.props = {
-      label: {
-        width: 0,
-        height: 0
-      }
-    };
-    this.className = null;
-
-    this.items = {};        // items filtered by groupId of this group
-    this.visibleItems = []; // items currently visible in window
-    this.orderedItems = {   // items sorted by start and by end
-      byStart: [],
-      byEnd: []
-    };
-
-    this._create();
-
-    this.setData(data);
-  }
-
-  /**
-   * Create DOM elements for the group
-   * @private
-   */
-  Group.prototype._create = function() {
-    var label = document.createElement('div');
-    label.className = 'vlabel';
-    this.dom.label = label;
-
-    var inner = document.createElement('div');
-    inner.className = 'inner';
-    label.appendChild(inner);
-    this.dom.inner = inner;
-
-    var foreground = document.createElement('div');
-    foreground.className = 'group';
-    foreground['timeline-group'] = this;
-    this.dom.foreground = foreground;
-
-    this.dom.background = document.createElement('div');
-    this.dom.background.className = 'group';
-
-    this.dom.axis = document.createElement('div');
-    this.dom.axis.className = 'group';
-
-    // create a hidden marker to detect when the Timelines container is attached
-    // to the DOM, or the style of a parent of the Timeline is changed from
-    // display:none is changed to visible.
-    this.dom.marker = document.createElement('div');
-    this.dom.marker.style.display = 'none';
-    this.dom.marker.innerHTML = '?';
-    this.dom.background.appendChild(this.dom.marker);
-  };
-
-  /**
-   * Set the group data for this group
-   * @param {Object} data   Group data, can contain properties content and className
-   */
-  Group.prototype.setData = function(data) {
-    // update contents
-    var content = data && data.content;
-    if (content instanceof Element) {
-      this.dom.inner.appendChild(content);
-    }
-    else if (content !== undefined && content !== null) {
-      this.dom.inner.innerHTML = content;
-    }
-    else {
-      this.dom.inner.innerHTML = this.groupId || ''; // groupId can be null
-    }
-
-    // update title
-    this.dom.label.title = data && data.title || '';
-
-    if (!this.dom.inner.firstChild) {
-      util.addClassName(this.dom.inner, 'hidden');
-    }
-    else {
-      util.removeClassName(this.dom.inner, 'hidden');
-    }
-
-    // update className
-    var className = data && data.className || null;
-    if (className != this.className) {
-      if (this.className) {
-        util.removeClassName(this.dom.label, this.className);
-        util.removeClassName(this.dom.foreground, this.className);
-        util.removeClassName(this.dom.background, this.className);
-        util.removeClassName(this.dom.axis, this.className);
-      }
-      util.addClassName(this.dom.label, className);
-      util.addClassName(this.dom.foreground, className);
-      util.addClassName(this.dom.background, className);
-      util.addClassName(this.dom.axis, className);
-      this.className = className;
-    }
-  };
-
-  /**
-   * Get the width of the group label
-   * @return {number} width
-   */
-  Group.prototype.getLabelWidth = function() {
-    return this.props.label.width;
-  };
-
-
-  /**
-   * Repaint this group
-   * @param {{start: number, end: number}} range
-   * @param {{item: {horizontal: number, vertical: number}, axis: number}} margin
-   * @param {boolean} [restack=false]  Force restacking of all items
-   * @return {boolean} Returns true if the group is resized
-   */
-  Group.prototype.redraw = function(range, margin, restack) {
-    var resized = false;
-
-    this.visibleItems = this._updateVisibleItems(this.orderedItems, this.visibleItems, range);
-
-    // force recalculation of the height of the items when the marker height changed
-    // (due to the Timeline being attached to the DOM or changed from display:none to visible)
-    var markerHeight = this.dom.marker.clientHeight;
-    if (markerHeight != this.lastMarkerHeight) {
-      this.lastMarkerHeight = markerHeight;
-
-      util.forEach(this.items, function (item) {
-        item.dirty = true;
-        if (item.displayed) item.redraw();
-      });
-
-      restack = true;
-    }
-    // reposition visible items vertically
-    if (this.itemSet.options.stack == true) { // TODO: ugly way to access options...
-      stack.stack(this.visibleItems, margin, restack);
-    }
-    else { // no stacking
-      stack.nostack(this.visibleItems, margin);
-    }
-
-    // recalculate the height of the group
-    var height;
-    var visibleItems = this.visibleItems;
-    if (visibleItems.length) {
-      var min = visibleItems[0].top;
-      var max = visibleItems[0].top + visibleItems[0].height;
-      util.forEach(visibleItems, function (item) {
-        min = Math.min(min, item.top);
-        max = Math.max(max, (item.top + item.height));
-      });
-      if (min > margin.axis) {
-        // there is an empty gap between the lowest item and the axis
-        var offset = min - margin.axis;
-        max -= offset;
-        util.forEach(visibleItems, function (item) {
-          item.top -= offset;
-        });
-      }
-      height = max + margin.item.vertical / 2;
-    }
-    else {
-      height = margin.axis + margin.item.vertical;
-    }
-    height = Math.max(height, this.props.label.height);
-
-    // calculate actual size and position
-    var foreground = this.dom.foreground;
-    this.top = foreground.offsetTop;
-    this.left = foreground.offsetLeft;
-    this.width = foreground.offsetWidth;
-    resized = util.updateProperty(this, 'height', height) || resized;
-
-    // recalculate size of label
-    resized = util.updateProperty(this.props.label, 'width', this.dom.inner.clientWidth) || resized;
-    resized = util.updateProperty(this.props.label, 'height', this.dom.inner.clientHeight) || resized;
-
-    // apply new height
-    this.dom.background.style.height  = height + 'px';
-    this.dom.foreground.style.height  = height + 'px';
-    this.dom.label.style.height = height + 'px';
-
-    this.visibleSubgroups = Math.round(height / 40);
-
-    // update vertical position of items after they are re-stacked and the height of the group is calculated
-    for (var i = 0, ii = this.visibleItems.length; i < ii; i++) {
-      var item = this.visibleItems[i];
-      item.repositionY();
-    }
-
-    return resized;
-  };
-
-  /**
-   * Show this group: attach to the DOM
-   */
-  Group.prototype.show = function() {
-    if (!this.dom.label.parentNode) {
-      this.itemSet.dom.labelSet.appendChild(this.dom.label);
-    }
-
-    if (!this.dom.foreground.parentNode) {
-      this.itemSet.dom.foreground.appendChild(this.dom.foreground);
-    }
-
-    if (!this.dom.background.parentNode) {
-      this.itemSet.dom.background.appendChild(this.dom.background);
-    }
-
-    if (!this.dom.axis.parentNode) {
-      this.itemSet.dom.axis.appendChild(this.dom.axis);
-    }
-  };
-
-  /**
-   * Hide this group: remove from the DOM
-   */
-  Group.prototype.hide = function() {
-    var label = this.dom.label;
-    if (label.parentNode) {
-      label.parentNode.removeChild(label);
-    }
-
-    var foreground = this.dom.foreground;
-    if (foreground.parentNode) {
-      foreground.parentNode.removeChild(foreground);
-    }
-
-    var background = this.dom.background;
-    if (background.parentNode) {
-      background.parentNode.removeChild(background);
-    }
-
-    var axis = this.dom.axis;
-    if (axis.parentNode) {
-      axis.parentNode.removeChild(axis);
-    }
-  };
-
-  /**
-   * Add an item to the group
-   * @param {Item} item
-   */
-  Group.prototype.add = function(item) {
-    this.items[item.id] = item;
-    item.setParent(this);
-
-    if (item.data.subgroup !== undefined) {
-      if (this.subgroups[item.data.subgroup] === undefined) {
-        this.subgroups[item.data.subgroup] = 0;
-        this.amountSubgroups += 1;
-      }
-      this.subgroups[item.data.subgroup] += 1;
-    }
-
-    if (this.visibleItems.indexOf(item) == -1) {
-      var range = this.itemSet.body.range; // TODO: not nice accessing the range like this
-      this._checkIfVisible(item, this.visibleItems, range);
-    }
-  };
-
-  /**
-   * Remove an item from the group
-   * @param {Item} item
-   */
-  Group.prototype.remove = function(item) {
-    delete this.items[item.id];
-    item.setParent(this.itemSet);
-
-    // remove from visible items
-    var index = this.visibleItems.indexOf(item);
-    if (index != -1) this.visibleItems.splice(index, 1);
-
-    // TODO: also remove from ordered items?
-  };
-
-  /**
-   * Remove an item from the corresponding DataSet
-   * @param {Item} item
-   */
-  Group.prototype.removeFromDataSet = function(item) {
-    this.itemSet.removeItem(item.id);
-  };
-
-  /**
-   * Reorder the items
-   */
-  Group.prototype.order = function() {
-    var array = util.toArray(this.items);
-    this.orderedItems.byStart = array;
-    this.orderedItems.byEnd = this._constructByEndArray(array);
-
-    stack.orderByStart(this.orderedItems.byStart);
-    stack.orderByEnd(this.orderedItems.byEnd);
-  };
-
-  /**
-   * Create an array containing all items being a range (having an end date)
-   * @param {Item[]} array
-   * @returns {RangeItem[]}
-   * @private
-   */
-  Group.prototype._constructByEndArray = function(array) {
-    var endArray = [];
-
-    for (var i = 0; i < array.length; i++) {
-      if (array[i] instanceof RangeItem) {
-        endArray.push(array[i]);
-      }
-    }
-    return endArray;
-  };
-
-  /**
-   * Update the visible items
-   * @param {{byStart: Item[], byEnd: Item[]}} orderedItems   All items ordered by start date and by end date
-   * @param {Item[]} visibleItems                             The previously visible items.
-   * @param {{start: number, end: number}} range              Visible range
-   * @return {Item[]} visibleItems                            The new visible items.
-   * @private
-   */
-  Group.prototype._updateVisibleItems = function(orderedItems, visibleItems, range) {
-    var initialPosByStart,
-        newVisibleItems = [],
-        i;
-
-    // first check if the items that were in view previously are still in view.
-    // this handles the case for the RangeItem that is both before and after the current one.
-    if (visibleItems.length > 0) {
-      for (i = 0; i < visibleItems.length; i++) {
-        this._checkIfVisible(visibleItems[i], newVisibleItems, range);
-      }
-    }
-
-    // If there were no visible items previously, use binarySearch to find a visible PointItem or RangeItem (based on startTime)
-    if (newVisibleItems.length == 0) {
-      initialPosByStart = util.binarySearch(orderedItems.byStart, range, 'data','start');
-    }
-    else {
-      initialPosByStart = orderedItems.byStart.indexOf(newVisibleItems[0]);
-    }
-
-    // use visible search to find a visible RangeItem (only based on endTime)
-    var initialPosByEnd = util.binarySearch(orderedItems.byEnd, range, 'data','end');
-
-    // if we found a initial ID to use, trace it up and down until we meet an invisible item.
-    if (initialPosByStart != -1) {
-      for (i = initialPosByStart; i >= 0; i--) {
-        if (this._checkIfInvisible(orderedItems.byStart[i], newVisibleItems, range)) {break;}
-      }
-      for (i = initialPosByStart + 1; i < orderedItems.byStart.length; i++) {
-        if (this._checkIfInvisible(orderedItems.byStart[i], newVisibleItems, range)) {break;}
-      }
-    }
-
-    // if we found a initial ID to use, trace it up and down until we meet an invisible item.
-    if (initialPosByEnd != -1) {
-      for (i = initialPosByEnd; i >= 0; i--) {
-        if (this._checkIfInvisible(orderedItems.byEnd[i], newVisibleItems, range)) {break;}
-      }
-      for (i = initialPosByEnd + 1; i < orderedItems.byEnd.length; i++) {
-        if (this._checkIfInvisible(orderedItems.byEnd[i], newVisibleItems, range)) {break;}
-      }
-    }
-
-    return newVisibleItems;
-  };
-
-
-
-  /**
-   * this function checks if an item is invisible. If it is NOT we make it visible
-   * and add it to the global visible items. If it is, return true.
-   *
-   * @param {Item} item
-   * @param {Item[]} visibleItems
-   * @param {{start:number, end:number}} range
-   * @returns {boolean}
-   * @private
-   */
-  Group.prototype._checkIfInvisible = function(item, visibleItems, range) {
-    if (item.isVisible(range)) {
-      if (!item.displayed) item.show();
-      item.repositionX();
-      if (visibleItems.indexOf(item) == -1) {
-        visibleItems.push(item);
-      }
-      return false;
-    }
-    else {
-      if (item.displayed) item.hide();
-      return true;
-    }
-  };
-
-  /**
-   * this function is very similar to the _checkIfInvisible() but it does not
-   * return booleans, hides the item if it should not be seen and always adds to
-   * the visibleItems.
-   * this one is for brute forcing and hiding.
-   *
-   * @param {Item} item
-   * @param {Array} visibleItems
-   * @param {{start:number, end:number}} range
-   * @private
-   */
-  Group.prototype._checkIfVisible = function(item, visibleItems, range) {
-    if (item.isVisible(range)) {
-      if (!item.displayed) item.show();
-      // reposition item horizontally
-      item.repositionX();
-      visibleItems.push(item);
-    }
-    else {
-      if (item.displayed) item.hide();
-    }
-  };
-
-  module.exports = Group;
-
-
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-  var Hammer = __webpack_require__(42);
-  var util = __webpack_require__(1);
-  var DataSet = __webpack_require__(3);
+  var DataSet = __webpack_require__(2);
   var DataView = __webpack_require__(4);
-  var Component = __webpack_require__(18);
+  var Component = __webpack_require__(19);
   var Group = __webpack_require__(23);
-  var BoxItem = __webpack_require__(30);
-  var PointItem = __webpack_require__(31);
-  var RangeItem = __webpack_require__(32);
-  var BackgroundItem = __webpack_require__(29);
+  var BackgroundGroup = __webpack_require__(24);
+  var BoxItem = __webpack_require__(32);
+  var PointItem = __webpack_require__(34);
+  var RangeItem = __webpack_require__(33);
+  var BackgroundItem = __webpack_require__(31);
 
 
-  var UNGROUPED = '__ungrouped__'; // reserved group id for ungrouped items
+  var UNGROUPED = '__ungrouped__';   // reserved group id for ungrouped items
+  var BACKGROUND = '__background__'; // reserved group id for background items without group
 
   /**
    * An ItemSet holds a set of items and ranges which can be displayed in a
@@ -9923,6 +10653,11 @@ return /******/ (function(modules) { // webpackBootstrap
     // create ungrouped Group
     this._updateUngrouped();
 
+    // create background Group
+    var backgroundGroup = new BackgroundGroup(BACKGROUND, null, this);
+    backgroundGroup.show();
+    this.groups[BACKGROUND] = backgroundGroup;
+
     // attach event listeners
     // Note: we bind to the centerContainer for the case where the height
     //       of the center container is larger than of the ItemSet, so we
@@ -10017,7 +10752,7 @@ return /******/ (function(modules) { // webpackBootstrap
   ItemSet.prototype.setOptions = function(options) {
     if (options) {
       // copy all options that we know
-      var fields = ['type', 'align', 'orientation', 'padding', 'stack', 'selectable', 'groupOrder', 'dataAttributes', 'template'];
+      var fields = ['type', 'align', 'orientation', 'padding', 'stack', 'selectable', 'groupOrder', 'dataAttributes', 'template','hide'];
       util.selectiveExtend(fields, this.options, options);
 
       if ('margin' in options) {
@@ -10249,7 +10984,10 @@ return /******/ (function(modules) { // webpackBootstrap
     this.lastVisibleInterval = visibleInterval;
     this.props.lastWidth = this.props.width;
 
-    // redraw all groups
+    // redraw the background group
+    this.groups[BACKGROUND].redraw(range, nonFirstMargin, restack);
+
+    // redraw all regular groups
     var restack = this.stackDirty,
         firstGroup = this._firstGroup(),
         firstMargin = {
@@ -10312,12 +11050,24 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   ItemSet.prototype._updateUngrouped = function() {
     var ungrouped = this.groups[UNGROUPED];
+    var background = this.groups[BACKGROUND];
+    var item, itemId;
 
     if (this.groupsData) {
       // remove the group holding all ungrouped items
       if (ungrouped) {
         ungrouped.hide();
         delete this.groups[UNGROUPED];
+
+        for (itemId in this.items) {
+          if (this.items.hasOwnProperty(itemId)) {
+            item = this.items[itemId];
+            item.parent && item.parent.remove(item);
+            var groupId = this._getGroupId(item.data);
+            var group = this.groups[groupId];
+            group && group.add(item) || item.hide();
+          }
+        }
       }
     }
     else {
@@ -10328,9 +11078,15 @@ return /******/ (function(modules) { // webpackBootstrap
         ungrouped = new Group(id, data, this);
         this.groups[UNGROUPED] = ungrouped;
 
-        for (var itemId in this.items) {
+        for (itemId in this.items) {
           if (this.items.hasOwnProperty(itemId)) {
-            ungrouped.add(this.items[itemId]);
+            item = this.items[itemId];
+            if (item instanceof BackgroundItem) {
+              background.add(item);
+            }
+            else {
+              ungrouped.add(item);
+            }
           }
         }
 
@@ -10483,6 +11239,33 @@ return /******/ (function(modules) { // webpackBootstrap
   };
 
   /**
+   * Get the time of an item based on it's data and options.type
+   * @param {Object} itemData
+   * @returns {string} Returns the type
+   * @private
+   */
+  ItemSet.prototype._getType = function (itemData) {
+    return itemData.type || this.options.type || (itemData.end ? 'range' : 'box');
+  };
+
+
+  /**
+   * Get the group id for an item
+   * @param {Object} itemData
+   * @returns {string} Returns the groupId
+   * @private
+   */
+  ItemSet.prototype._getGroupId = function (itemData) {
+    var type = this._getType(itemData);
+    if (type == 'background') {
+     return this.groupsData && itemData.group != undefined ? itemData.group : BACKGROUND;
+    }
+    else {
+      return this.groupsData ? itemData.group : UNGROUPED;
+    }
+  };
+
+  /**
    * Handle updated items
    * @param {Number[]} ids
    * @protected
@@ -10491,9 +11274,9 @@ return /******/ (function(modules) { // webpackBootstrap
     var me = this;
 
     ids.forEach(function (id) {
-      var itemData = me.itemsData.get(id, me.itemOptions),
-          item = me.items[id],
-          type = itemData.type || me.options.type || (itemData.end ? 'range' : 'box');
+      var itemData = me.itemsData.get(id, me.itemOptions);
+      var item = me.items[id];
+      var type = me._getType(itemData);
 
       var constructor = ItemSet.types[type];
 
@@ -10598,7 +11381,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
       if (!group) {
         // check for reserved ids
-        if (id == UNGROUPED) {
+        if (id == UNGROUPED || id == BACKGROUND) {
           throw new Error('Illegal group id. ' + id + ' is a reserved id.');
         }
 
@@ -10697,7 +11480,7 @@ return /******/ (function(modules) { // webpackBootstrap
     this.items[item.id] = item;
 
     // add to group
-    var groupId = this.groupsData ? item.data.group : UNGROUPED;
+    var groupId = this._getGroupId(item.data);
     var group = this.groups[groupId];
     if (group) group.add(item);
   };
@@ -10719,7 +11502,7 @@ return /******/ (function(modules) { // webpackBootstrap
       var oldGroup = this.groups[oldGroupId];
       if (oldGroup) oldGroup.remove(item);
 
-      var groupId = this.groupsData ? item.data.group : UNGROUPED;
+      var groupId = this._getGroupId(item.data);
       var group = this.groups[groupId];
       if (group) group.add(item);
     }
@@ -10743,7 +11526,7 @@ return /******/ (function(modules) { // webpackBootstrap
     if (index != -1) this.selection.splice(index, 1);
 
     // remove from group
-    var groupId = this.groupsData ? item.data.group : UNGROUPED;
+    var groupId = this._getGroupId(item.data);
     var group = this.groups[groupId];
     if (group) group.remove(item);
   };
@@ -10789,18 +11572,17 @@ return /******/ (function(modules) { // webpackBootstrap
       return;
     }
 
-    var item = this.touchParams.item || null,
-        me = this,
-        props;
+    var item = this.touchParams.item || null;
+    var me = this;
+    var props = {};
 
+    props.initialX = event.gesture.center.clientX;
     if (item && item.selected) {
       var dragLeftItem = event.target.dragLeftItem;
       var dragRightItem = event.target.dragRightItem;
 
       if (dragLeftItem) {
-        props = {
-          item: dragLeftItem
-        };
+        props.item = dragLeftItem;
 
         if (me.options.editable.updateTime) {
           props.start = item.data.start.valueOf();
@@ -10812,9 +11594,7 @@ return /******/ (function(modules) { // webpackBootstrap
         this.touchParams.itemProps = [props];
       }
       else if (dragRightItem) {
-        props = {
-          item: dragRightItem
-        };
+        props.item = dragRightItem;
 
         if (me.options.editable.updateTime) {
           props.end = item.data.end.valueOf();
@@ -10828,9 +11608,7 @@ return /******/ (function(modules) { // webpackBootstrap
       else {
         this.touchParams.itemProps = this.getSelection().map(function (id) {
           var item = me.items[id];
-          var props = {
-            item: item
-          };
+          props.item = item;
 
           if (me.options.editable.updateTime) {
             if ('start' in item.data) props.start = item.data.start.valueOf();
@@ -10856,23 +11634,28 @@ return /******/ (function(modules) { // webpackBootstrap
   ItemSet.prototype._onDrag = function (event) {
     if (this.touchParams.itemProps) {
       var me = this;
-      var range = this.body.range;
       var snap = this.body.util.snap || null;
-      var deltaX = event.gesture.deltaX;
-      var scale = (this.props.width / (range.end - range.start));
-      var offset = deltaX / scale;
+      var xOffset = this.body.dom.root.offsetLeft + this.body.domProps.left.width;
 
       // move
       this.touchParams.itemProps.forEach(function (props) {
         var newProps = {};
-
-        if ('start' in props) {
-          var start = new Date(props.start + offset);
+        if ('start' in props && !('end' in props)) {  // only start in props
+          var start = me.body.util.toTime(event.gesture.center.clientX - xOffset);
           newProps.start = snap ? snap(start) : start;
         }
-
-        if ('end' in props) {
+        else if ('start' in props) {                  // start and end in props
+          var current = me.body.util.toTime(event.gesture.center.clientX - xOffset);
+          var initial = me.body.util.toTime(props.initialX - xOffset);
+          var offset = current - initial;
+          var start = new Date(props.start + offset);
           var end = new Date(props.end + offset);
+
+          newProps.start = snap ? snap(start) : start;
+          newProps.end = snap ? snap(end) : end;
+        }
+        else if ('end' in props) {                    // only end in props
+          var end = me.body.util.toTime(event.gesture.center.clientX - xOffset);
           newProps.end = snap ? snap(end) : end;
         }
 
@@ -11024,8 +11807,6 @@ return /******/ (function(modules) { // webpackBootstrap
         items: this.getSelection()
       });
     }
-
-    event.stopPropagation();
   };
 
   /**
@@ -11113,8 +11894,6 @@ return /******/ (function(modules) { // webpackBootstrap
       this.body.emitter.emit('select', {
         items: this.getSelection()
       });
-
-      event.stopPropagation();
     }
   };
 
@@ -11176,12 +11955,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 25 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var DOMutil = __webpack_require__(2);
-  var Component = __webpack_require__(18);
+  var DOMutil = __webpack_require__(3);
+  var Component = __webpack_require__(19);
 
   /**
    * Legend for Graph2d
@@ -11252,6 +12031,7 @@ return /******/ (function(modules) { // webpackBootstrap
     this.svg.style.position = 'absolute';
     this.svg.style.top = 0 +'px';
     this.svg.style.width = this.options.iconSize + 5 + 'px';
+    this.svg.style.height = '100%';
 
     this.dom.frame.appendChild(this.svg);
     this.dom.frame.appendChild(this.dom.textArea);
@@ -11379,17 +12159,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var DOMutil = __webpack_require__(2);
-  var DataSet = __webpack_require__(3);
+  var DOMutil = __webpack_require__(3);
+  var DataSet = __webpack_require__(2);
   var DataView = __webpack_require__(4);
-  var Component = __webpack_require__(18);
-  var DataAxis = __webpack_require__(21);
+  var Component = __webpack_require__(19);
+  var DataAxis = __webpack_require__(25);
   var GraphGroup = __webpack_require__(22);
-  var Legend = __webpack_require__(25);
+  var Legend = __webpack_require__(27);
 
   var UNGROUPED = '__ungrouped__'; // reserved group id for ungrouped items
 
@@ -12686,13 +13466,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var Component = __webpack_require__(18);
-  var TimeStep = __webpack_require__(17);
-  var moment = __webpack_require__(41);
+  var Component = __webpack_require__(19);
+  var TimeStep = __webpack_require__(18);
+  var DateUtil = __webpack_require__(14);
+  var moment = __webpack_require__(44);
 
   /**
    * A horizontal time axis
@@ -12754,7 +13535,7 @@ return /******/ (function(modules) { // webpackBootstrap
   TimeAxis.prototype.setOptions = function(options) {
     if (options) {
       // copy all options that we know
-      util.selectiveExtend(['orientation', 'showMinorLabels', 'showMajorLabels'], this.options, options);
+      util.selectiveExtend(['orientation', 'showMinorLabels', 'showMajorLabels','hiddenDates'], this.options, options);
 
       // apply locale to moment.js
       // TODO: not so nice, this is applied globally to moment.js
@@ -12801,10 +13582,10 @@ return /******/ (function(modules) { // webpackBootstrap
    * @return {boolean} Returns true if the component is resized
    */
   TimeAxis.prototype.redraw = function () {
-    var options = this.options,
-        props = this.props,
-        foreground = this.dom.foreground,
-        background = this.dom.background;
+    var options = this.options;
+    var props = this.props;
+    var foreground = this.dom.foreground;
+    var background = this.dom.background;
 
     // determine the correct parent DOM element (depending on option orientation)
     var parent = (options.orientation == 'top') ? this.body.dom.top : this.body.dom.bottom;
@@ -12865,11 +13646,14 @@ return /******/ (function(modules) { // webpackBootstrap
     var orientation = this.options.orientation;
 
     // calculate range and step (step such that we have space for 7 characters per label)
-    var start = util.convert(this.body.range.start, 'Number'),
-        end = util.convert(this.body.range.end, 'Number'),
-        minimumStep = this.body.util.toTime((this.props.minorCharWidth || 10) * 7).valueOf()
-            -this.body.util.toTime(0).valueOf();
-    var step = new TimeStep(new Date(start), new Date(end), minimumStep);
+    var start = util.convert(this.body.range.start, 'Number');
+    var end = util.convert(this.body.range.end, 'Number');
+    var timeLabelsize = this.body.util.toTime((this.props.minorCharWidth || 10) * 7).valueOf();
+    var minimumStep = timeLabelsize - DateUtil.getHiddenDurationBefore(this.body.hiddenDates, this.body.range, timeLabelsize);
+    minimumStep -= this.body.util.toTime(0).valueOf();
+
+
+    var step = new TimeStep(new Date(start), new Date(end), minimumStep, this.body.hiddenDates);
     this.step = step;
 
     // Move all DOM elements to a "redundant" list, where they
@@ -12890,9 +13674,10 @@ return /******/ (function(modules) { // webpackBootstrap
     var max = 0;
     while (step.hasNext() && max < 1000) {
       max++;
-      var cur = step.getCurrent(),
-          x = this.body.util.toScreen(cur),
-          isMajor = step.isMajor();
+      var cur = step.getCurrent();
+      var x = this.body.util.toScreen(cur);
+      var isMajor = step.isMajor();
+
 
       // TODO: lines must have a width, such that we can create css backgrounds
 
@@ -13100,10 +13885,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 28 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(42);
+  var Hammer = __webpack_require__(43);
   var util = __webpack_require__(1);
 
   /**
@@ -13131,9 +13916,9 @@ return /******/ (function(modules) { // webpackBootstrap
     this.left = null;
     this.width = null;
     this.height = null;
-
-    this.ignoreStacking = false;
   }
+
+  Item.prototype.stack = true;
 
   /**
    * Select current item
@@ -13276,17 +14061,22 @@ return /******/ (function(modules) { // webpackBootstrap
       content = this.data.content;
     }
 
-    if (content instanceof Element) {
-      element.innerHTML = '';
-      element.appendChild(content);
-    }
-    else if (content != undefined) {
-      element.innerHTML = content;
-    }
-    else {
-      if (!(this.data.type == 'background' && this.data.content === undefined)) {
-        throw new Error('Property "content" missing in item ' + this.id);
+    if(content !== this.content) {
+      // only replace the content when changed
+      if (content instanceof Element) {
+        element.innerHTML = '';
+        element.appendChild(content);
       }
+      else if (content != undefined) {
+        element.innerHTML = content;
+      }
+      else {
+        if (!(this.data.type == 'background' && this.data.content === undefined)) {
+          throw new Error('Property "content" missing in item ' + this.id);
+        }
+      }
+
+      this.content = content;
     }
   };
 
@@ -13343,14 +14133,14 @@ return /******/ (function(modules) { // webpackBootstrap
    * @private
    */
   Item.prototype._updateStyle = function(element) {
-    // update style
-    if (this.data.style) {
-      if (this.style) {
-        // remove old styles
-        util.removeCssText(element, this.style);
-      }
+    // remove old styles
+    if (this.style) {
+      util.removeCssText(element, this.style);
+      this.style = null;
+    }
 
-      // append new styles
+    // append new styles
+    if (this.data.style) {
       util.addCssText(element, this.data.style);
       this.style = this.data.style;
     }
@@ -13360,12 +14150,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 29 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(42);
-  var Item = __webpack_require__(28);
-  var RangeItem = __webpack_require__(32);
+  var Hammer = __webpack_require__(43);
+  var Item = __webpack_require__(30);
+  var BackgroundGroup = __webpack_require__(24);
+  var RangeItem = __webpack_require__(33);
 
   /**
    * @constructor BackgroundItem
@@ -13398,13 +14189,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
     Item.call(this, data, conversion, options);
 
-    this.ignoreStacking = true; // this is not used when stacking
     this.emptyContent = false;
   }
 
   BackgroundItem.prototype = new Item (null, null, null);
 
   BackgroundItem.prototype.baseClassName = 'item background';
+  BackgroundItem.prototype.stack = false;
 
   /**
    * Check whether this item is visible inside given range
@@ -13502,42 +14293,78 @@ return /******/ (function(modules) { // webpackBootstrap
    * Reposition the item vertically
    * @Override
    */
-  BackgroundItem.prototype.repositionY = function() {
+  BackgroundItem.prototype.repositionY = function(margin) {
     var onTop = this.options.orientation === 'top';
     this.dom.content.style.top = onTop ? '' : '0';
     this.dom.content.style.bottom = onTop ? '0' : '';
+    var height;
 
-    //var height = Math.max(this.parent.height,
-    //    this.parent.itemSet.body.domProps.centerContainer.height);
+    // special positioning for subgroups
     if (this.data.subgroup !== undefined) {
-      var height = 40;
-      var subgroup = this.data.subgroup;
-      var amountSubgroups = this.parent.visibleSubgroups - 1;
-      this.dom.box.style.top = (amountSubgroups - subgroup) * (height) + this.parent.top + 5 + 'px';
-      //this.dom.box.style.bottom = onTop ? '' : '0';
-      this.dom.box.style.height = height + 'px';
+      var itemSubgroup = this.data.subgroup;
+      var subgroups = this.parent.subgroups;
+      var subgroupIndex = subgroups[itemSubgroup].index;
+      // if the orientation is top, we need to take the difference in height into account.
+      if (onTop == true) {
+        // the first subgroup will have to account for the distance from the top to the first item.
+        height = this.parent.subgroups[itemSubgroup].height + margin.item.vertical;
+        height += subgroupIndex == 0 ? margin.axis - 0.5*margin.item.vertical : 0;
+        var newTop = this.parent.top;
+        for (var subgroup in subgroups) {
+          if (subgroups.hasOwnProperty(subgroup)) {
+            if (subgroups[subgroup].visible == true && subgroups[subgroup].index < subgroupIndex) {
+              newTop += subgroups[subgroup].height + margin.item.vertical;
+            }
+          }
+        }
+
+        // the others will have to be offset downwards with this same distance.
+        newTop += subgroupIndex != 0 ? margin.axis - 0.5 * margin.item.vertical : 0;
+        this.dom.box.style.top = newTop + 'px';
+        this.dom.box.style.bottom = '';
+      }
+      // and when the orientation is bottom:
+      else {
+        var newTop = this.parent.top;
+        for (var subgroup in subgroups) {
+          if (subgroups.hasOwnProperty(subgroup)) {
+            if (subgroups[subgroup].visible == true && subgroups[subgroup].index > subgroupIndex) {
+              newTop += subgroups[subgroup].height + margin.item.vertical;
+            }
+          }
+        }
+        height = this.parent.subgroups[itemSubgroup].height + margin.item.vertical;
+        this.dom.box.style.top = newTop + 'px';
+        this.dom.box.style.bottom = '';
+      }
     }
+    // and in the case of no subgroups:
     else {
-      var height = Math.max(this.parent.height,
-        this.parent.itemSet.body.domProps.centerContainer.height);
-      this.dom.box.style.top = onTop ? '0' : '';
-      this.dom.box.style.bottom = onTop ? '' : '0';
-      this.dom.box.style.height = height + 'px';
+      // we want backgrounds with groups to only show in groups.
+      if (this.parent instanceof BackgroundGroup) {
+        // if the item is not in a group:
+        height = Math.max(this.parent.height, this.parent.itemSet.body.domProps.centerContainer.height);
+        this.dom.box.style.top = onTop ? '0' : '';
+        this.dom.box.style.bottom = onTop ? '' : '0';
+      }
+      else {
+        height = this.parent.height;
+        // same alignment for items when orientation is top or bottom
+        this.dom.box.style.top = this.parent.top + 'px';
+        this.dom.box.style.bottom = '';
+      }
     }
-
-
-
-
+    this.dom.box.style.height = height + 'px';
   };
 
   module.exports = BackgroundItem;
 
 
 /***/ },
-/* 30 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Item = __webpack_require__(28);
+  var Item = __webpack_require__(30);
   var util = __webpack_require__(1);
 
   /**
@@ -13764,200 +14591,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 31 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Item = __webpack_require__(28);
-
-  /**
-   * @constructor PointItem
-   * @extends Item
-   * @param {Object} data             Object containing parameters start
-   *                                  content, className.
-   * @param {{toScreen: function, toTime: function}} conversion
-   *                                  Conversion functions from time to screen and vice versa
-   * @param {Object} [options]        Configuration options
-   *                                  // TODO: describe available options
-   */
-  function PointItem (data, conversion, options) {
-    this.props = {
-      dot: {
-        top: 0,
-        width: 0,
-        height: 0
-      },
-      content: {
-        height: 0,
-        marginLeft: 0
-      }
-    };
-
-    // validate data
-    if (data) {
-      if (data.start == undefined) {
-        throw new Error('Property "start" missing in item ' + data);
-      }
-    }
-
-    Item.call(this, data, conversion, options);
-  }
-
-  PointItem.prototype = new Item (null, null, null);
-
-  /**
-   * Check whether this item is visible inside given range
-   * @returns {{start: Number, end: Number}} range with a timestamp for start and end
-   * @returns {boolean} True if visible
-   */
-  PointItem.prototype.isVisible = function(range) {
-    // determine visibility
-    // TODO: account for the real width of the item. Right now we just add 1/4 to the window
-    var interval = (range.end - range.start) / 4;
-    return (this.data.start > range.start - interval) && (this.data.start < range.end + interval);
-  };
-
-  /**
-   * Repaint the item
-   */
-  PointItem.prototype.redraw = function() {
-    var dom = this.dom;
-    if (!dom) {
-      // create DOM
-      this.dom = {};
-      dom = this.dom;
-
-      // background box
-      dom.point = document.createElement('div');
-      // className is updated in redraw()
-
-      // contents box, right from the dot
-      dom.content = document.createElement('div');
-      dom.content.className = 'content';
-      dom.point.appendChild(dom.content);
-
-      // dot at start
-      dom.dot = document.createElement('div');
-      dom.point.appendChild(dom.dot);
-
-      // attach this item as attribute
-      dom.point['timeline-item'] = this;
-
-      this.dirty = true;
-    }
-
-    // append DOM to parent DOM
-    if (!this.parent) {
-      throw new Error('Cannot redraw item: no parent attached');
-    }
-    if (!dom.point.parentNode) {
-      var foreground = this.parent.dom.foreground;
-      if (!foreground) {
-        throw new Error('Cannot redraw item: parent has no foreground container element');
-      }
-      foreground.appendChild(dom.point);
-    }
-    this.displayed = true;
-
-    // Update DOM when item is marked dirty. An item is marked dirty when:
-    // - the item is not yet rendered
-    // - the item's data is changed
-    // - the item is selected/deselected
-    if (this.dirty) {
-      this._updateContents(this.dom.content);
-      this._updateTitle(this.dom.point);
-      this._updateDataAttributes(this.dom.point);
-      this._updateStyle(this.dom.point);
-
-      // update class
-      var className = (this.data.className? ' ' + this.data.className : '') +
-          (this.selected ? ' selected' : '');
-      dom.point.className  = 'item point' + className;
-      dom.dot.className  = 'item dot' + className;
-
-      // recalculate size
-      this.width = dom.point.offsetWidth;
-      this.height = dom.point.offsetHeight;
-      this.props.dot.width = dom.dot.offsetWidth;
-      this.props.dot.height = dom.dot.offsetHeight;
-      this.props.content.height = dom.content.offsetHeight;
-
-      // resize contents
-      dom.content.style.marginLeft = 2 * this.props.dot.width + 'px';
-      //dom.content.style.marginRight = ... + 'px'; // TODO: margin right
-
-      dom.dot.style.top = ((this.height - this.props.dot.height) / 2) + 'px';
-      dom.dot.style.left = (this.props.dot.width / 2) + 'px';
-
-      this.dirty = false;
-    }
-
-    this._repaintDeleteButton(dom.point);
-  };
-
-  /**
-   * Show the item in the DOM (when not already visible). The items DOM will
-   * be created when needed.
-   */
-  PointItem.prototype.show = function() {
-    if (!this.displayed) {
-      this.redraw();
-    }
-  };
-
-  /**
-   * Hide the item from the DOM (when visible)
-   */
-  PointItem.prototype.hide = function() {
-    if (this.displayed) {
-      if (this.dom.point.parentNode) {
-        this.dom.point.parentNode.removeChild(this.dom.point);
-      }
-
-      this.top = null;
-      this.left = null;
-
-      this.displayed = false;
-    }
-  };
-
-  /**
-   * Reposition the item horizontally
-   * @Override
-   */
-  PointItem.prototype.repositionX = function() {
-    var start = this.conversion.toScreen(this.data.start);
-
-    this.left = start - this.props.dot.width;
-
-    // reposition point
-    this.dom.point.style.left = this.left + 'px';
-  };
-
-  /**
-   * Reposition the item vertically
-   * @Override
-   */
-  PointItem.prototype.repositionY = function() {
-    var orientation = this.options.orientation,
-        point = this.dom.point;
-
-    if (orientation == 'top') {
-      point.style.top = this.top + 'px';
-    }
-    else {
-      point.style.top = (this.parent.height - this.top - this.height) + 'px';
-    }
-  };
-
-  module.exports = PointItem;
-
-
-/***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-  var Hammer = __webpack_require__(42);
-  var Item = __webpack_require__(28);
+  var Hammer = __webpack_require__(43);
+  var Item = __webpack_require__(30);
 
   /**
    * @constructor RangeItem
@@ -14252,29 +14890,218 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Emitter = __webpack_require__(50);
-  var Hammer = __webpack_require__(42);
-  var mousetrap = __webpack_require__(51);
+  var Item = __webpack_require__(30);
+
+  /**
+   * @constructor PointItem
+   * @extends Item
+   * @param {Object} data             Object containing parameters start
+   *                                  content, className.
+   * @param {{toScreen: function, toTime: function}} conversion
+   *                                  Conversion functions from time to screen and vice versa
+   * @param {Object} [options]        Configuration options
+   *                                  // TODO: describe available options
+   */
+  function PointItem (data, conversion, options) {
+    this.props = {
+      dot: {
+        top: 0,
+        width: 0,
+        height: 0
+      },
+      content: {
+        height: 0,
+        marginLeft: 0
+      }
+    };
+
+    // validate data
+    if (data) {
+      if (data.start == undefined) {
+        throw new Error('Property "start" missing in item ' + data);
+      }
+    }
+
+    Item.call(this, data, conversion, options);
+  }
+
+  PointItem.prototype = new Item (null, null, null);
+
+  /**
+   * Check whether this item is visible inside given range
+   * @returns {{start: Number, end: Number}} range with a timestamp for start and end
+   * @returns {boolean} True if visible
+   */
+  PointItem.prototype.isVisible = function(range) {
+    // determine visibility
+    // TODO: account for the real width of the item. Right now we just add 1/4 to the window
+    var interval = (range.end - range.start) / 4;
+    return (this.data.start > range.start - interval) && (this.data.start < range.end + interval);
+  };
+
+  /**
+   * Repaint the item
+   */
+  PointItem.prototype.redraw = function() {
+    var dom = this.dom;
+    if (!dom) {
+      // create DOM
+      this.dom = {};
+      dom = this.dom;
+
+      // background box
+      dom.point = document.createElement('div');
+      // className is updated in redraw()
+
+      // contents box, right from the dot
+      dom.content = document.createElement('div');
+      dom.content.className = 'content';
+      dom.point.appendChild(dom.content);
+
+      // dot at start
+      dom.dot = document.createElement('div');
+      dom.point.appendChild(dom.dot);
+
+      // attach this item as attribute
+      dom.point['timeline-item'] = this;
+
+      this.dirty = true;
+    }
+
+    // append DOM to parent DOM
+    if (!this.parent) {
+      throw new Error('Cannot redraw item: no parent attached');
+    }
+    if (!dom.point.parentNode) {
+      var foreground = this.parent.dom.foreground;
+      if (!foreground) {
+        throw new Error('Cannot redraw item: parent has no foreground container element');
+      }
+      foreground.appendChild(dom.point);
+    }
+    this.displayed = true;
+
+    // Update DOM when item is marked dirty. An item is marked dirty when:
+    // - the item is not yet rendered
+    // - the item's data is changed
+    // - the item is selected/deselected
+    if (this.dirty) {
+      this._updateContents(this.dom.content);
+      this._updateTitle(this.dom.point);
+      this._updateDataAttributes(this.dom.point);
+      this._updateStyle(this.dom.point);
+
+      // update class
+      var className = (this.data.className? ' ' + this.data.className : '') +
+          (this.selected ? ' selected' : '');
+      dom.point.className  = 'item point' + className;
+      dom.dot.className  = 'item dot' + className;
+
+      // recalculate size
+      this.width = dom.point.offsetWidth;
+      this.height = dom.point.offsetHeight;
+      this.props.dot.width = dom.dot.offsetWidth;
+      this.props.dot.height = dom.dot.offsetHeight;
+      this.props.content.height = dom.content.offsetHeight;
+
+      // resize contents
+      dom.content.style.marginLeft = 2 * this.props.dot.width + 'px';
+      //dom.content.style.marginRight = ... + 'px'; // TODO: margin right
+
+      dom.dot.style.top = ((this.height - this.props.dot.height) / 2) + 'px';
+      dom.dot.style.left = (this.props.dot.width / 2) + 'px';
+
+      this.dirty = false;
+    }
+
+    this._repaintDeleteButton(dom.point);
+  };
+
+  /**
+   * Show the item in the DOM (when not already visible). The items DOM will
+   * be created when needed.
+   */
+  PointItem.prototype.show = function() {
+    if (!this.displayed) {
+      this.redraw();
+    }
+  };
+
+  /**
+   * Hide the item from the DOM (when visible)
+   */
+  PointItem.prototype.hide = function() {
+    if (this.displayed) {
+      if (this.dom.point.parentNode) {
+        this.dom.point.parentNode.removeChild(this.dom.point);
+      }
+
+      this.top = null;
+      this.left = null;
+
+      this.displayed = false;
+    }
+  };
+
+  /**
+   * Reposition the item horizontally
+   * @Override
+   */
+  PointItem.prototype.repositionX = function() {
+    var start = this.conversion.toScreen(this.data.start);
+
+    this.left = start - this.props.dot.width;
+
+    // reposition point
+    this.dom.point.style.left = this.left + 'px';
+  };
+
+  /**
+   * Reposition the item vertically
+   * @Override
+   */
+  PointItem.prototype.repositionY = function() {
+    var orientation = this.options.orientation,
+        point = this.dom.point;
+
+    if (orientation == 'top') {
+      point.style.top = this.top + 'px';
+    }
+    else {
+      point.style.top = (this.parent.height - this.top - this.height) + 'px';
+    }
+  };
+
+  module.exports = PointItem;
+
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+  var Emitter = __webpack_require__(52);
+  var Hammer = __webpack_require__(43);
+  var mousetrap = __webpack_require__(55);
   var util = __webpack_require__(1);
-  var hammerUtil = __webpack_require__(44);
-  var DataSet = __webpack_require__(3);
+  var hammerUtil = __webpack_require__(47);
+  var DataSet = __webpack_require__(2);
   var DataView = __webpack_require__(4);
-  var dotparser = __webpack_require__(39);
-  var gephiParser = __webpack_require__(40);
-  var Groups = __webpack_require__(35);
-  var Images = __webpack_require__(36);
-  var Node = __webpack_require__(37);
-  var Edge = __webpack_require__(34);
-  var Popup = __webpack_require__(38);
-  var MixinLoader = __webpack_require__(48);
-  var Activator = __webpack_require__(49);
-  var locales = __webpack_require__(46);
+  var dotparser = __webpack_require__(41);
+  var gephiParser = __webpack_require__(42);
+  var Groups = __webpack_require__(37);
+  var Images = __webpack_require__(38);
+  var Node = __webpack_require__(39);
+  var Edge = __webpack_require__(36);
+  var Popup = __webpack_require__(40);
+  var MixinLoader = __webpack_require__(51);
+  var Activator = __webpack_require__(50);
+  var locales = __webpack_require__(48);
 
   // Load custom shapes into CanvasRenderingContext2D
-  __webpack_require__(47);
+  __webpack_require__(49);
 
   /**
    * @constructor Network
@@ -15104,7 +15931,7 @@ return /******/ (function(modules) { // webpackBootstrap
     drag.translation = this._getTranslation();
     drag.nodeId = null;
 
-    if (node != null) {
+    if (node != null && this.constants.dragNodes == true) {
       drag.nodeId = node.id;
       // select the clicked node if not yet selected
       if (!node.isSelected()) {
@@ -15553,6 +16380,8 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   Network.prototype.setSize = function(width, height) {
     var emitEvent = false;
+    var oldWidth = this.frame.canvas.width;
+    var oldHeight = this.frame.canvas.height;
     if (width != this.constants.width || height != this.constants.height || this.frame.style.width != width || this.frame.style.height != height) {
       this.frame.style.width = width;
       this.frame.style.height = height;
@@ -15583,7 +16412,7 @@ return /******/ (function(modules) { // webpackBootstrap
     }
 
     if (emitEvent == true) {
-      this.emit('resize', {width:this.frame.canvas.width,height:this.frame.canvas.height});
+      this.emit('resize', {width:this.frame.canvas.width,height:this.frame.canvas.height, oldWidth: oldWidth, oldHeight: oldHeight});
     }
   };
 
@@ -15598,7 +16427,7 @@ return /******/ (function(modules) { // webpackBootstrap
     if (nodes instanceof DataSet || nodes instanceof DataView) {
       this.nodesData = nodes;
     }
-    else if (nodes instanceof Array) {
+    else if (Array.isArray(nodes)) {
       this.nodesData = new DataSet();
       this.nodesData.add(nodes);
     }
@@ -15729,7 +16558,7 @@ return /******/ (function(modules) { // webpackBootstrap
     if (edges instanceof DataSet || edges instanceof DataView) {
       this.edgesData = edges;
     }
-    else if (edges instanceof Array) {
+    else if (Array.isArray(edges)) {
       this.edgesData = new DataSet();
       this.edgesData.add(edges);
     }
@@ -16539,14 +17368,32 @@ return /******/ (function(modules) { // webpackBootstrap
   };
 
   /**
-   * Load the XY positions of the nodes into the dataset.
+   * Return the positions of the nodes.
    */
-  Network.prototype.getPositions = function() {
+  Network.prototype.getPositions = function(ids) {
     var dataArray = {};
-    for (var nodeId in this.nodes) {
-      if (this.nodes.hasOwnProperty(nodeId)) {
-        var node = this.nodes[nodeId];
-        dataArray[nodeId] = {x:Math.round(node.x),y:Math.round(node.y)};
+    if (ids !== undefined) {
+      if (Array.isArray(ids) == true) {
+        for (var i = 0; i < ids.length; i++) {
+          if (this.nodes[ids[i]] !== undefined) {
+            var node = this.nodes[ids[i]];
+            dataArray[ids[i]] = {x: Math.round(node.x), y: Math.round(node.y)};
+          }
+        }
+      }
+      else {
+        if (this.nodes[ids] !== undefined) {
+          var node = this.nodes[ids];
+          dataArray[ids] = {x: Math.round(node.x), y: Math.round(node.y)};
+        }
+      }
+    }
+    else {
+      for (var nodeId in this.nodes) {
+        if (this.nodes.hasOwnProperty(nodeId)) {
+          var node = this.nodes[nodeId];
+          dataArray[nodeId] = {x: Math.round(node.x), y: Math.round(node.y)};
+        }
       }
     }
     return dataArray;
@@ -16769,16 +17616,15 @@ return /******/ (function(modules) { // webpackBootstrap
     return this.DOMtoCanvas({x: 0.5 * this.frame.canvas.clientWidth, y: 0.5 * this.frame.canvas.clientHeight});
   };
 
-
   module.exports = Network;
 
 
 /***/ },
-/* 34 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var Node = __webpack_require__(37);
+  var Node = __webpack_require__(39);
 
   /**
    * @class Edge
@@ -17973,7 +18819,7 @@ return /******/ (function(modules) { // webpackBootstrap
   module.exports = Edge;
 
 /***/ },
-/* 35 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
@@ -18062,7 +18908,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 36 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -18120,7 +18966,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 37 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
@@ -19003,7 +19849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
       var lines = text.split('\n');
       var lineCount = lines.length;
-      var fontSize = (Number(this.options.fontSize) + 4);
+      var fontSize = (Number(this.options.fontSize) + 4); // TODO: why is this +4 ?
       var yLine = y + (1 - lineCount) / 2 * fontSize;
       if (labelUnderNode == true) {
         yLine = y + (1 - lineCount) / (2 * fontSize);
@@ -19018,7 +19864,7 @@ return /******/ (function(modules) { // webpackBootstrap
       var height = this.options.fontSize * lineCount;
       var left = x - width / 2;
       var top = y - height / 2;
-      if (ctx.textBaseline == "top") {
+      if (baseline == "top") {
         top += 0.5 * fontSize;
       }
       this.labelDimensions = {top:top,left:left,width:width,height:height,yLine:yLine};
@@ -19144,7 +19990,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 38 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -19290,7 +20136,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 39 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -19995,9 +20841,9 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {function} fn
    */
   function forEach2(array1, array2, fn) {
-    if (array1 instanceof Array) {
+    if (Array.isArray(array1)) {
       array1.forEach(function (elem1) {
-        if (array2 instanceof Array) {
+        if (Array.isArray(array2)) {
           array2.forEach(function (elem2)  {
             fn(elem1, elem2);
           });
@@ -20008,7 +20854,7 @@ return /******/ (function(modules) { // webpackBootstrap
       });
     }
     else {
-      if (array2 instanceof Array) {
+      if (Array.isArray(array2)) {
         array2.forEach(function (elem2)  {
           fn(array1, elem2);
         });
@@ -20122,7 +20968,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 40 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
   
@@ -20187,22 +21033,13 @@ return /******/ (function(modules) { // webpackBootstrap
   exports.parseGephi = parseGephi;
 
 /***/ },
-/* 41 */
-/***/ function(module, exports, __webpack_require__) {
-
-  // first check if moment.js is already loaded in the browser window, if so,
-  // use this instance. Else, load via commonjs.
-  module.exports = (typeof window !== 'undefined') && window['moment'] || __webpack_require__(52);
-
-
-/***/ },
-/* 42 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
   // Only load hammer.js when in a browser environment
   // (loading hammer.js in a node.js environment gives errors)
   if (typeof window !== 'undefined') {
-    module.exports = window['Hammer'] || __webpack_require__(53);
+    module.exports = window['Hammer'] || __webpack_require__(54);
   }
   else {
     module.exports = function () {
@@ -20212,20 +21049,30 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 43 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Emitter = __webpack_require__(50);
-  var Hammer = __webpack_require__(42);
+  // first check if moment.js is already loaded in the browser window, if so,
+  // use this instance. Else, load via commonjs.
+  module.exports = (typeof window !== 'undefined') && window['moment'] || __webpack_require__(53);
+
+
+/***/ },
+/* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+  var Emitter = __webpack_require__(52);
+  var Hammer = __webpack_require__(43);
   var util = __webpack_require__(1);
-  var DataSet = __webpack_require__(3);
+  var DataSet = __webpack_require__(2);
   var DataView = __webpack_require__(4);
-  var Range = __webpack_require__(15);
-  var TimeAxis = __webpack_require__(27);
-  var CurrentTime = __webpack_require__(19);
-  var CustomTime = __webpack_require__(20);
-  var ItemSet = __webpack_require__(24);
-  var Activator = __webpack_require__(49);
+  var Range = __webpack_require__(16);
+  var TimeAxis = __webpack_require__(29);
+  var CurrentTime = __webpack_require__(20);
+  var CustomTime = __webpack_require__(21);
+  var ItemSet = __webpack_require__(26);
+  var Activator = __webpack_require__(50);
+  var DateUtil = __webpack_require__(14);
 
   /**
    * Create a timeline visualization
@@ -20390,8 +21237,12 @@ return /******/ (function(modules) { // webpackBootstrap
   Core.prototype.setOptions = function (options) {
     if (options) {
       // copy the known options
-      var fields = ['width', 'height', 'minHeight', 'maxHeight', 'autoResize', 'start', 'end', 'orientation', 'clickToUse', 'dataAttributes','amountOfSubgroups'];
+      var fields = ['width', 'height', 'minHeight', 'maxHeight', 'autoResize', 'start', 'end', 'orientation', 'clickToUse', 'dataAttributes', 'hiddenDates'];
       util.selectiveExtend(fields, this.options, options);
+
+      if ('hiddenDates' in this.options) {
+        DateUtil.convertHiddenOptions(this.body, this.options.hiddenDates);
+      }
 
       if ('clickToUse' in options) {
         if (options.clickToUse) {
@@ -20643,12 +21494,14 @@ return /******/ (function(modules) { // webpackBootstrap
    * option autoResize=false
    */
   Core.prototype.redraw = function() {
-    var resized = false,
-      options = this.options,
-      props = this.props,
-      dom = this.dom;
+    var resized = false;
+    var options = this.options;
+    var props = this.props;
+    var dom = this.dom;
 
     if (!dom) return; // when destroyed
+
+    DateUtil.updateHiddenDates(this.body, this.options.hiddenDates);
 
     // update class names
     if (options.orientation == 'top') {
@@ -20833,10 +21686,8 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   // TODO: move this function to Range
   Core.prototype._toTime = function(x) {
-    var conversion = this.range.conversion(this.props.center.width);
-    return new Date(x / conversion.scale + conversion.offset);
+    return DateUtil.toTime(this.body, this.range, x, this.props.center.width);
   };
-
 
   /**
    * Convert a position on the global screen (pixels) to a datetime
@@ -20846,8 +21697,9 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   // TODO: move this function to Range
   Core.prototype._toGlobalTime = function(x) {
-    var conversion = this.range.conversion(this.props.root.width);
-    return new Date(x / conversion.scale + conversion.offset);
+    return DateUtil.toTime(this.body, this.range, x, this.props.root.width);
+    //var conversion = this.range.conversion(this.props.root.width);
+    //return new Date(x / conversion.scale + conversion.offset);
   };
 
   /**
@@ -20859,9 +21711,9 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   // TODO: move this function to Range
   Core.prototype._toScreen = function(time) {
-    var conversion = this.range.conversion(this.props.center.width);
-    return (time.valueOf() - conversion.offset) * conversion.scale;
+    return DateUtil.toScreen(this, time, this.props.center.width);
   };
+
 
 
   /**
@@ -20874,8 +21726,9 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   // TODO: move this function to Range
   Core.prototype._toGlobalScreen = function(time) {
-    var conversion = this.range.conversion(this.props.root.width);
-    return (time.valueOf() - conversion.offset) * conversion.scale;
+    return DateUtil.toScreen(this, time, this.props.root.width);
+    //var conversion = this.range.conversion(this.props.root.width);
+    //return (time.valueOf() - conversion.offset) * conversion.scale;
   };
 
 
@@ -21041,10 +21894,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 44 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var Hammer = __webpack_require__(42);
+  // English
+  exports['en'] = {
+    current: 'current',
+    time: 'time'
+  };
+  exports['en_EN'] = exports['en'];
+  exports['en_US'] = exports['en'];
+
+  // Dutch
+  exports['nl'] = {
+    custom: 'aangepaste',
+    time: 'tijd'
+  };
+  exports['nl_NL'] = exports['nl'];
+  exports['nl_BE'] = exports['nl'];
+
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+  var Hammer = __webpack_require__(43);
 
   /**
    * Fake a hammer.js gesture. Event can be a ScrollEvent or MouseMoveEvent
@@ -21075,28 +21949,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 45 */
-/***/ function(module, exports, __webpack_require__) {
-
-  // English
-  exports['en'] = {
-    current: 'current',
-    time: 'time'
-  };
-  exports['en_EN'] = exports['en'];
-  exports['en_US'] = exports['en'];
-
-  // Dutch
-  exports['nl'] = {
-    custom: 'aangepaste',
-    time: 'tijd'
-  };
-  exports['nl_NL'] = exports['nl'];
-  exports['nl_BE'] = exports['nl'];
-
-
-/***/ },
-/* 46 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
   // English
@@ -21137,7 +21990,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 47 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -21368,16 +22221,168 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 48 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
-  var PhysicsMixin = __webpack_require__(60);
-  var ClusterMixin = __webpack_require__(54);
-  var SectorsMixin = __webpack_require__(55);
-  var SelectionMixin = __webpack_require__(56);
-  var ManipulationMixin = __webpack_require__(57);
-  var NavigationMixin = __webpack_require__(58);
-  var HierarchicalLayoutMixin = __webpack_require__(59);
+  var mousetrap = __webpack_require__(55);
+  var Emitter = __webpack_require__(52);
+  var Hammer = __webpack_require__(43);
+  var util = __webpack_require__(1);
+
+  /**
+   * Turn an element into an clickToUse element.
+   * When not active, the element has a transparent overlay. When the overlay is
+   * clicked, the mode is changed to active.
+   * When active, the element is displayed with a blue border around it, and
+   * the interactive contents of the element can be used. When clicked outside
+   * the element, the elements mode is changed to inactive.
+   * @param {Element} container
+   * @constructor
+   */
+  function Activator(container) {
+    this.active = false;
+
+    this.dom = {
+      container: container
+    };
+
+    this.dom.overlay = document.createElement('div');
+    this.dom.overlay.className = 'overlay';
+
+    this.dom.container.appendChild(this.dom.overlay);
+
+    this.hammer = Hammer(this.dom.overlay, {prevent_default: false});
+    this.hammer.on('tap', this._onTapOverlay.bind(this));
+
+    // block all touch events (except tap)
+    var me = this;
+    var events = [
+      'touch', 'pinch',
+      'doubletap', 'hold',
+      'dragstart', 'drag', 'dragend',
+      'mousewheel', 'DOMMouseScroll' // DOMMouseScroll is needed for Firefox
+    ];
+    events.forEach(function (event) {
+      me.hammer.on(event, function (event) {
+        event.stopPropagation();
+      });
+    });
+
+    // attach a tap event to the window, in order to deactivate when clicking outside the timeline
+    this.windowHammer = Hammer(window, {prevent_default: false});
+    this.windowHammer.on('tap', function (event) {
+      // deactivate when clicked outside the container
+      if (!_hasParent(event.target, container)) {
+        me.deactivate();
+      }
+    });
+
+    // mousetrap listener only bounded when active)
+    this.escListener = this.deactivate.bind(this);
+  }
+
+  // turn into an event emitter
+  Emitter(Activator.prototype);
+
+  // The currently active activator
+  Activator.current = null;
+
+  /**
+   * Destroy the activator. Cleans up all created DOM and event listeners
+   */
+  Activator.prototype.destroy = function () {
+    this.deactivate();
+
+    // remove dom
+    this.dom.overlay.parentNode.removeChild(this.dom.overlay);
+
+    // cleanup hammer instances
+    this.hammer = null;
+    this.windowHammer = null;
+    // FIXME: cleaning up hammer instances doesn't work (Timeline not removed from memory)
+  };
+
+  /**
+   * Activate the element
+   * Overlay is hidden, element is decorated with a blue shadow border
+   */
+  Activator.prototype.activate = function () {
+    // we allow only one active activator at a time
+    if (Activator.current) {
+      Activator.current.deactivate();
+    }
+    Activator.current = this;
+
+    this.active = true;
+    this.dom.overlay.style.display = 'none';
+    util.addClassName(this.dom.container, 'vis-active');
+
+    this.emit('change');
+    this.emit('activate');
+
+    // ugly hack: bind ESC after emitting the events, as the Network rebinds all
+    // keyboard events on a 'change' event
+    mousetrap.bind('esc', this.escListener);
+  };
+
+  /**
+   * Deactivate the element
+   * Overlay is displayed on top of the element
+   */
+  Activator.prototype.deactivate = function () {
+    this.active = false;
+    this.dom.overlay.style.display = '';
+    util.removeClassName(this.dom.container, 'vis-active');
+    mousetrap.unbind('esc', this.escListener);
+
+    this.emit('change');
+    this.emit('deactivate');
+  };
+
+  /**
+   * Handle a tap event: activate the container
+   * @param event
+   * @private
+   */
+  Activator.prototype._onTapOverlay = function (event) {
+    // activate the container
+    this.activate();
+    event.stopPropagation();
+  };
+
+  /**
+   * Test whether the element has the requested parent element somewhere in
+   * its chain of parent nodes.
+   * @param {HTMLElement} element
+   * @param {HTMLElement} parent
+   * @returns {boolean} Returns true when the parent is found somewhere in the
+   *                    chain of parent nodes.
+   * @private
+   */
+  function _hasParent(element, parent) {
+    while (element) {
+      if (element === parent) {
+        return true
+      }
+      element = element.parentNode;
+    }
+    return false;
+  }
+
+  module.exports = Activator;
+
+
+/***/ },
+/* 51 */
+/***/ function(module, exports, __webpack_require__) {
+
+  var PhysicsMixin = __webpack_require__(62);
+  var ClusterMixin = __webpack_require__(56);
+  var SectorsMixin = __webpack_require__(57);
+  var SelectionMixin = __webpack_require__(61);
+  var ManipulationMixin = __webpack_require__(58);
+  var NavigationMixin = __webpack_require__(59);
+  var HierarchicalLayoutMixin = __webpack_require__(60);
 
   /**
    * Load a mixin into the network object
@@ -21572,159 +22577,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 49 */
-/***/ function(module, exports, __webpack_require__) {
-
-  var mousetrap = __webpack_require__(51);
-  var Emitter = __webpack_require__(50);
-  var Hammer = __webpack_require__(42);
-  var util = __webpack_require__(1);
-
-  /**
-   * Turn an element into an clickToUse element.
-   * When not active, the element has a transparent overlay. When the overlay is
-   * clicked, the mode is changed to active.
-   * When active, the element is displayed with a blue border around it, and
-   * the interactive contents of the element can be used. When clicked outside
-   * the element, the elements mode is changed to inactive.
-   * @param {Element} container
-   * @constructor
-   */
-  function Activator(container) {
-    this.active = false;
-
-    this.dom = {
-      container: container
-    };
-
-    this.dom.overlay = document.createElement('div');
-    this.dom.overlay.className = 'overlay';
-
-    this.dom.container.appendChild(this.dom.overlay);
-
-    this.hammer = Hammer(this.dom.overlay, {prevent_default: false});
-    this.hammer.on('tap', this._onTapOverlay.bind(this));
-
-    // block all touch events (except tap)
-    var me = this;
-    var events = [
-      'touch', 'pinch',
-      'doubletap', 'hold',
-      'dragstart', 'drag', 'dragend',
-      'mousewheel', 'DOMMouseScroll' // DOMMouseScroll is needed for Firefox
-    ];
-    events.forEach(function (event) {
-      me.hammer.on(event, function (event) {
-        event.stopPropagation();
-      });
-    });
-
-    // attach a tap event to the window, in order to deactivate when clicking outside the timeline
-    this.windowHammer = Hammer(window, {prevent_default: false});
-    this.windowHammer.on('tap', function (event) {
-      // deactivate when clicked outside the container
-      if (!_hasParent(event.target, container)) {
-        me.deactivate();
-      }
-    });
-
-    // mousetrap listener only bounded when active)
-    this.escListener = this.deactivate.bind(this);
-  }
-
-  // turn into an event emitter
-  Emitter(Activator.prototype);
-
-  // The currently active activator
-  Activator.current = null;
-
-  /**
-   * Destroy the activator. Cleans up all created DOM and event listeners
-   */
-  Activator.prototype.destroy = function () {
-    this.deactivate();
-
-    // remove dom
-    this.dom.overlay.parentNode.removeChild(this.dom.overlay);
-
-    // cleanup hammer instances
-    this.hammer = null;
-    this.windowHammer = null;
-    // FIXME: cleaning up hammer instances doesn't work (Timeline not removed from memory)
-  };
-
-  /**
-   * Activate the element
-   * Overlay is hidden, element is decorated with a blue shadow border
-   */
-  Activator.prototype.activate = function () {
-    // we allow only one active activator at a time
-    if (Activator.current) {
-      Activator.current.deactivate();
-    }
-    Activator.current = this;
-
-    this.active = true;
-    this.dom.overlay.style.display = 'none';
-    util.addClassName(this.dom.container, 'vis-active');
-
-    this.emit('change');
-    this.emit('activate');
-
-    // ugly hack: bind ESC after emitting the events, as the Network rebinds all
-    // keyboard events on a 'change' event
-    mousetrap.bind('esc', this.escListener);
-  };
-
-  /**
-   * Deactivate the element
-   * Overlay is displayed on top of the element
-   */
-  Activator.prototype.deactivate = function () {
-    this.active = false;
-    this.dom.overlay.style.display = '';
-    util.removeClassName(this.dom.container, 'vis-active');
-    mousetrap.unbind('esc', this.escListener);
-
-    this.emit('change');
-    this.emit('deactivate');
-  };
-
-  /**
-   * Handle a tap event: activate the container
-   * @param event
-   * @private
-   */
-  Activator.prototype._onTapOverlay = function (event) {
-    // activate the container
-    this.activate();
-    event.stopPropagation();
-  };
-
-  /**
-   * Test whether the element has the requested parent element somewhere in
-   * its chain of parent nodes.
-   * @param {HTMLElement} element
-   * @param {HTMLElement} parent
-   * @returns {boolean} Returns true when the parent is found somewhere in the
-   *                    chain of parent nodes.
-   * @private
-   */
-  function _hasParent(element, parent) {
-    while (element) {
-      if (element === parent) {
-        return true
-      }
-      element = element.parentNode;
-    }
-    return false;
-  }
-
-  module.exports = Activator;
-
-
-/***/ },
-/* 50 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
   
@@ -21894,812 +22747,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 51 */
-/***/ function(module, exports, __webpack_require__) {
-
-  /**
-   * Copyright 2012 Craig Campbell
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   * http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   *
-   * Mousetrap is a simple keyboard shortcut library for Javascript with
-   * no external dependencies
-   *
-   * @version 1.1.2
-   * @url craig.is/killing/mice
-   */
-
-    /**
-     * mapping of special keycodes to their corresponding keys
-     *
-     * everything in this dictionary cannot use keypress events
-     * so it has to be here to map to the correct keycodes for
-     * keyup/keydown events
-     *
-     * @type {Object}
-     */
-    var _MAP = {
-            8: 'backspace',
-            9: 'tab',
-            13: 'enter',
-            16: 'shift',
-            17: 'ctrl',
-            18: 'alt',
-            20: 'capslock',
-            27: 'esc',
-            32: 'space',
-            33: 'pageup',
-            34: 'pagedown',
-            35: 'end',
-            36: 'home',
-            37: 'left',
-            38: 'up',
-            39: 'right',
-            40: 'down',
-            45: 'ins',
-            46: 'del',
-            91: 'meta',
-            93: 'meta',
-            224: 'meta'
-        },
-
-        /**
-         * mapping for special characters so they can support
-         *
-         * this dictionary is only used incase you want to bind a
-         * keyup or keydown event to one of these keys
-         *
-         * @type {Object}
-         */
-        _KEYCODE_MAP = {
-            106: '*',
-            107: '+',
-            109: '-',
-            110: '.',
-            111 : '/',
-            186: ';',
-            187: '=',
-            188: ',',
-            189: '-',
-            190: '.',
-            191: '/',
-            192: '`',
-            219: '[',
-            220: '\\',
-            221: ']',
-            222: '\''
-        },
-
-        /**
-         * this is a mapping of keys that require shift on a US keypad
-         * back to the non shift equivelents
-         *
-         * this is so you can use keyup events with these keys
-         *
-         * note that this will only work reliably on US keyboards
-         *
-         * @type {Object}
-         */
-        _SHIFT_MAP = {
-            '~': '`',
-            '!': '1',
-            '@': '2',
-            '#': '3',
-            '$': '4',
-            '%': '5',
-            '^': '6',
-            '&': '7',
-            '*': '8',
-            '(': '9',
-            ')': '0',
-            '_': '-',
-            '+': '=',
-            ':': ';',
-            '\"': '\'',
-            '<': ',',
-            '>': '.',
-            '?': '/',
-            '|': '\\'
-        },
-
-        /**
-         * this is a list of special strings you can use to map
-         * to modifier keys when you specify your keyboard shortcuts
-         *
-         * @type {Object}
-         */
-        _SPECIAL_ALIASES = {
-            'option': 'alt',
-            'command': 'meta',
-            'return': 'enter',
-            'escape': 'esc'
-        },
-
-        /**
-         * variable to store the flipped version of _MAP from above
-         * needed to check if we should use keypress or not when no action
-         * is specified
-         *
-         * @type {Object|undefined}
-         */
-        _REVERSE_MAP,
-
-        /**
-         * a list of all the callbacks setup via Mousetrap.bind()
-         *
-         * @type {Object}
-         */
-        _callbacks = {},
-
-        /**
-         * direct map of string combinations to callbacks used for trigger()
-         *
-         * @type {Object}
-         */
-        _direct_map = {},
-
-        /**
-         * keeps track of what level each sequence is at since multiple
-         * sequences can start out with the same sequence
-         *
-         * @type {Object}
-         */
-        _sequence_levels = {},
-
-        /**
-         * variable to store the setTimeout call
-         *
-         * @type {null|number}
-         */
-        _reset_timer,
-
-        /**
-         * temporary state where we will ignore the next keyup
-         *
-         * @type {boolean|string}
-         */
-        _ignore_next_keyup = false,
-
-        /**
-         * are we currently inside of a sequence?
-         * type of action ("keyup" or "keydown" or "keypress") or false
-         *
-         * @type {boolean|string}
-         */
-        _inside_sequence = false;
-
-    /**
-     * loop through the f keys, f1 to f19 and add them to the map
-     * programatically
-     */
-    for (var i = 1; i < 20; ++i) {
-        _MAP[111 + i] = 'f' + i;
-    }
-
-    /**
-     * loop through to map numbers on the numeric keypad
-     */
-    for (i = 0; i <= 9; ++i) {
-        _MAP[i + 96] = i;
-    }
-
-    /**
-     * cross browser add event method
-     *
-     * @param {Element|HTMLDocument} object
-     * @param {string} type
-     * @param {Function} callback
-     * @returns void
-     */
-    function _addEvent(object, type, callback) {
-        if (object.addEventListener) {
-            return object.addEventListener(type, callback, false);
-        }
-
-        object.attachEvent('on' + type, callback);
-    }
-
-    /**
-     * takes the event and returns the key character
-     *
-     * @param {Event} e
-     * @return {string}
-     */
-    function _characterFromEvent(e) {
-
-        // for keypress events we should return the character as is
-        if (e.type == 'keypress') {
-            return String.fromCharCode(e.which);
-        }
-
-        // for non keypress events the special maps are needed
-        if (_MAP[e.which]) {
-            return _MAP[e.which];
-        }
-
-        if (_KEYCODE_MAP[e.which]) {
-            return _KEYCODE_MAP[e.which];
-        }
-
-        // if it is not in the special map
-        return String.fromCharCode(e.which).toLowerCase();
-    }
-
-    /**
-     * should we stop this event before firing off callbacks
-     *
-     * @param {Event} e
-     * @return {boolean}
-     */
-    function _stop(e) {
-        var element = e.target || e.srcElement,
-            tag_name = element.tagName;
-
-        // if the element has the class "mousetrap" then no need to stop
-        if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
-            return false;
-        }
-
-        // stop for input, select, and textarea
-        return tag_name == 'INPUT' || tag_name == 'SELECT' || tag_name == 'TEXTAREA' || (element.contentEditable && element.contentEditable == 'true');
-    }
-
-    /**
-     * checks if two arrays are equal
-     *
-     * @param {Array} modifiers1
-     * @param {Array} modifiers2
-     * @returns {boolean}
-     */
-    function _modifiersMatch(modifiers1, modifiers2) {
-        return modifiers1.sort().join(',') === modifiers2.sort().join(',');
-    }
-
-    /**
-     * resets all sequence counters except for the ones passed in
-     *
-     * @param {Object} do_not_reset
-     * @returns void
-     */
-    function _resetSequences(do_not_reset) {
-        do_not_reset = do_not_reset || {};
-
-        var active_sequences = false,
-            key;
-
-        for (key in _sequence_levels) {
-            if (do_not_reset[key]) {
-                active_sequences = true;
-                continue;
-            }
-            _sequence_levels[key] = 0;
-        }
-
-        if (!active_sequences) {
-            _inside_sequence = false;
-        }
-    }
-
-    /**
-     * finds all callbacks that match based on the keycode, modifiers,
-     * and action
-     *
-     * @param {string} character
-     * @param {Array} modifiers
-     * @param {string} action
-     * @param {boolean=} remove - should we remove any matches
-     * @param {string=} combination
-     * @returns {Array}
-     */
-    function _getMatches(character, modifiers, action, remove, combination) {
-        var i,
-            callback,
-            matches = [];
-
-        // if there are no events related to this keycode
-        if (!_callbacks[character]) {
-            return [];
-        }
-
-        // if a modifier key is coming up on its own we should allow it
-        if (action == 'keyup' && _isModifier(character)) {
-            modifiers = [character];
-        }
-
-        // loop through all callbacks for the key that was pressed
-        // and see if any of them match
-        for (i = 0; i < _callbacks[character].length; ++i) {
-            callback = _callbacks[character][i];
-
-            // if this is a sequence but it is not at the right level
-            // then move onto the next match
-            if (callback.seq && _sequence_levels[callback.seq] != callback.level) {
-                continue;
-            }
-
-            // if the action we are looking for doesn't match the action we got
-            // then we should keep going
-            if (action != callback.action) {
-                continue;
-            }
-
-            // if this is a keypress event that means that we need to only
-            // look at the character, otherwise check the modifiers as
-            // well
-            if (action == 'keypress' || _modifiersMatch(modifiers, callback.modifiers)) {
-
-                // remove is used so if you change your mind and call bind a
-                // second time with a new function the first one is overwritten
-                if (remove && callback.combo == combination) {
-                    _callbacks[character].splice(i, 1);
-                }
-
-                matches.push(callback);
-            }
-        }
-
-        return matches;
-    }
-
-    /**
-     * takes a key event and figures out what the modifiers are
-     *
-     * @param {Event} e
-     * @returns {Array}
-     */
-    function _eventModifiers(e) {
-        var modifiers = [];
-
-        if (e.shiftKey) {
-            modifiers.push('shift');
-        }
-
-        if (e.altKey) {
-            modifiers.push('alt');
-        }
-
-        if (e.ctrlKey) {
-            modifiers.push('ctrl');
-        }
-
-        if (e.metaKey) {
-            modifiers.push('meta');
-        }
-
-        return modifiers;
-    }
-
-    /**
-     * actually calls the callback function
-     *
-     * if your callback function returns false this will use the jquery
-     * convention - prevent default and stop propogation on the event
-     *
-     * @param {Function} callback
-     * @param {Event} e
-     * @returns void
-     */
-    function _fireCallback(callback, e) {
-        if (callback(e) === false) {
-            if (e.preventDefault) {
-                e.preventDefault();
-            }
-
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
-
-            e.returnValue = false;
-            e.cancelBubble = true;
-        }
-    }
-
-    /**
-     * handles a character key event
-     *
-     * @param {string} character
-     * @param {Event} e
-     * @returns void
-     */
-    function _handleCharacter(character, e) {
-
-        // if this event should not happen stop here
-        if (_stop(e)) {
-            return;
-        }
-
-        var callbacks = _getMatches(character, _eventModifiers(e), e.type),
-            i,
-            do_not_reset = {},
-            processed_sequence_callback = false;
-
-        // loop through matching callbacks for this key event
-        for (i = 0; i < callbacks.length; ++i) {
-
-            // fire for all sequence callbacks
-            // this is because if for example you have multiple sequences
-            // bound such as "g i" and "g t" they both need to fire the
-            // callback for matching g cause otherwise you can only ever
-            // match the first one
-            if (callbacks[i].seq) {
-                processed_sequence_callback = true;
-
-                // keep a list of which sequences were matches for later
-                do_not_reset[callbacks[i].seq] = 1;
-                _fireCallback(callbacks[i].callback, e);
-                continue;
-            }
-
-            // if there were no sequence matches but we are still here
-            // that means this is a regular match so we should fire that
-            if (!processed_sequence_callback && !_inside_sequence) {
-                _fireCallback(callbacks[i].callback, e);
-            }
-        }
-
-        // if you are inside of a sequence and the key you are pressing
-        // is not a modifier key then we should reset all sequences
-        // that were not matched by this key event
-        if (e.type == _inside_sequence && !_isModifier(character)) {
-            _resetSequences(do_not_reset);
-        }
-    }
-
-    /**
-     * handles a keydown event
-     *
-     * @param {Event} e
-     * @returns void
-     */
-    function _handleKey(e) {
-
-        // normalize e.which for key events
-        // @see http://stackoverflow.com/questions/4285627/javascript-keycode-vs-charcode-utter-confusion
-        e.which = typeof e.which == "number" ? e.which : e.keyCode;
-
-        var character = _characterFromEvent(e);
-
-        // no character found then stop
-        if (!character) {
-            return;
-        }
-
-        if (e.type == 'keyup' && _ignore_next_keyup == character) {
-            _ignore_next_keyup = false;
-            return;
-        }
-
-        _handleCharacter(character, e);
-    }
-
-    /**
-     * determines if the keycode specified is a modifier key or not
-     *
-     * @param {string} key
-     * @returns {boolean}
-     */
-    function _isModifier(key) {
-        return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
-    }
-
-    /**
-     * called to set a 1 second timeout on the specified sequence
-     *
-     * this is so after each key press in the sequence you have 1 second
-     * to press the next key before you have to start over
-     *
-     * @returns void
-     */
-    function _resetSequenceTimer() {
-        clearTimeout(_reset_timer);
-        _reset_timer = setTimeout(_resetSequences, 1000);
-    }
-
-    /**
-     * reverses the map lookup so that we can look for specific keys
-     * to see what can and can't use keypress
-     *
-     * @return {Object}
-     */
-    function _getReverseMap() {
-        if (!_REVERSE_MAP) {
-            _REVERSE_MAP = {};
-            for (var key in _MAP) {
-
-                // pull out the numeric keypad from here cause keypress should
-                // be able to detect the keys from the character
-                if (key > 95 && key < 112) {
-                    continue;
-                }
-
-                if (_MAP.hasOwnProperty(key)) {
-                    _REVERSE_MAP[_MAP[key]] = key;
-                }
-            }
-        }
-        return _REVERSE_MAP;
-    }
-
-    /**
-     * picks the best action based on the key combination
-     *
-     * @param {string} key - character for key
-     * @param {Array} modifiers
-     * @param {string=} action passed in
-     */
-    function _pickBestAction(key, modifiers, action) {
-
-        // if no action was picked in we should try to pick the one
-        // that we think would work best for this key
-        if (!action) {
-            action = _getReverseMap()[key] ? 'keydown' : 'keypress';
-        }
-
-        // modifier keys don't work as expected with keypress,
-        // switch to keydown
-        if (action == 'keypress' && modifiers.length) {
-            action = 'keydown';
-        }
-
-        return action;
-    }
-
-    /**
-     * binds a key sequence to an event
-     *
-     * @param {string} combo - combo specified in bind call
-     * @param {Array} keys
-     * @param {Function} callback
-     * @param {string=} action
-     * @returns void
-     */
-    function _bindSequence(combo, keys, callback, action) {
-
-        // start off by adding a sequence level record for this combination
-        // and setting the level to 0
-        _sequence_levels[combo] = 0;
-
-        // if there is no action pick the best one for the first key
-        // in the sequence
-        if (!action) {
-            action = _pickBestAction(keys[0], []);
-        }
-
-        /**
-         * callback to increase the sequence level for this sequence and reset
-         * all other sequences that were active
-         *
-         * @param {Event} e
-         * @returns void
-         */
-        var _increaseSequence = function(e) {
-                _inside_sequence = action;
-                ++_sequence_levels[combo];
-                _resetSequenceTimer();
-            },
-
-            /**
-             * wraps the specified callback inside of another function in order
-             * to reset all sequence counters as soon as this sequence is done
-             *
-             * @param {Event} e
-             * @returns void
-             */
-            _callbackAndReset = function(e) {
-                _fireCallback(callback, e);
-
-                // we should ignore the next key up if the action is key down
-                // or keypress.  this is so if you finish a sequence and
-                // release the key the final key will not trigger a keyup
-                if (action !== 'keyup') {
-                    _ignore_next_keyup = _characterFromEvent(e);
-                }
-
-                // weird race condition if a sequence ends with the key
-                // another sequence begins with
-                setTimeout(_resetSequences, 10);
-            },
-            i;
-
-        // loop through keys one at a time and bind the appropriate callback
-        // function.  for any key leading up to the final one it should
-        // increase the sequence. after the final, it should reset all sequences
-        for (i = 0; i < keys.length; ++i) {
-            _bindSingle(keys[i], i < keys.length - 1 ? _increaseSequence : _callbackAndReset, action, combo, i);
-        }
-    }
-
-    /**
-     * binds a single keyboard combination
-     *
-     * @param {string} combination
-     * @param {Function} callback
-     * @param {string=} action
-     * @param {string=} sequence_name - name of sequence if part of sequence
-     * @param {number=} level - what part of the sequence the command is
-     * @returns void
-     */
-    function _bindSingle(combination, callback, action, sequence_name, level) {
-
-        // make sure multiple spaces in a row become a single space
-        combination = combination.replace(/\s+/g, ' ');
-
-        var sequence = combination.split(' '),
-            i,
-            key,
-            keys,
-            modifiers = [];
-
-        // if this pattern is a sequence of keys then run through this method
-        // to reprocess each pattern one key at a time
-        if (sequence.length > 1) {
-            return _bindSequence(combination, sequence, callback, action);
-        }
-
-        // take the keys from this pattern and figure out what the actual
-        // pattern is all about
-        keys = combination === '+' ? ['+'] : combination.split('+');
-
-        for (i = 0; i < keys.length; ++i) {
-            key = keys[i];
-
-            // normalize key names
-            if (_SPECIAL_ALIASES[key]) {
-                key = _SPECIAL_ALIASES[key];
-            }
-
-            // if this is not a keypress event then we should
-            // be smart about using shift keys
-            // this will only work for US keyboards however
-            if (action && action != 'keypress' && _SHIFT_MAP[key]) {
-                key = _SHIFT_MAP[key];
-                modifiers.push('shift');
-            }
-
-            // if this key is a modifier then add it to the list of modifiers
-            if (_isModifier(key)) {
-                modifiers.push(key);
-            }
-        }
-
-        // depending on what the key combination is
-        // we will try to pick the best event for it
-        action = _pickBestAction(key, modifiers, action);
-
-        // make sure to initialize array if this is the first time
-        // a callback is added for this key
-        if (!_callbacks[key]) {
-            _callbacks[key] = [];
-        }
-
-        // remove an existing match if there is one
-        _getMatches(key, modifiers, action, !sequence_name, combination);
-
-        // add this call back to the array
-        // if it is a sequence put it at the beginning
-        // if not put it at the end
-        //
-        // this is important because the way these are processed expects
-        // the sequence ones to come first
-        _callbacks[key][sequence_name ? 'unshift' : 'push']({
-            callback: callback,
-            modifiers: modifiers,
-            action: action,
-            seq: sequence_name,
-            level: level,
-            combo: combination
-        });
-    }
-
-    /**
-     * binds multiple combinations to the same callback
-     *
-     * @param {Array} combinations
-     * @param {Function} callback
-     * @param {string|undefined} action
-     * @returns void
-     */
-    function _bindMultiple(combinations, callback, action) {
-        for (var i = 0; i < combinations.length; ++i) {
-            _bindSingle(combinations[i], callback, action);
-        }
-    }
-
-    // start!
-    _addEvent(document, 'keypress', _handleKey);
-    _addEvent(document, 'keydown', _handleKey);
-    _addEvent(document, 'keyup', _handleKey);
-
-    var mousetrap = {
-
-        /**
-         * binds an event to mousetrap
-         *
-         * can be a single key, a combination of keys separated with +,
-         * a comma separated list of keys, an array of keys, or
-         * a sequence of keys separated by spaces
-         *
-         * be sure to list the modifier keys first to make sure that the
-         * correct key ends up getting bound (the last key in the pattern)
-         *
-         * @param {string|Array} keys
-         * @param {Function} callback
-         * @param {string=} action - 'keypress', 'keydown', or 'keyup'
-         * @returns void
-         */
-        bind: function(keys, callback, action) {
-            _bindMultiple(keys instanceof Array ? keys : [keys], callback, action);
-            _direct_map[keys + ':' + action] = callback;
-            return this;
-        },
-
-        /**
-         * unbinds an event to mousetrap
-         *
-         * the unbinding sets the callback function of the specified key combo
-         * to an empty function and deletes the corresponding key in the
-         * _direct_map dict.
-         *
-         * the keycombo+action has to be exactly the same as
-         * it was defined in the bind method
-         *
-         * TODO: actually remove this from the _callbacks dictionary instead
-         * of binding an empty function
-         *
-         * @param {string|Array} keys
-         * @param {string} action
-         * @returns void
-         */
-        unbind: function(keys, action) {
-            if (_direct_map[keys + ':' + action]) {
-                delete _direct_map[keys + ':' + action];
-                this.bind(keys, function() {}, action);
-            }
-            return this;
-        },
-
-        /**
-         * triggers an event that has already been bound
-         *
-         * @param {string} keys
-         * @param {string=} action
-         * @returns void
-         */
-        trigger: function(keys, action) {
-            _direct_map[keys + ':' + action]();
-            return this;
-        },
-
-        /**
-         * resets the library back to its initial state.  this is useful
-         * if you want to clear out the current keyboard shortcuts and bind
-         * new ones - for example if you switch to another page
-         *
-         * @returns void
-         */
-        reset: function() {
-            _callbacks = {};
-            _direct_map = {};
-            return this;
-        }
-    };
-
-  module.exports = mousetrap;
-
-
-
-/***/ },
-/* 52 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
   var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, module) {//! moment.js
@@ -25559,10 +25607,10 @@ return /******/ (function(modules) { // webpackBootstrap
       }
   }).call(this);
   
-  /* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(65)(module)))
+  /* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(67)(module)))
 
 /***/ },
-/* 53 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
   var __WEBPACK_AMD_DEFINE_RESULT__;/*! Hammer.JS - v1.1.3 - 2014-05-20
@@ -27729,7 +27777,812 @@ return /******/ (function(modules) { // webpackBootstrap
   })(window);
 
 /***/ },
-/* 54 */
+/* 55 */
+/***/ function(module, exports, __webpack_require__) {
+
+  /**
+   * Copyright 2012 Craig Campbell
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   * http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *
+   * Mousetrap is a simple keyboard shortcut library for Javascript with
+   * no external dependencies
+   *
+   * @version 1.1.2
+   * @url craig.is/killing/mice
+   */
+
+    /**
+     * mapping of special keycodes to their corresponding keys
+     *
+     * everything in this dictionary cannot use keypress events
+     * so it has to be here to map to the correct keycodes for
+     * keyup/keydown events
+     *
+     * @type {Object}
+     */
+    var _MAP = {
+            8: 'backspace',
+            9: 'tab',
+            13: 'enter',
+            16: 'shift',
+            17: 'ctrl',
+            18: 'alt',
+            20: 'capslock',
+            27: 'esc',
+            32: 'space',
+            33: 'pageup',
+            34: 'pagedown',
+            35: 'end',
+            36: 'home',
+            37: 'left',
+            38: 'up',
+            39: 'right',
+            40: 'down',
+            45: 'ins',
+            46: 'del',
+            91: 'meta',
+            93: 'meta',
+            224: 'meta'
+        },
+
+        /**
+         * mapping for special characters so they can support
+         *
+         * this dictionary is only used incase you want to bind a
+         * keyup or keydown event to one of these keys
+         *
+         * @type {Object}
+         */
+        _KEYCODE_MAP = {
+            106: '*',
+            107: '+',
+            109: '-',
+            110: '.',
+            111 : '/',
+            186: ';',
+            187: '=',
+            188: ',',
+            189: '-',
+            190: '.',
+            191: '/',
+            192: '`',
+            219: '[',
+            220: '\\',
+            221: ']',
+            222: '\''
+        },
+
+        /**
+         * this is a mapping of keys that require shift on a US keypad
+         * back to the non shift equivelents
+         *
+         * this is so you can use keyup events with these keys
+         *
+         * note that this will only work reliably on US keyboards
+         *
+         * @type {Object}
+         */
+        _SHIFT_MAP = {
+            '~': '`',
+            '!': '1',
+            '@': '2',
+            '#': '3',
+            '$': '4',
+            '%': '5',
+            '^': '6',
+            '&': '7',
+            '*': '8',
+            '(': '9',
+            ')': '0',
+            '_': '-',
+            '+': '=',
+            ':': ';',
+            '\"': '\'',
+            '<': ',',
+            '>': '.',
+            '?': '/',
+            '|': '\\'
+        },
+
+        /**
+         * this is a list of special strings you can use to map
+         * to modifier keys when you specify your keyboard shortcuts
+         *
+         * @type {Object}
+         */
+        _SPECIAL_ALIASES = {
+            'option': 'alt',
+            'command': 'meta',
+            'return': 'enter',
+            'escape': 'esc'
+        },
+
+        /**
+         * variable to store the flipped version of _MAP from above
+         * needed to check if we should use keypress or not when no action
+         * is specified
+         *
+         * @type {Object|undefined}
+         */
+        _REVERSE_MAP,
+
+        /**
+         * a list of all the callbacks setup via Mousetrap.bind()
+         *
+         * @type {Object}
+         */
+        _callbacks = {},
+
+        /**
+         * direct map of string combinations to callbacks used for trigger()
+         *
+         * @type {Object}
+         */
+        _direct_map = {},
+
+        /**
+         * keeps track of what level each sequence is at since multiple
+         * sequences can start out with the same sequence
+         *
+         * @type {Object}
+         */
+        _sequence_levels = {},
+
+        /**
+         * variable to store the setTimeout call
+         *
+         * @type {null|number}
+         */
+        _reset_timer,
+
+        /**
+         * temporary state where we will ignore the next keyup
+         *
+         * @type {boolean|string}
+         */
+        _ignore_next_keyup = false,
+
+        /**
+         * are we currently inside of a sequence?
+         * type of action ("keyup" or "keydown" or "keypress") or false
+         *
+         * @type {boolean|string}
+         */
+        _inside_sequence = false;
+
+    /**
+     * loop through the f keys, f1 to f19 and add them to the map
+     * programatically
+     */
+    for (var i = 1; i < 20; ++i) {
+        _MAP[111 + i] = 'f' + i;
+    }
+
+    /**
+     * loop through to map numbers on the numeric keypad
+     */
+    for (i = 0; i <= 9; ++i) {
+        _MAP[i + 96] = i;
+    }
+
+    /**
+     * cross browser add event method
+     *
+     * @param {Element|HTMLDocument} object
+     * @param {string} type
+     * @param {Function} callback
+     * @returns void
+     */
+    function _addEvent(object, type, callback) {
+        if (object.addEventListener) {
+            return object.addEventListener(type, callback, false);
+        }
+
+        object.attachEvent('on' + type, callback);
+    }
+
+    /**
+     * takes the event and returns the key character
+     *
+     * @param {Event} e
+     * @return {string}
+     */
+    function _characterFromEvent(e) {
+
+        // for keypress events we should return the character as is
+        if (e.type == 'keypress') {
+            return String.fromCharCode(e.which);
+        }
+
+        // for non keypress events the special maps are needed
+        if (_MAP[e.which]) {
+            return _MAP[e.which];
+        }
+
+        if (_KEYCODE_MAP[e.which]) {
+            return _KEYCODE_MAP[e.which];
+        }
+
+        // if it is not in the special map
+        return String.fromCharCode(e.which).toLowerCase();
+    }
+
+    /**
+     * should we stop this event before firing off callbacks
+     *
+     * @param {Event} e
+     * @return {boolean}
+     */
+    function _stop(e) {
+        var element = e.target || e.srcElement,
+            tag_name = element.tagName;
+
+        // if the element has the class "mousetrap" then no need to stop
+        if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
+            return false;
+        }
+
+        // stop for input, select, and textarea
+        return tag_name == 'INPUT' || tag_name == 'SELECT' || tag_name == 'TEXTAREA' || (element.contentEditable && element.contentEditable == 'true');
+    }
+
+    /**
+     * checks if two arrays are equal
+     *
+     * @param {Array} modifiers1
+     * @param {Array} modifiers2
+     * @returns {boolean}
+     */
+    function _modifiersMatch(modifiers1, modifiers2) {
+        return modifiers1.sort().join(',') === modifiers2.sort().join(',');
+    }
+
+    /**
+     * resets all sequence counters except for the ones passed in
+     *
+     * @param {Object} do_not_reset
+     * @returns void
+     */
+    function _resetSequences(do_not_reset) {
+        do_not_reset = do_not_reset || {};
+
+        var active_sequences = false,
+            key;
+
+        for (key in _sequence_levels) {
+            if (do_not_reset[key]) {
+                active_sequences = true;
+                continue;
+            }
+            _sequence_levels[key] = 0;
+        }
+
+        if (!active_sequences) {
+            _inside_sequence = false;
+        }
+    }
+
+    /**
+     * finds all callbacks that match based on the keycode, modifiers,
+     * and action
+     *
+     * @param {string} character
+     * @param {Array} modifiers
+     * @param {string} action
+     * @param {boolean=} remove - should we remove any matches
+     * @param {string=} combination
+     * @returns {Array}
+     */
+    function _getMatches(character, modifiers, action, remove, combination) {
+        var i,
+            callback,
+            matches = [];
+
+        // if there are no events related to this keycode
+        if (!_callbacks[character]) {
+            return [];
+        }
+
+        // if a modifier key is coming up on its own we should allow it
+        if (action == 'keyup' && _isModifier(character)) {
+            modifiers = [character];
+        }
+
+        // loop through all callbacks for the key that was pressed
+        // and see if any of them match
+        for (i = 0; i < _callbacks[character].length; ++i) {
+            callback = _callbacks[character][i];
+
+            // if this is a sequence but it is not at the right level
+            // then move onto the next match
+            if (callback.seq && _sequence_levels[callback.seq] != callback.level) {
+                continue;
+            }
+
+            // if the action we are looking for doesn't match the action we got
+            // then we should keep going
+            if (action != callback.action) {
+                continue;
+            }
+
+            // if this is a keypress event that means that we need to only
+            // look at the character, otherwise check the modifiers as
+            // well
+            if (action == 'keypress' || _modifiersMatch(modifiers, callback.modifiers)) {
+
+                // remove is used so if you change your mind and call bind a
+                // second time with a new function the first one is overwritten
+                if (remove && callback.combo == combination) {
+                    _callbacks[character].splice(i, 1);
+                }
+
+                matches.push(callback);
+            }
+        }
+
+        return matches;
+    }
+
+    /**
+     * takes a key event and figures out what the modifiers are
+     *
+     * @param {Event} e
+     * @returns {Array}
+     */
+    function _eventModifiers(e) {
+        var modifiers = [];
+
+        if (e.shiftKey) {
+            modifiers.push('shift');
+        }
+
+        if (e.altKey) {
+            modifiers.push('alt');
+        }
+
+        if (e.ctrlKey) {
+            modifiers.push('ctrl');
+        }
+
+        if (e.metaKey) {
+            modifiers.push('meta');
+        }
+
+        return modifiers;
+    }
+
+    /**
+     * actually calls the callback function
+     *
+     * if your callback function returns false this will use the jquery
+     * convention - prevent default and stop propogation on the event
+     *
+     * @param {Function} callback
+     * @param {Event} e
+     * @returns void
+     */
+    function _fireCallback(callback, e) {
+        if (callback(e) === false) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            e.returnValue = false;
+            e.cancelBubble = true;
+        }
+    }
+
+    /**
+     * handles a character key event
+     *
+     * @param {string} character
+     * @param {Event} e
+     * @returns void
+     */
+    function _handleCharacter(character, e) {
+
+        // if this event should not happen stop here
+        if (_stop(e)) {
+            return;
+        }
+
+        var callbacks = _getMatches(character, _eventModifiers(e), e.type),
+            i,
+            do_not_reset = {},
+            processed_sequence_callback = false;
+
+        // loop through matching callbacks for this key event
+        for (i = 0; i < callbacks.length; ++i) {
+
+            // fire for all sequence callbacks
+            // this is because if for example you have multiple sequences
+            // bound such as "g i" and "g t" they both need to fire the
+            // callback for matching g cause otherwise you can only ever
+            // match the first one
+            if (callbacks[i].seq) {
+                processed_sequence_callback = true;
+
+                // keep a list of which sequences were matches for later
+                do_not_reset[callbacks[i].seq] = 1;
+                _fireCallback(callbacks[i].callback, e);
+                continue;
+            }
+
+            // if there were no sequence matches but we are still here
+            // that means this is a regular match so we should fire that
+            if (!processed_sequence_callback && !_inside_sequence) {
+                _fireCallback(callbacks[i].callback, e);
+            }
+        }
+
+        // if you are inside of a sequence and the key you are pressing
+        // is not a modifier key then we should reset all sequences
+        // that were not matched by this key event
+        if (e.type == _inside_sequence && !_isModifier(character)) {
+            _resetSequences(do_not_reset);
+        }
+    }
+
+    /**
+     * handles a keydown event
+     *
+     * @param {Event} e
+     * @returns void
+     */
+    function _handleKey(e) {
+
+        // normalize e.which for key events
+        // @see http://stackoverflow.com/questions/4285627/javascript-keycode-vs-charcode-utter-confusion
+        e.which = typeof e.which == "number" ? e.which : e.keyCode;
+
+        var character = _characterFromEvent(e);
+
+        // no character found then stop
+        if (!character) {
+            return;
+        }
+
+        if (e.type == 'keyup' && _ignore_next_keyup == character) {
+            _ignore_next_keyup = false;
+            return;
+        }
+
+        _handleCharacter(character, e);
+    }
+
+    /**
+     * determines if the keycode specified is a modifier key or not
+     *
+     * @param {string} key
+     * @returns {boolean}
+     */
+    function _isModifier(key) {
+        return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
+    }
+
+    /**
+     * called to set a 1 second timeout on the specified sequence
+     *
+     * this is so after each key press in the sequence you have 1 second
+     * to press the next key before you have to start over
+     *
+     * @returns void
+     */
+    function _resetSequenceTimer() {
+        clearTimeout(_reset_timer);
+        _reset_timer = setTimeout(_resetSequences, 1000);
+    }
+
+    /**
+     * reverses the map lookup so that we can look for specific keys
+     * to see what can and can't use keypress
+     *
+     * @return {Object}
+     */
+    function _getReverseMap() {
+        if (!_REVERSE_MAP) {
+            _REVERSE_MAP = {};
+            for (var key in _MAP) {
+
+                // pull out the numeric keypad from here cause keypress should
+                // be able to detect the keys from the character
+                if (key > 95 && key < 112) {
+                    continue;
+                }
+
+                if (_MAP.hasOwnProperty(key)) {
+                    _REVERSE_MAP[_MAP[key]] = key;
+                }
+            }
+        }
+        return _REVERSE_MAP;
+    }
+
+    /**
+     * picks the best action based on the key combination
+     *
+     * @param {string} key - character for key
+     * @param {Array} modifiers
+     * @param {string=} action passed in
+     */
+    function _pickBestAction(key, modifiers, action) {
+
+        // if no action was picked in we should try to pick the one
+        // that we think would work best for this key
+        if (!action) {
+            action = _getReverseMap()[key] ? 'keydown' : 'keypress';
+        }
+
+        // modifier keys don't work as expected with keypress,
+        // switch to keydown
+        if (action == 'keypress' && modifiers.length) {
+            action = 'keydown';
+        }
+
+        return action;
+    }
+
+    /**
+     * binds a key sequence to an event
+     *
+     * @param {string} combo - combo specified in bind call
+     * @param {Array} keys
+     * @param {Function} callback
+     * @param {string=} action
+     * @returns void
+     */
+    function _bindSequence(combo, keys, callback, action) {
+
+        // start off by adding a sequence level record for this combination
+        // and setting the level to 0
+        _sequence_levels[combo] = 0;
+
+        // if there is no action pick the best one for the first key
+        // in the sequence
+        if (!action) {
+            action = _pickBestAction(keys[0], []);
+        }
+
+        /**
+         * callback to increase the sequence level for this sequence and reset
+         * all other sequences that were active
+         *
+         * @param {Event} e
+         * @returns void
+         */
+        var _increaseSequence = function(e) {
+                _inside_sequence = action;
+                ++_sequence_levels[combo];
+                _resetSequenceTimer();
+            },
+
+            /**
+             * wraps the specified callback inside of another function in order
+             * to reset all sequence counters as soon as this sequence is done
+             *
+             * @param {Event} e
+             * @returns void
+             */
+            _callbackAndReset = function(e) {
+                _fireCallback(callback, e);
+
+                // we should ignore the next key up if the action is key down
+                // or keypress.  this is so if you finish a sequence and
+                // release the key the final key will not trigger a keyup
+                if (action !== 'keyup') {
+                    _ignore_next_keyup = _characterFromEvent(e);
+                }
+
+                // weird race condition if a sequence ends with the key
+                // another sequence begins with
+                setTimeout(_resetSequences, 10);
+            },
+            i;
+
+        // loop through keys one at a time and bind the appropriate callback
+        // function.  for any key leading up to the final one it should
+        // increase the sequence. after the final, it should reset all sequences
+        for (i = 0; i < keys.length; ++i) {
+            _bindSingle(keys[i], i < keys.length - 1 ? _increaseSequence : _callbackAndReset, action, combo, i);
+        }
+    }
+
+    /**
+     * binds a single keyboard combination
+     *
+     * @param {string} combination
+     * @param {Function} callback
+     * @param {string=} action
+     * @param {string=} sequence_name - name of sequence if part of sequence
+     * @param {number=} level - what part of the sequence the command is
+     * @returns void
+     */
+    function _bindSingle(combination, callback, action, sequence_name, level) {
+
+        // make sure multiple spaces in a row become a single space
+        combination = combination.replace(/\s+/g, ' ');
+
+        var sequence = combination.split(' '),
+            i,
+            key,
+            keys,
+            modifiers = [];
+
+        // if this pattern is a sequence of keys then run through this method
+        // to reprocess each pattern one key at a time
+        if (sequence.length > 1) {
+            return _bindSequence(combination, sequence, callback, action);
+        }
+
+        // take the keys from this pattern and figure out what the actual
+        // pattern is all about
+        keys = combination === '+' ? ['+'] : combination.split('+');
+
+        for (i = 0; i < keys.length; ++i) {
+            key = keys[i];
+
+            // normalize key names
+            if (_SPECIAL_ALIASES[key]) {
+                key = _SPECIAL_ALIASES[key];
+            }
+
+            // if this is not a keypress event then we should
+            // be smart about using shift keys
+            // this will only work for US keyboards however
+            if (action && action != 'keypress' && _SHIFT_MAP[key]) {
+                key = _SHIFT_MAP[key];
+                modifiers.push('shift');
+            }
+
+            // if this key is a modifier then add it to the list of modifiers
+            if (_isModifier(key)) {
+                modifiers.push(key);
+            }
+        }
+
+        // depending on what the key combination is
+        // we will try to pick the best event for it
+        action = _pickBestAction(key, modifiers, action);
+
+        // make sure to initialize array if this is the first time
+        // a callback is added for this key
+        if (!_callbacks[key]) {
+            _callbacks[key] = [];
+        }
+
+        // remove an existing match if there is one
+        _getMatches(key, modifiers, action, !sequence_name, combination);
+
+        // add this call back to the array
+        // if it is a sequence put it at the beginning
+        // if not put it at the end
+        //
+        // this is important because the way these are processed expects
+        // the sequence ones to come first
+        _callbacks[key][sequence_name ? 'unshift' : 'push']({
+            callback: callback,
+            modifiers: modifiers,
+            action: action,
+            seq: sequence_name,
+            level: level,
+            combo: combination
+        });
+    }
+
+    /**
+     * binds multiple combinations to the same callback
+     *
+     * @param {Array} combinations
+     * @param {Function} callback
+     * @param {string|undefined} action
+     * @returns void
+     */
+    function _bindMultiple(combinations, callback, action) {
+        for (var i = 0; i < combinations.length; ++i) {
+            _bindSingle(combinations[i], callback, action);
+        }
+    }
+
+    // start!
+    _addEvent(document, 'keypress', _handleKey);
+    _addEvent(document, 'keydown', _handleKey);
+    _addEvent(document, 'keyup', _handleKey);
+
+    var mousetrap = {
+
+        /**
+         * binds an event to mousetrap
+         *
+         * can be a single key, a combination of keys separated with +,
+         * a comma separated list of keys, an array of keys, or
+         * a sequence of keys separated by spaces
+         *
+         * be sure to list the modifier keys first to make sure that the
+         * correct key ends up getting bound (the last key in the pattern)
+         *
+         * @param {string|Array} keys
+         * @param {Function} callback
+         * @param {string=} action - 'keypress', 'keydown', or 'keyup'
+         * @returns void
+         */
+        bind: function(keys, callback, action) {
+            _bindMultiple(keys instanceof Array ? keys : [keys], callback, action);
+            _direct_map[keys + ':' + action] = callback;
+            return this;
+        },
+
+        /**
+         * unbinds an event to mousetrap
+         *
+         * the unbinding sets the callback function of the specified key combo
+         * to an empty function and deletes the corresponding key in the
+         * _direct_map dict.
+         *
+         * the keycombo+action has to be exactly the same as
+         * it was defined in the bind method
+         *
+         * TODO: actually remove this from the _callbacks dictionary instead
+         * of binding an empty function
+         *
+         * @param {string|Array} keys
+         * @param {string} action
+         * @returns void
+         */
+        unbind: function(keys, action) {
+            if (_direct_map[keys + ':' + action]) {
+                delete _direct_map[keys + ':' + action];
+                this.bind(keys, function() {}, action);
+            }
+            return this;
+        },
+
+        /**
+         * triggers an event that has already been bound
+         *
+         * @param {string} keys
+         * @param {string=} action
+         * @returns void
+         */
+        trigger: function(keys, action) {
+            _direct_map[keys + ':' + action]();
+            return this;
+        },
+
+        /**
+         * resets the library back to its initial state.  this is useful
+         * if you want to clear out the current keyboard shortcuts and bind
+         * new ones - for example if you switch to another page
+         *
+         * @returns void
+         */
+        reset: function() {
+            _callbacks = {};
+            _direct_map = {};
+            return this;
+        }
+    };
+
+  module.exports = mousetrap;
+
+
+
+/***/ },
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -28872,11 +29725,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 55 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var Node = __webpack_require__(37);
+  var Node = __webpack_require__(39);
 
   /**
    * Creation of the SectorMixin var.
@@ -29431,726 +30284,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 56 */
-/***/ function(module, exports, __webpack_require__) {
-
-  var Node = __webpack_require__(37);
-
-  /**
-   * This function can be called from the _doInAllSectors function
-   *
-   * @param object
-   * @param overlappingNodes
-   * @private
-   */
-  exports._getNodesOverlappingWith = function(object, overlappingNodes) {
-    var nodes = this.nodes;
-    for (var nodeId in nodes) {
-      if (nodes.hasOwnProperty(nodeId)) {
-        if (nodes[nodeId].isOverlappingWith(object)) {
-          overlappingNodes.push(nodeId);
-        }
-      }
-    }
-  };
-
-  /**
-   * retrieve all nodes overlapping with given object
-   * @param {Object} object  An object with parameters left, top, right, bottom
-   * @return {Number[]}   An array with id's of the overlapping nodes
-   * @private
-   */
-  exports._getAllNodesOverlappingWith = function (object) {
-    var overlappingNodes = [];
-    this._doInAllActiveSectors("_getNodesOverlappingWith",object,overlappingNodes);
-    return overlappingNodes;
-  };
-
-
-  /**
-   * Return a position object in canvasspace from a single point in screenspace
-   *
-   * @param pointer
-   * @returns {{left: number, top: number, right: number, bottom: number}}
-   * @private
-   */
-  exports._pointerToPositionObject = function(pointer) {
-    var x = this._XconvertDOMtoCanvas(pointer.x);
-    var y = this._YconvertDOMtoCanvas(pointer.y);
-
-    return {
-      left:   x,
-      top:    y,
-      right:  x,
-      bottom: y
-    };
-  };
-
-
-  /**
-   * Get the top node at the a specific point (like a click)
-   *
-   * @param {{x: Number, y: Number}} pointer
-   * @return {Node | null} node
-   * @private
-   */
-  exports._getNodeAt = function (pointer) {
-    // we first check if this is an navigation controls element
-    var positionObject = this._pointerToPositionObject(pointer);
-    var overlappingNodes = this._getAllNodesOverlappingWith(positionObject);
-
-    // if there are overlapping nodes, select the last one, this is the
-    // one which is drawn on top of the others
-    if (overlappingNodes.length > 0) {
-       return this.nodes[overlappingNodes[overlappingNodes.length - 1]];
-    }
-    else {
-      return null;
-    }
-  };
-
-
-  /**
-   * retrieve all edges overlapping with given object, selector is around center
-   * @param {Object} object  An object with parameters left, top, right, bottom
-   * @return {Number[]}   An array with id's of the overlapping nodes
-   * @private
-   */
-  exports._getEdgesOverlappingWith = function (object, overlappingEdges) {
-    var edges = this.edges;
-    for (var edgeId in edges) {
-      if (edges.hasOwnProperty(edgeId)) {
-        if (edges[edgeId].isOverlappingWith(object)) {
-          overlappingEdges.push(edgeId);
-        }
-      }
-    }
-  };
-
-
-  /**
-   * retrieve all nodes overlapping with given object
-   * @param {Object} object  An object with parameters left, top, right, bottom
-   * @return {Number[]}   An array with id's of the overlapping nodes
-   * @private
-   */
-  exports._getAllEdgesOverlappingWith = function (object) {
-    var overlappingEdges = [];
-    this._doInAllActiveSectors("_getEdgesOverlappingWith",object,overlappingEdges);
-    return overlappingEdges;
-  };
-
-  /**
-   * Place holder. To implement change the _getNodeAt to a _getObjectAt. Have the _getObjectAt call
-   * _getNodeAt and _getEdgesAt, then priortize the selection to user preferences.
-   *
-   * @param pointer
-   * @returns {null}
-   * @private
-   */
-  exports._getEdgeAt = function(pointer) {
-    var positionObject = this._pointerToPositionObject(pointer);
-    var overlappingEdges = this._getAllEdgesOverlappingWith(positionObject);
-
-    if (overlappingEdges.length > 0) {
-      return this.edges[overlappingEdges[overlappingEdges.length - 1]];
-    }
-    else {
-      return null;
-    }
-  };
-
-
-  /**
-   * Add object to the selection array.
-   *
-   * @param obj
-   * @private
-   */
-  exports._addToSelection = function(obj) {
-    if (obj instanceof Node) {
-      this.selectionObj.nodes[obj.id] = obj;
-    }
-    else {
-      this.selectionObj.edges[obj.id] = obj;
-    }
-  };
-
-  /**
-   * Add object to the selection array.
-   *
-   * @param obj
-   * @private
-   */
-  exports._addToHover = function(obj) {
-    if (obj instanceof Node) {
-      this.hoverObj.nodes[obj.id] = obj;
-    }
-    else {
-      this.hoverObj.edges[obj.id] = obj;
-    }
-  };
-
-
-  /**
-   * Remove a single option from selection.
-   *
-   * @param {Object} obj
-   * @private
-   */
-  exports._removeFromSelection = function(obj) {
-    if (obj instanceof Node) {
-      delete this.selectionObj.nodes[obj.id];
-    }
-    else {
-      delete this.selectionObj.edges[obj.id];
-    }
-  };
-
-  /**
-   * Unselect all. The selectionObj is useful for this.
-   *
-   * @param {Boolean} [doNotTrigger] | ignore trigger
-   * @private
-   */
-  exports._unselectAll = function(doNotTrigger) {
-    if (doNotTrigger === undefined) {
-      doNotTrigger = false;
-    }
-    for(var nodeId in this.selectionObj.nodes) {
-      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
-        this.selectionObj.nodes[nodeId].unselect();
-      }
-    }
-    for(var edgeId in this.selectionObj.edges) {
-      if(this.selectionObj.edges.hasOwnProperty(edgeId)) {
-        this.selectionObj.edges[edgeId].unselect();
-      }
-    }
-
-    this.selectionObj = {nodes:{},edges:{}};
-
-    if (doNotTrigger == false) {
-      this.emit('select', this.getSelection());
-    }
-  };
-
-  /**
-   * Unselect all clusters. The selectionObj is useful for this.
-   *
-   * @param {Boolean} [doNotTrigger] | ignore trigger
-   * @private
-   */
-  exports._unselectClusters = function(doNotTrigger) {
-    if (doNotTrigger === undefined) {
-      doNotTrigger = false;
-    }
-
-    for (var nodeId in this.selectionObj.nodes) {
-      if (this.selectionObj.nodes.hasOwnProperty(nodeId)) {
-        if (this.selectionObj.nodes[nodeId].clusterSize > 1) {
-          this.selectionObj.nodes[nodeId].unselect();
-          this._removeFromSelection(this.selectionObj.nodes[nodeId]);
-        }
-      }
-    }
-
-    if (doNotTrigger == false) {
-      this.emit('select', this.getSelection());
-    }
-  };
-
-
-  /**
-   * return the number of selected nodes
-   *
-   * @returns {number}
-   * @private
-   */
-  exports._getSelectedNodeCount = function() {
-    var count = 0;
-    for (var nodeId in this.selectionObj.nodes) {
-      if (this.selectionObj.nodes.hasOwnProperty(nodeId)) {
-        count += 1;
-      }
-    }
-    return count;
-  };
-
-  /**
-   * return the selected node
-   *
-   * @returns {number}
-   * @private
-   */
-  exports._getSelectedNode = function() {
-    for (var nodeId in this.selectionObj.nodes) {
-      if (this.selectionObj.nodes.hasOwnProperty(nodeId)) {
-        return this.selectionObj.nodes[nodeId];
-      }
-    }
-    return null;
-  };
-
-  /**
-   * return the selected edge
-   *
-   * @returns {number}
-   * @private
-   */
-  exports._getSelectedEdge = function() {
-    for (var edgeId in this.selectionObj.edges) {
-      if (this.selectionObj.edges.hasOwnProperty(edgeId)) {
-        return this.selectionObj.edges[edgeId];
-      }
-    }
-    return null;
-  };
-
-
-  /**
-   * return the number of selected edges
-   *
-   * @returns {number}
-   * @private
-   */
-  exports._getSelectedEdgeCount = function() {
-    var count = 0;
-    for (var edgeId in this.selectionObj.edges) {
-      if (this.selectionObj.edges.hasOwnProperty(edgeId)) {
-        count += 1;
-      }
-    }
-    return count;
-  };
-
-
-  /**
-   * return the number of selected objects.
-   *
-   * @returns {number}
-   * @private
-   */
-  exports._getSelectedObjectCount = function() {
-    var count = 0;
-    for(var nodeId in this.selectionObj.nodes) {
-      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
-        count += 1;
-      }
-    }
-    for(var edgeId in this.selectionObj.edges) {
-      if(this.selectionObj.edges.hasOwnProperty(edgeId)) {
-        count += 1;
-      }
-    }
-    return count;
-  };
-
-  /**
-   * Check if anything is selected
-   *
-   * @returns {boolean}
-   * @private
-   */
-  exports._selectionIsEmpty = function() {
-    for(var nodeId in this.selectionObj.nodes) {
-      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
-        return false;
-      }
-    }
-    for(var edgeId in this.selectionObj.edges) {
-      if(this.selectionObj.edges.hasOwnProperty(edgeId)) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-
-  /**
-   * check if one of the selected nodes is a cluster.
-   *
-   * @returns {boolean}
-   * @private
-   */
-  exports._clusterInSelection = function() {
-    for(var nodeId in this.selectionObj.nodes) {
-      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
-        if (this.selectionObj.nodes[nodeId].clusterSize > 1) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
-
-  /**
-   * select the edges connected to the node that is being selected
-   *
-   * @param {Node} node
-   * @private
-   */
-  exports._selectConnectedEdges = function(node) {
-    for (var i = 0; i < node.dynamicEdges.length; i++) {
-      var edge = node.dynamicEdges[i];
-      edge.select();
-      this._addToSelection(edge);
-    }
-  };
-
-  /**
-   * select the edges connected to the node that is being selected
-   *
-   * @param {Node} node
-   * @private
-   */
-  exports._hoverConnectedEdges = function(node) {
-    for (var i = 0; i < node.dynamicEdges.length; i++) {
-      var edge = node.dynamicEdges[i];
-      edge.hover = true;
-      this._addToHover(edge);
-    }
-  };
-
-
-  /**
-   * unselect the edges connected to the node that is being selected
-   *
-   * @param {Node} node
-   * @private
-   */
-  exports._unselectConnectedEdges = function(node) {
-    for (var i = 0; i < node.dynamicEdges.length; i++) {
-      var edge = node.dynamicEdges[i];
-      edge.unselect();
-      this._removeFromSelection(edge);
-    }
-  };
-
-
-
-
-  /**
-   * This is called when someone clicks on a node. either select or deselect it.
-   * If there is an existing selection and we don't want to append to it, clear the existing selection
-   *
-   * @param {Node || Edge} object
-   * @param {Boolean} append
-   * @param {Boolean} [doNotTrigger] | ignore trigger
-   * @private
-   */
-  exports._selectObject = function(object, append, doNotTrigger, highlightEdges) {
-    if (doNotTrigger === undefined) {
-      doNotTrigger = false;
-    }
-    if (highlightEdges === undefined) {
-      highlightEdges = true;
-    }
-
-    if (this._selectionIsEmpty() == false && append == false && this.forceAppendSelection == false) {
-      this._unselectAll(true);
-    }
-
-    if (object.selected == false) {
-      object.select();
-      this._addToSelection(object);
-      if (object instanceof Node && this.blockConnectingEdgeSelection == false && highlightEdges == true) {
-        this._selectConnectedEdges(object);
-      }
-    }
-    else {
-      object.unselect();
-      this._removeFromSelection(object);
-    }
-
-    if (doNotTrigger == false) {
-      this.emit('select', this.getSelection());
-    }
-  };
-
-
-  /**
-   * This is called when someone clicks on a node. either select or deselect it.
-   * If there is an existing selection and we don't want to append to it, clear the existing selection
-   *
-   * @param {Node || Edge} object
-   * @private
-   */
-  exports._blurObject = function(object) {
-    if (object.hover == true) {
-      object.hover = false;
-      this.emit("blurNode",{node:object.id});
-    }
-  };
-
-  /**
-   * This is called when someone clicks on a node. either select or deselect it.
-   * If there is an existing selection and we don't want to append to it, clear the existing selection
-   *
-   * @param {Node || Edge} object
-   * @private
-   */
-  exports._hoverObject = function(object) {
-    if (object.hover == false) {
-      object.hover = true;
-      this._addToHover(object);
-      if (object instanceof Node) {
-        this.emit("hoverNode",{node:object.id});
-      }
-    }
-    if (object instanceof Node) {
-      this._hoverConnectedEdges(object);
-    }
-  };
-
-
-  /**
-   * handles the selection part of the touch, only for navigation controls elements;
-   * Touch is triggered before tap, also before hold. Hold triggers after a while.
-   * This is the most responsive solution
-   *
-   * @param {Object} pointer
-   * @private
-   */
-  exports._handleTouch = function(pointer) {
-  };
-
-
-  /**
-   * handles the selection part of the tap;
-   *
-   * @param {Object} pointer
-   * @private
-   */
-  exports._handleTap = function(pointer) {
-    var node = this._getNodeAt(pointer);
-    if (node != null) {
-      this._selectObject(node,false);
-    }
-    else {
-      var edge = this._getEdgeAt(pointer);
-      if (edge != null) {
-        this._selectObject(edge,false);
-      }
-      else {
-        this._unselectAll();
-      }
-    }
-    this.emit("click", this.getSelection());
-    this._redraw();
-  };
-
-
-  /**
-   * handles the selection part of the double tap and opens a cluster if needed
-   *
-   * @param {Object} pointer
-   * @private
-   */
-  exports._handleDoubleTap = function(pointer) {
-    var node = this._getNodeAt(pointer);
-    if (node != null && node !== undefined) {
-      // we reset the areaCenter here so the opening of the node will occur
-      this.areaCenter =  {"x" : this._XconvertDOMtoCanvas(pointer.x),
-                          "y" : this._YconvertDOMtoCanvas(pointer.y)};
-      this.openCluster(node);
-    }
-    this.emit("doubleClick", this.getSelection());
-  };
-
-
-  /**
-   * Handle the onHold selection part
-   *
-   * @param pointer
-   * @private
-   */
-  exports._handleOnHold = function(pointer) {
-    var node = this._getNodeAt(pointer);
-    if (node != null) {
-      this._selectObject(node,true);
-    }
-    else {
-      var edge = this._getEdgeAt(pointer);
-      if (edge != null) {
-        this._selectObject(edge,true);
-      }
-    }
-    this._redraw();
-  };
-
-
-  /**
-   * handle the onRelease event. These functions are here for the navigation controls module
-   * and data manipulation module.
-   *
-    * @private
-   */
-  exports._handleOnRelease = function(pointer) {
-    this._manipulationReleaseOverload(pointer);
-    this._navigationReleaseOverload(pointer);
-  };
-
-  exports._manipulationReleaseOverload = function (pointer) {};
-  exports._navigationReleaseOverload = function (pointer) {};
-
-  /**
-   *
-   * retrieve the currently selected objects
-   * @return {{nodes: Array.<String>, edges: Array.<String>}} selection
-   */
-  exports.getSelection = function() {
-    var nodeIds = this.getSelectedNodes();
-    var edgeIds = this.getSelectedEdges();
-    return {nodes:nodeIds, edges:edgeIds};
-  };
-
-  /**
-   *
-   * retrieve the currently selected nodes
-   * @return {String[]} selection    An array with the ids of the
-   *                                            selected nodes.
-   */
-  exports.getSelectedNodes = function() {
-    var idArray = [];
-    for(var nodeId in this.selectionObj.nodes) {
-      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
-        idArray.push(nodeId);
-      }
-    }
-    return idArray
-  };
-
-  /**
-   *
-   * retrieve the currently selected edges
-   * @return {Array} selection    An array with the ids of the
-   *                                            selected nodes.
-   */
-  exports.getSelectedEdges = function() {
-    var idArray = [];
-    for(var edgeId in this.selectionObj.edges) {
-      if(this.selectionObj.edges.hasOwnProperty(edgeId)) {
-        idArray.push(edgeId);
-      }
-    }
-    return idArray;
-  };
-
-
-  /**
-   * select zero or more nodes
-   * @param {Number[] | String[]} selection     An array with the ids of the
-   *                                            selected nodes.
-   */
-  exports.setSelection = function(selection) {
-    var i, iMax, id;
-
-    if (!selection || (selection.length == undefined))
-      throw 'Selection must be an array with ids';
-
-    // first unselect any selected node
-    this._unselectAll(true);
-
-    for (i = 0, iMax = selection.length; i < iMax; i++) {
-      id = selection[i];
-
-      var node = this.nodes[id];
-      if (!node) {
-        throw new RangeError('Node with id "' + id + '" not found');
-      }
-      this._selectObject(node,true,true);
-    }
-
-    console.log("setSelection is deprecated. Please use selectNodes instead.")
-
-    this.redraw();
-  };
-
-
-  /**
-   * select zero or more nodes with the option to highlight edges
-   * @param {Number[] | String[]} selection     An array with the ids of the
-   *                                            selected nodes.
-   * @param {boolean} [highlightEdges]
-   */
-  exports.selectNodes = function(selection, highlightEdges) {
-    var i, iMax, id;
-
-    if (!selection || (selection.length == undefined))
-      throw 'Selection must be an array with ids';
-
-    // first unselect any selected node
-    this._unselectAll(true);
-
-    for (i = 0, iMax = selection.length; i < iMax; i++) {
-      id = selection[i];
-
-      var node = this.nodes[id];
-      if (!node) {
-        throw new RangeError('Node with id "' + id + '" not found');
-      }
-      this._selectObject(node,true,true,highlightEdges);
-    }
-    this.redraw();
-  };
-
-
-  /**
-   * select zero or more edges
-   * @param {Number[] | String[]} selection     An array with the ids of the
-   *                                            selected nodes.
-   */
-  exports.selectEdges = function(selection) {
-    var i, iMax, id;
-
-    if (!selection || (selection.length == undefined))
-      throw 'Selection must be an array with ids';
-
-    // first unselect any selected node
-    this._unselectAll(true);
-
-    for (i = 0, iMax = selection.length; i < iMax; i++) {
-      id = selection[i];
-
-      var edge = this.edges[id];
-      if (!edge) {
-        throw new RangeError('Edge with id "' + id + '" not found');
-      }
-      this._selectObject(edge,true,true,highlightEdges);
-    }
-    this.redraw();
-  };
-
-  /**
-   * Validate the selection: remove ids of nodes which no longer exist
-   * @private
-   */
-  exports._updateSelection = function () {
-    for(var nodeId in this.selectionObj.nodes) {
-      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
-        if (!this.nodes.hasOwnProperty(nodeId)) {
-          delete this.selectionObj.nodes[nodeId];
-        }
-      }
-    }
-    for(var edgeId in this.selectionObj.edges) {
-      if(this.selectionObj.edges.hasOwnProperty(edgeId)) {
-        if (!this.edges.hasOwnProperty(edgeId)) {
-          delete this.selectionObj.edges[edgeId];
-        }
-      }
-    }
-  };
-
-
-/***/ },
-/* 57 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var Node = __webpack_require__(37);
-  var Edge = __webpack_require__(34);
+  var Node = __webpack_require__(39);
+  var Edge = __webpack_require__(36);
 
   /**
    * clears the toolbar div element of children
@@ -30746,11 +30885,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 58 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var Hammer = __webpack_require__(42);
+  var Hammer = __webpack_require__(43);
 
   exports._cleanNavigation = function() {
     // clean hammer bindings
@@ -30929,7 +31068,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 59 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
   exports._resetLevels = function() {
@@ -31346,13 +31485,717 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 60 */
+/* 61 */
+/***/ function(module, exports, __webpack_require__) {
+
+  var Node = __webpack_require__(39);
+
+  /**
+   * This function can be called from the _doInAllSectors function
+   *
+   * @param object
+   * @param overlappingNodes
+   * @private
+   */
+  exports._getNodesOverlappingWith = function(object, overlappingNodes) {
+    var nodes = this.nodes;
+    for (var nodeId in nodes) {
+      if (nodes.hasOwnProperty(nodeId)) {
+        if (nodes[nodeId].isOverlappingWith(object)) {
+          overlappingNodes.push(nodeId);
+        }
+      }
+    }
+  };
+
+  /**
+   * retrieve all nodes overlapping with given object
+   * @param {Object} object  An object with parameters left, top, right, bottom
+   * @return {Number[]}   An array with id's of the overlapping nodes
+   * @private
+   */
+  exports._getAllNodesOverlappingWith = function (object) {
+    var overlappingNodes = [];
+    this._doInAllActiveSectors("_getNodesOverlappingWith",object,overlappingNodes);
+    return overlappingNodes;
+  };
+
+
+  /**
+   * Return a position object in canvasspace from a single point in screenspace
+   *
+   * @param pointer
+   * @returns {{left: number, top: number, right: number, bottom: number}}
+   * @private
+   */
+  exports._pointerToPositionObject = function(pointer) {
+    var x = this._XconvertDOMtoCanvas(pointer.x);
+    var y = this._YconvertDOMtoCanvas(pointer.y);
+
+    return {
+      left:   x,
+      top:    y,
+      right:  x,
+      bottom: y
+    };
+  };
+
+
+  /**
+   * Get the top node at the a specific point (like a click)
+   *
+   * @param {{x: Number, y: Number}} pointer
+   * @return {Node | null} node
+   * @private
+   */
+  exports._getNodeAt = function (pointer) {
+    // we first check if this is an navigation controls element
+    var positionObject = this._pointerToPositionObject(pointer);
+    var overlappingNodes = this._getAllNodesOverlappingWith(positionObject);
+
+    // if there are overlapping nodes, select the last one, this is the
+    // one which is drawn on top of the others
+    if (overlappingNodes.length > 0) {
+       return this.nodes[overlappingNodes[overlappingNodes.length - 1]];
+    }
+    else {
+      return null;
+    }
+  };
+
+
+  /**
+   * retrieve all edges overlapping with given object, selector is around center
+   * @param {Object} object  An object with parameters left, top, right, bottom
+   * @return {Number[]}   An array with id's of the overlapping nodes
+   * @private
+   */
+  exports._getEdgesOverlappingWith = function (object, overlappingEdges) {
+    var edges = this.edges;
+    for (var edgeId in edges) {
+      if (edges.hasOwnProperty(edgeId)) {
+        if (edges[edgeId].isOverlappingWith(object)) {
+          overlappingEdges.push(edgeId);
+        }
+      }
+    }
+  };
+
+
+  /**
+   * retrieve all nodes overlapping with given object
+   * @param {Object} object  An object with parameters left, top, right, bottom
+   * @return {Number[]}   An array with id's of the overlapping nodes
+   * @private
+   */
+  exports._getAllEdgesOverlappingWith = function (object) {
+    var overlappingEdges = [];
+    this._doInAllActiveSectors("_getEdgesOverlappingWith",object,overlappingEdges);
+    return overlappingEdges;
+  };
+
+  /**
+   * Place holder. To implement change the _getNodeAt to a _getObjectAt. Have the _getObjectAt call
+   * _getNodeAt and _getEdgesAt, then priortize the selection to user preferences.
+   *
+   * @param pointer
+   * @returns {null}
+   * @private
+   */
+  exports._getEdgeAt = function(pointer) {
+    var positionObject = this._pointerToPositionObject(pointer);
+    var overlappingEdges = this._getAllEdgesOverlappingWith(positionObject);
+
+    if (overlappingEdges.length > 0) {
+      return this.edges[overlappingEdges[overlappingEdges.length - 1]];
+    }
+    else {
+      return null;
+    }
+  };
+
+
+  /**
+   * Add object to the selection array.
+   *
+   * @param obj
+   * @private
+   */
+  exports._addToSelection = function(obj) {
+    if (obj instanceof Node) {
+      this.selectionObj.nodes[obj.id] = obj;
+    }
+    else {
+      this.selectionObj.edges[obj.id] = obj;
+    }
+  };
+
+  /**
+   * Add object to the selection array.
+   *
+   * @param obj
+   * @private
+   */
+  exports._addToHover = function(obj) {
+    if (obj instanceof Node) {
+      this.hoverObj.nodes[obj.id] = obj;
+    }
+    else {
+      this.hoverObj.edges[obj.id] = obj;
+    }
+  };
+
+
+  /**
+   * Remove a single option from selection.
+   *
+   * @param {Object} obj
+   * @private
+   */
+  exports._removeFromSelection = function(obj) {
+    if (obj instanceof Node) {
+      delete this.selectionObj.nodes[obj.id];
+    }
+    else {
+      delete this.selectionObj.edges[obj.id];
+    }
+  };
+
+  /**
+   * Unselect all. The selectionObj is useful for this.
+   *
+   * @param {Boolean} [doNotTrigger] | ignore trigger
+   * @private
+   */
+  exports._unselectAll = function(doNotTrigger) {
+    if (doNotTrigger === undefined) {
+      doNotTrigger = false;
+    }
+    for(var nodeId in this.selectionObj.nodes) {
+      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
+        this.selectionObj.nodes[nodeId].unselect();
+      }
+    }
+    for(var edgeId in this.selectionObj.edges) {
+      if(this.selectionObj.edges.hasOwnProperty(edgeId)) {
+        this.selectionObj.edges[edgeId].unselect();
+      }
+    }
+
+    this.selectionObj = {nodes:{},edges:{}};
+
+    if (doNotTrigger == false) {
+      this.emit('select', this.getSelection());
+    }
+  };
+
+  /**
+   * Unselect all clusters. The selectionObj is useful for this.
+   *
+   * @param {Boolean} [doNotTrigger] | ignore trigger
+   * @private
+   */
+  exports._unselectClusters = function(doNotTrigger) {
+    if (doNotTrigger === undefined) {
+      doNotTrigger = false;
+    }
+
+    for (var nodeId in this.selectionObj.nodes) {
+      if (this.selectionObj.nodes.hasOwnProperty(nodeId)) {
+        if (this.selectionObj.nodes[nodeId].clusterSize > 1) {
+          this.selectionObj.nodes[nodeId].unselect();
+          this._removeFromSelection(this.selectionObj.nodes[nodeId]);
+        }
+      }
+    }
+
+    if (doNotTrigger == false) {
+      this.emit('select', this.getSelection());
+    }
+  };
+
+
+  /**
+   * return the number of selected nodes
+   *
+   * @returns {number}
+   * @private
+   */
+  exports._getSelectedNodeCount = function() {
+    var count = 0;
+    for (var nodeId in this.selectionObj.nodes) {
+      if (this.selectionObj.nodes.hasOwnProperty(nodeId)) {
+        count += 1;
+      }
+    }
+    return count;
+  };
+
+  /**
+   * return the selected node
+   *
+   * @returns {number}
+   * @private
+   */
+  exports._getSelectedNode = function() {
+    for (var nodeId in this.selectionObj.nodes) {
+      if (this.selectionObj.nodes.hasOwnProperty(nodeId)) {
+        return this.selectionObj.nodes[nodeId];
+      }
+    }
+    return null;
+  };
+
+  /**
+   * return the selected edge
+   *
+   * @returns {number}
+   * @private
+   */
+  exports._getSelectedEdge = function() {
+    for (var edgeId in this.selectionObj.edges) {
+      if (this.selectionObj.edges.hasOwnProperty(edgeId)) {
+        return this.selectionObj.edges[edgeId];
+      }
+    }
+    return null;
+  };
+
+
+  /**
+   * return the number of selected edges
+   *
+   * @returns {number}
+   * @private
+   */
+  exports._getSelectedEdgeCount = function() {
+    var count = 0;
+    for (var edgeId in this.selectionObj.edges) {
+      if (this.selectionObj.edges.hasOwnProperty(edgeId)) {
+        count += 1;
+      }
+    }
+    return count;
+  };
+
+
+  /**
+   * return the number of selected objects.
+   *
+   * @returns {number}
+   * @private
+   */
+  exports._getSelectedObjectCount = function() {
+    var count = 0;
+    for(var nodeId in this.selectionObj.nodes) {
+      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
+        count += 1;
+      }
+    }
+    for(var edgeId in this.selectionObj.edges) {
+      if(this.selectionObj.edges.hasOwnProperty(edgeId)) {
+        count += 1;
+      }
+    }
+    return count;
+  };
+
+  /**
+   * Check if anything is selected
+   *
+   * @returns {boolean}
+   * @private
+   */
+  exports._selectionIsEmpty = function() {
+    for(var nodeId in this.selectionObj.nodes) {
+      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
+        return false;
+      }
+    }
+    for(var edgeId in this.selectionObj.edges) {
+      if(this.selectionObj.edges.hasOwnProperty(edgeId)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+
+  /**
+   * check if one of the selected nodes is a cluster.
+   *
+   * @returns {boolean}
+   * @private
+   */
+  exports._clusterInSelection = function() {
+    for(var nodeId in this.selectionObj.nodes) {
+      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
+        if (this.selectionObj.nodes[nodeId].clusterSize > 1) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  /**
+   * select the edges connected to the node that is being selected
+   *
+   * @param {Node} node
+   * @private
+   */
+  exports._selectConnectedEdges = function(node) {
+    for (var i = 0; i < node.dynamicEdges.length; i++) {
+      var edge = node.dynamicEdges[i];
+      edge.select();
+      this._addToSelection(edge);
+    }
+  };
+
+  /**
+   * select the edges connected to the node that is being selected
+   *
+   * @param {Node} node
+   * @private
+   */
+  exports._hoverConnectedEdges = function(node) {
+    for (var i = 0; i < node.dynamicEdges.length; i++) {
+      var edge = node.dynamicEdges[i];
+      edge.hover = true;
+      this._addToHover(edge);
+    }
+  };
+
+
+  /**
+   * unselect the edges connected to the node that is being selected
+   *
+   * @param {Node} node
+   * @private
+   */
+  exports._unselectConnectedEdges = function(node) {
+    for (var i = 0; i < node.dynamicEdges.length; i++) {
+      var edge = node.dynamicEdges[i];
+      edge.unselect();
+      this._removeFromSelection(edge);
+    }
+  };
+
+
+
+
+  /**
+   * This is called when someone clicks on a node. either select or deselect it.
+   * If there is an existing selection and we don't want to append to it, clear the existing selection
+   *
+   * @param {Node || Edge} object
+   * @param {Boolean} append
+   * @param {Boolean} [doNotTrigger] | ignore trigger
+   * @private
+   */
+  exports._selectObject = function(object, append, doNotTrigger, highlightEdges, overrideSelectable) {
+    if (doNotTrigger === undefined) {
+      doNotTrigger = false;
+    }
+    if (highlightEdges === undefined) {
+      highlightEdges = true;
+    }
+
+    if (this._selectionIsEmpty() == false && append == false && this.forceAppendSelection == false) {
+      this._unselectAll(true);
+    }
+
+    // selectable allows the object to be selected. Override can be used if needed to bypass this.
+    if (object.selected == false && (this.constants.selectable == true || overrideSelectable)) {
+      object.select();
+      this._addToSelection(object);
+      if (object instanceof Node && this.blockConnectingEdgeSelection == false && highlightEdges == true) {
+        this._selectConnectedEdges(object);
+      }
+    }
+    // do not select the object if selectable is false, only add it to selection to allow drag to work
+    else if (object.selected == false) {
+      this._addToSelection(object);
+      doNotTrigger = true;
+    }
+    else {
+      object.unselect();
+      this._removeFromSelection(object);
+    }
+
+    if (doNotTrigger == false) {
+      this.emit('select', this.getSelection());
+    }
+  };
+
+
+  /**
+   * This is called when someone clicks on a node. either select or deselect it.
+   * If there is an existing selection and we don't want to append to it, clear the existing selection
+   *
+   * @param {Node || Edge} object
+   * @private
+   */
+  exports._blurObject = function(object) {
+    if (object.hover == true) {
+      object.hover = false;
+      this.emit("blurNode",{node:object.id});
+    }
+  };
+
+  /**
+   * This is called when someone clicks on a node. either select or deselect it.
+   * If there is an existing selection and we don't want to append to it, clear the existing selection
+   *
+   * @param {Node || Edge} object
+   * @private
+   */
+  exports._hoverObject = function(object) {
+    if (object.hover == false) {
+      object.hover = true;
+      this._addToHover(object);
+      if (object instanceof Node) {
+        this.emit("hoverNode",{node:object.id});
+      }
+    }
+    if (object instanceof Node) {
+      this._hoverConnectedEdges(object);
+    }
+  };
+
+
+  /**
+   * handles the selection part of the touch, only for navigation controls elements;
+   * Touch is triggered before tap, also before hold. Hold triggers after a while.
+   * This is the most responsive solution
+   *
+   * @param {Object} pointer
+   * @private
+   */
+  exports._handleTouch = function(pointer) {
+  };
+
+
+  /**
+   * handles the selection part of the tap;
+   *
+   * @param {Object} pointer
+   * @private
+   */
+  exports._handleTap = function(pointer) {
+    var node = this._getNodeAt(pointer);
+    if (node != null) {
+      this._selectObject(node, false);
+    }
+    else {
+      var edge = this._getEdgeAt(pointer);
+      if (edge != null) {
+        this._selectObject(edge, false);
+      }
+      else {
+        this._unselectAll();
+      }
+    }
+    this.emit("click", this.getSelection());
+    this._redraw();
+  };
+
+
+  /**
+   * handles the selection part of the double tap and opens a cluster if needed
+   *
+   * @param {Object} pointer
+   * @private
+   */
+  exports._handleDoubleTap = function(pointer) {
+    var node = this._getNodeAt(pointer);
+    if (node != null && node !== undefined) {
+      // we reset the areaCenter here so the opening of the node will occur
+      this.areaCenter =  {"x" : this._XconvertDOMtoCanvas(pointer.x),
+                          "y" : this._YconvertDOMtoCanvas(pointer.y)};
+      this.openCluster(node);
+    }
+    this.emit("doubleClick", this.getSelection());
+  };
+
+
+  /**
+   * Handle the onHold selection part
+   *
+   * @param pointer
+   * @private
+   */
+  exports._handleOnHold = function(pointer) {
+    var node = this._getNodeAt(pointer);
+    if (node != null) {
+      this._selectObject(node,true);
+    }
+    else {
+      var edge = this._getEdgeAt(pointer);
+      if (edge != null) {
+        this._selectObject(edge,true);
+      }
+    }
+    this._redraw();
+  };
+
+
+  /**
+   * handle the onRelease event. These functions are here for the navigation controls module
+   * and data manipulation module.
+   *
+    * @private
+   */
+  exports._handleOnRelease = function(pointer) {
+    this._manipulationReleaseOverload(pointer);
+    this._navigationReleaseOverload(pointer);
+  };
+
+  exports._manipulationReleaseOverload = function (pointer) {};
+  exports._navigationReleaseOverload = function (pointer) {};
+
+  /**
+   *
+   * retrieve the currently selected objects
+   * @return {{nodes: Array.<String>, edges: Array.<String>}} selection
+   */
+  exports.getSelection = function() {
+    var nodeIds = this.getSelectedNodes();
+    var edgeIds = this.getSelectedEdges();
+    return {nodes:nodeIds, edges:edgeIds};
+  };
+
+  /**
+   *
+   * retrieve the currently selected nodes
+   * @return {String[]} selection    An array with the ids of the
+   *                                            selected nodes.
+   */
+  exports.getSelectedNodes = function() {
+    var idArray = [];
+    if (this.constants.selectable == true) {
+      for (var nodeId in this.selectionObj.nodes) {
+        if (this.selectionObj.nodes.hasOwnProperty(nodeId)) {
+          idArray.push(nodeId);
+        }
+      }
+    }
+    return idArray
+  };
+
+  /**
+   *
+   * retrieve the currently selected edges
+   * @return {Array} selection    An array with the ids of the
+   *                                            selected nodes.
+   */
+  exports.getSelectedEdges = function() {
+    var idArray = [];
+    if (this.constants.selectable == true) {
+      for (var edgeId in this.selectionObj.edges) {
+        if (this.selectionObj.edges.hasOwnProperty(edgeId)) {
+          idArray.push(edgeId);
+        }
+      }
+    }
+    return idArray;
+  };
+
+
+  /**
+   * select zero or more nodes DEPRICATED
+   * @param {Number[] | String[]} selection     An array with the ids of the
+   *                                            selected nodes.
+   */
+  exports.setSelection = function() {
+    console.log("setSelection is deprecated. Please use selectNodes instead.")
+  };
+
+
+  /**
+   * select zero or more nodes with the option to highlight edges
+   * @param {Number[] | String[]} selection     An array with the ids of the
+   *                                            selected nodes.
+   * @param {boolean} [highlightEdges]
+   */
+  exports.selectNodes = function(selection, highlightEdges) {
+    var i, iMax, id;
+
+    if (!selection || (selection.length == undefined))
+      throw 'Selection must be an array with ids';
+
+    // first unselect any selected node
+    this._unselectAll(true);
+
+    for (i = 0, iMax = selection.length; i < iMax; i++) {
+      id = selection[i];
+
+      var node = this.nodes[id];
+      if (!node) {
+        throw new RangeError('Node with id "' + id + '" not found');
+      }
+      this._selectObject(node,true,true,highlightEdges,true);
+    }
+    this.redraw();
+  };
+
+
+  /**
+   * select zero or more edges
+   * @param {Number[] | String[]} selection     An array with the ids of the
+   *                                            selected nodes.
+   */
+  exports.selectEdges = function(selection) {
+    var i, iMax, id;
+
+    if (!selection || (selection.length == undefined))
+      throw 'Selection must be an array with ids';
+
+    // first unselect any selected node
+    this._unselectAll(true);
+
+    for (i = 0, iMax = selection.length; i < iMax; i++) {
+      id = selection[i];
+
+      var edge = this.edges[id];
+      if (!edge) {
+        throw new RangeError('Edge with id "' + id + '" not found');
+      }
+      this._selectObject(edge,true,true,false,true);
+    }
+    this.redraw();
+  };
+
+  /**
+   * Validate the selection: remove ids of nodes which no longer exist
+   * @private
+   */
+  exports._updateSelection = function () {
+    for(var nodeId in this.selectionObj.nodes) {
+      if(this.selectionObj.nodes.hasOwnProperty(nodeId)) {
+        if (!this.nodes.hasOwnProperty(nodeId)) {
+          delete this.selectionObj.nodes[nodeId];
+        }
+      }
+    }
+    for(var edgeId in this.selectionObj.edges) {
+      if(this.selectionObj.edges.hasOwnProperty(edgeId)) {
+        if (!this.edges.hasOwnProperty(edgeId)) {
+          delete this.selectionObj.edges[edgeId];
+        }
+      }
+    }
+  };
+
+
+/***/ },
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var RepulsionMixin = __webpack_require__(62);
-  var HierarchialRepulsionMixin = __webpack_require__(63);
-  var BarnesHutMixin = __webpack_require__(64);
+  var RepulsionMixin = __webpack_require__(64);
+  var HierarchialRepulsionMixin = __webpack_require__(65);
+  var BarnesHutMixin = __webpack_require__(66);
 
   /**
    * Toggling barnes Hut calculation on and off.
@@ -32040,7 +32883,7 @@ return /******/ (function(modules) { // webpackBootstrap
     var valueId = id + "_value";
     var rangeValue = document.getElementById(id).value;
 
-    if (map instanceof Array) {
+    if (Array.isArray(map)) {
       document.getElementById(valueId).value = map[parseInt(rangeValue)];
       this._overWriteGraphConstants(constantsVariableName,map[parseInt(rangeValue)]);
     }
@@ -32060,19 +32903,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 61 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
   function webpackContext(req) {
   	throw new Error("Cannot find module '" + req + "'.");
   }
-  webpackContext.resolve = webpackContext;
   webpackContext.keys = function() { return []; };
+  webpackContext.resolve = webpackContext;
   module.exports = webpackContext;
+  webpackContext.id = 63;
 
 
 /***/ },
-/* 62 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -32136,7 +32980,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 63 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -32295,7 +33139,7 @@ return /******/ (function(modules) { // webpackBootstrap
   };
 
 /***/ },
-/* 64 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -32700,7 +33544,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 65 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
   module.exports = function(module) {

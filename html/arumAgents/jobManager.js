@@ -16,29 +16,7 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
   var me = this;
 
   // create job agent. This agent will keep track of the global job stats. Jobs per type.
-  this.agent.rpc.request('jobAgentGenerator',{method:'createJob', params:{type:type}});
-
-  // assign agent to job.
-  this.agent.rpc.request(type, {method:'add', params:{
-    agentId: this.agent.id,
-    time:time,
-    jobId: id,
-    prerequisites: prerequisites
-  }})
-    .then(function (prediction) {
-      if (prediction.duration.mean != 0) {
-        me.agent.timelineDataset.update({
-          id: id + "_predMean0",
-          start: time,
-          end: new Date(time).getTime() + prediction.duration.mean,
-          group: me.agent.id,
-          type: 'background',
-          subgroup: me.agent.usedSubgroups[type],
-          className: 'prediction'
-        });
-      }
-      me.jobs.id[id].prediction = prediction;
-  });
+  this.agent.rpc.request('jobAgentGenerator',{method:'createJob', params:{type:type}}).done();
 
   this.jobs.id[id] = {
     type: type,
@@ -51,6 +29,30 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
     endOfDay: false,
     paused: false
   };
+
+  // assign agent to job.
+  this.agent.rpc.request(type, {method:'add', params:{
+    agentId: this.agent.id,
+    time:time,
+    jobId: id,
+    prerequisites: prerequisites
+  }})
+    .done(function (prediction) {
+      if (prediction.duration.mean != 0) {
+        me.agent.timelineDataset.update({
+          id: id + "_predMean0",
+          start: time,
+          end: new Date(time).getTime() + prediction.duration.mean,
+          group: me.agent.id,
+          type: 'range',
+          content: "",
+          subgroup: me.agent.usedSubgroups[type],
+          className: 'prediction'
+        });
+      }
+      me.jobs.id[id].prediction = prediction;
+  });
+
   if (this.jobs.type.open[type] === undefined) {this.jobs.type.open[type] = {}}
   this.jobs.type.open[type][id] = time;
   this.openJobs[id] = this.jobs.id[id];
@@ -58,7 +60,7 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
 
   var addQuery = [{id:id, start:time, content:"started: "+ type, group:this.agent.id, subgroup: this.agent.usedSubgroups[type]}];
   this.agent.timelineDataset.add(addQuery);
-  this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
+  this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}}).done();
 };
 
 JobManager.prototype.finish = function(id, type, time) {
@@ -69,7 +71,7 @@ JobManager.prototype.finish = function(id, type, time) {
     time: time,
     jobId: id
   }})
-    .then(function (reply) {
+    .done(function (reply) {
       var prediction = reply.prediction;
       var originalPrediction = me.jobs.id[id].prediction;
       me.jobs.id[id].elapsedTime = reply.elapsedTime;
@@ -96,7 +98,6 @@ JobManager.prototype.finish = function(id, type, time) {
       graph2dDataset.push({x: time, y: originalPrediction.durationWithPause.mean/3600000 ,group: type + '_pred_durationWithPause_original', type: type});
       graph2dDataset.push({x: time, y: originalPrediction.durationWithStartup.mean/3600000 ,group: type + '_pred_durationWithStartup_original', type: type});
       graph2dDataset.push({x: time, y: originalPrediction.durationWithBoth.mean/3600000 ,group: type + '_pred_durationWithBoth_original', type: type});
-
     });
 
   delete this.jobs.type.open[type][id];
@@ -118,7 +119,7 @@ JobManager.prototype.update = function(id, type, time, operation) {
           jobId: jobId,
           operation: operation
         }})
-          .then(function (reply) {
+          .done(function (reply) {
             me.jobs.id[reply.jobId].elapsedTime = reply.elapsedTime;
             me.jobs.id[reply.jobId].elapsedTimeWithPause = reply.elapsedTimeWithPause;
             me.updateDataSetsOperation(reply.jobId, reply.type, time, operation, eventId);
@@ -134,7 +135,7 @@ JobManager.prototype.update = function(id, type, time, operation) {
       jobId: id,
       operation: operation
     }})
-      .then(function (reply) {
+      .done(function (reply) {
         me.jobs.id[id].elapsedTime = reply.elapsedTime;
         me.jobs.id[id].elapsedTimeWithPause = reply.elapsedTimeWithPause;
         me.updateDataSetsOperation(id, type, time, operation, eventId);
@@ -189,7 +190,7 @@ JobManager.prototype.updateDataSetsFinish = function(id, type, time, prediction)
 
   this.agent.freeSubgroup(type);
   this.agent.timelineDataset.update(updateQuery);
-  this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
+  this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}}).done();
 };
 
 JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, prediction, eventId) {
@@ -302,8 +303,9 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
       start: time,
       end: new Date(time).getTime() + predictedTimeLeft,
       group: this.agent.id,
+      content: "",
       subgroup: this.agent.usedSubgroups[type],
-      type: 'background',
+      type: 'range',
       className: 'prediction'
     });
   }
@@ -331,18 +333,18 @@ JobManager.prototype.updateJobs = function(time, skipId) {
     if (this.openJobs.hasOwnProperty(jobId) && jobId != skipId) {
       var type = this.openJobs[jobId].type;
       var prediction  = this.openJobs[jobId].prediction;
-      var predictedTimeLeft;
-      var predictionExists = false;
+      var predictedTimeLeft = 0;
       // never been paused before
       if (this.jobs.id[jobId].pauseCount == 0) {
-        predictedTimeLeft = prediction.duration.mean - this.jobs.id[jobId].elapsedTime;
-        predictionExists = prediction.duration.mean != 0;
+        if (prediction.duration !== null) {
+          predictedTimeLeft = prediction.duration.mean - this.jobs.id[jobId].elapsedTime;
+        }
       }
       else {
-        predictedTimeLeft = prediction.durationWithPause.mean - this.jobs.id[jobId].elapsedTimeWithPause;
-        predictionExists = prediction.durationWithPause.mean != 0;
+        if (prediction.duration !== null) {
+          predictedTimeLeft = prediction.durationWithPause.mean - this.jobs.id[jobId].elapsedTimeWithPause;
+        }
       }
-
       updateQuery.push({id: jobId, end: time, content: type, type: 'range'});
     }
   }
@@ -354,8 +356,8 @@ JobManager.prototype.updateJobs = function(time, skipId) {
 JobManager.prototype.generateColors = function(predictedTime, elapsedTime) {
   var ratio = (elapsedTime + predictedTime) / elapsedTime;
   if (ratio > 1) {
-    ratio = Math.min(1.5,ratio) - 1; // 1.5 -- 1
-    var rgb = HSVToRGB(94/360,(2*ratio)*0.6 + 0.2,1);
+    ratio = Math.min(2,ratio) - 1; // 2 -- 1
+    var rgb = HSVToRGB(94/360,ratio*0.6 + 0.2,1);
   }
   else {
     ratio = Math.max(0.5,ratio) - 0.5; // 1 -- 0.5

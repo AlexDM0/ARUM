@@ -14,7 +14,7 @@ function AgentGenerator(id) {
   conn[0].connect(JAVA_EVENTS_URL)
     .then(function () {
       console.log('Connected to the JAVA_EVENTS');
-      me.rpc.request(JAVA_EVENTS_URL,{method:"loadEvents", params:{filename:"events.csv", actuallySend: true}}).then(function (reply) {
+      me.rpc.request(JAVA_EVENTS_URL,{method:"loadEvents", params:{filename:"events.csv", actuallySend: true}}).done(function (reply) {
         me.amountOfEvents = reply;
         me.getEvents(AMOUNT_OF_INITIAL_EVENTS);
       });
@@ -37,15 +37,64 @@ AgentGenerator.prototype.constructor = AgentGenerator;
 AgentGenerator.prototype.rpcFunctions = {};
 
 AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
-  console.log("event:",this.eventNumber, this.amountOfEvents, params);
+  //console.log("event:",this.eventNumber, this.amountOfEvents, params);
 
   // setup timeline
   timeline.setCustomTime(params.time);
   var range = timeline.getWindow();
   var duration = range.end - range.start;
-  var cushion = 0.15 * duration;
+  var hiddenDates = timeline.body.hiddenDates;
+  var DateUtil = vis.timeline.DateUtil;
+  var hiddenDuration = DateUtil.getHiddenDurationBetween(hiddenDates, range.start, range.end);
+  var visibleDuration = duration - hiddenDuration;
+
+
+  var fraction = 0.15;
+  var requiredStartDuration = (1-fraction) * visibleDuration;
+  var requiredEndDuration = fraction * visibleDuration;
   var convertedTime = new Date(params.time).getTime();
-  timeline.setWindow(convertedTime - duration + cushion, convertedTime + cushion, {animate:false});
+  var newStart;
+  var newEnd;
+
+  var elapsedDuration = 0;
+  var previousPoint = convertedTime;
+  for (var i = hiddenDates.length-1; i > 0; i--) {
+    var startDate = hiddenDates[i].start;
+    var endDate = hiddenDates[i].end;
+    // if time after the cutout, and the
+    if (endDate <= convertedTime) {
+      elapsedDuration += previousPoint - endDate;
+      previousPoint = startDate;
+      if (elapsedDuration >= requiredStartDuration) {
+        newStart = endDate + (elapsedDuration - requiredStartDuration);
+        break;
+      }
+    }
+  }
+  if (newStart === undefined) {
+    newStart = endDate - (requiredStartDuration - elapsedDuration);
+  }
+
+  elapsedDuration = 0;
+  previousPoint = convertedTime;
+  for (var i = 0; i < hiddenDates.length; i++) {
+    var startDate = hiddenDates[i].start;
+    var endDate = hiddenDates[i].end;
+    // if time after the cutout, and the
+    if (startDate >= convertedTime) {
+      elapsedDuration += startDate - previousPoint;
+      previousPoint = endDate;
+      if (elapsedDuration >= requiredEndDuration) {
+        newEnd = startDate - (elapsedDuration - requiredEndDuration);
+        break;
+      }
+    }
+  }
+  if (newEnd === undefined) {
+    newEnd = endDate + (requiredEndDuration - elapsedDuration);
+  }
+
+  timeline.setWindow(newStart, newEnd, {animate:false});
 
   if (params.performedBy == "global") {
     this.imposeWorkingHours(params);
@@ -61,7 +110,7 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
   if (this.eventsToFire != 0) {
     this.eventNumber += 1;
     eventCounter.innerHTML = this.eventNumber +""; // make string so it works
-    this.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}});
+    this.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}}).done();
     this.eventsToFire -= 1;
   }
 }
@@ -72,7 +121,7 @@ AgentGenerator.prototype.getEvents = function (count, delay) {
   }
   if (count != 0) {
     this.eventsToFire = count;
-    this.rpc.request(JAVA_EVENTS_URL, {method: 'nextEvent', params: {}});
+    this.rpc.request(JAVA_EVENTS_URL, {method: 'nextEvent', params: {}}).done();
     this.eventNumber += 1;
     eventCounter.innerHTML = this.eventNumber + ""; // make string so it works
     this.eventsToFire -= 1;
@@ -116,7 +165,6 @@ AgentGenerator.prototype.imposeWorkingHours = function(params) {
         start: this.lastEndOfDayTime,
         end: time,
         type: 'background',
-        group: 'Biagio',
         className: 'night'
       });
       this.lastEndOfDayTime = null;

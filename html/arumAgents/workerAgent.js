@@ -55,7 +55,7 @@ WorkerAgent.prototype.callRAO = function(params) {
   if (NCdetected == true) {this.state = "Waiting on RAO what to do with NC.";}
   else                    {this.state = "Job is complete, waiting on RAO.";}
 
-  this.rpc.request("RAO",{method:"workerNotification", params:{NC:NCdetected}});
+  this.rpc.request("RAO",{method:"workerNotification", params:{NC:NCdetected}}).done();
 };
 
 

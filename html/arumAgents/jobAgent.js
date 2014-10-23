@@ -119,7 +119,7 @@ JobAgent.prototype.rpcFunctions.finish = function(params) {
         uuid:                 uuid,
         parentJobId:          parentJobId,
         duration:             job.duration.getData()
-      }});
+      }}).done();
     }
   }
   // cleanup watchers
@@ -217,7 +217,7 @@ JobAgent.prototype.rpcFunctions.addWatcherOnJobId = function(params, sender) {
       uuid:                 uuid,
       parentJobId:          parentJobId,
       duration:             job.duration.getData()  // we need the pure json data, not the class
-    }});
+    }}).done();
   }
   else {
     // we will create a watcher on a job which will alert the watcher when the job is finished with all the times.
@@ -271,7 +271,7 @@ JobAgent.prototype.rpcFunctions.addWatcherByAgentID = function(params, sender) {
       parentJobId:          parentJobId,
       duration:             returnStats.getMeanData(), // we need the pure json data, not the class
       oldData: true
-    }});
+    }}).done();
   }
   else {
     params.jobId = jobId;
@@ -295,7 +295,7 @@ JobAgent.prototype.rpcFunctions.addWatcherByType = function(params, sender) {
     parentJobId:          params.parentJobId,
     duration:             this.globalStats.getMeanData(), // we need the pure json data, not the class
     oldData: true
-  }});
+  }}).done();
   return this.globalStats.getData(); // we need the pure json data, not the class
 };
 
@@ -319,11 +319,11 @@ JobAgent.prototype.addWatchers = function(parentJobId, prerequisites) {
       // we first need to find the type of job this belongs to.
       this.rpc.request('JobAgentGenerator', {method: 'returnJobAddress', params: {jobId: prereq.jobId}})
         // now that we have an address, set a watcher on the job id
-        .then(function (address) {
+        .done(function (address) {
           if (address != 'doesNotExist') {
             params.jobId = prereq.jobId;  // this is the job we want to watch
             me.rpc.request(address, {method: 'addWatcherOnJobId', params: params})
-              .then(function (preliminaryStats) {
+              .done(function (preliminaryStats) {
                 me.allJobs[parentJobId].watchingPrerequisite(preliminaryStats, prereq.uuid);
               })
           }
@@ -337,13 +337,13 @@ JobAgent.prototype.addWatchers = function(parentJobId, prerequisites) {
       // we now have an agentId and a jobType to watch.
       params.agentId = prereq.agentId;  // this is the job we want to watch
       this.rpc.request(prereq.type, {method: 'addWatcherByAgentID', params: params})
-        .then(function (preliminaryStats) {
+        .done(function (preliminaryStats) {
           me.allJobs[parentJobId].watchingPrerequisite(preliminaryStats, prereq.uuid);
         })
     }
     else if (prereq.type !== undefined) {
       this.rpc.request(prereq.type, {method: 'addWatcherByType', params: params})
-        .then(function (preliminaryStats) {
+        .done(function (preliminaryStats) {
           me.allJobs[parentJobId].watchingPrerequisite(preliminaryStats, prereq.uuid);
         })
     }

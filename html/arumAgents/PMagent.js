@@ -24,10 +24,10 @@ PMagent.prototype.rpcFunctions.RAOnotification = function(params, sender) {
   // set timeout to simulate delay in response.
   setTimeout(function() {
     if (isMajorNC) {
-      this.rpc.request(sender, {method:"PMnotification", params:{PMsays:"Minor NC, rework internally."}})
+      this.rpc.request(sender, {method:"PMnotification", params:{PMsays:"Minor NC, rework internally."}}).done();
     }
     else {
-      this.rpc.request(sender, {method:"PMnotification", params:{PMsays:"Major NC, meeting is needed."}})
+      this.rpc.request(sender, {method:"PMnotification", params:{PMsays:"Major NC, meeting is needed."}}).done();
       this.planMeeting();
     }
   }.bind(this), responseDelay);

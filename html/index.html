@@ -15,11 +15,11 @@
             /*background-color: rgba(40, 148, 255, 0.20) !important;*/
             /*z-index:9999 !important;*/
         /*}*/
-        .vis.timeline .item.background.prediction {
+        .vis.timeline .item.range.prediction {
             border: 1px solid rgba(0, 164, 255, 0.50) !important;
             background-color: rgba(0, 164, 255, 0.10) !important;
             box-shadow: rgba(0, 83, 128, 0.15) 0px 0px 10px !important;
-            /*z-index:9999 !important;*/
+            z-index:-1 !important;
             height:34px !important;
         }
         .vis.timeline .item.background.night {
@@ -359,14 +359,18 @@
             // add items to the DataSet
             var timelineContainer = document.getElementById('timeline');
             var timelineOptions = {
-                start: '2014-09-21',
+                hiddenDates: [
+                    {start: '2013-10-26 00:00:00', end: '2013-10-28 00:00:00', repeat: 'weekly'}, // daily weekly monthly yearly
+                    {start: '2013-03-29 18:30:00', end: '2013-03-30 08:00:00', repeat: 'daily'} // daily weekly monthly yearly
+                ],
+                start: '2014-09-18',
                 end: '2014-09-23',
                 autoResize: false,
                 showCustomTime: true,
                 showCurrentTime: false,
                 stack: false
             }
-            timeline = new vis.Timeline(timelineContainer, timelineItems, timelineOptions, timelineGroups);
+            timeline = new vis.Timeline(timelineContainer, timelineItems, timelineGroups, timelineOptions);
 
             var graph2dContainer = document.getElementById('graph2d');
             var graph2dOptions = {
@@ -384,7 +388,7 @@
                 dataAxis: {
                     customRange: {
                         left: {
-                            min:-0.1
+                            min:-0.5
                         }
                     }
                 },
@@ -696,7 +700,7 @@
 
 </head>
 <body onload="draw()">
-<h1>ARUM - Prague Demonstration</h1>
+<img src="./images/arum_small.png" style="position:relative; top:-6px;"><img src="./images/midas_small.png" style="float:right;"><br>
 <div class="typeButton selected" onclick="showTimelineBtn()" id="showTimeline">Show by Timeline</div>
 <div class="typeButton" onclick="showGraphBtn()" id="showGraph">Show by Job</div>
 <div id="timelineWrapper">

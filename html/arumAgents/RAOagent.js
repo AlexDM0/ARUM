@@ -24,10 +24,10 @@ RAOagent.prototype.rpcFunctions.workerNotification = function(params, sender) {
   setTimeout(function() {
     if (params.NCdetected) {
       this.callPM();
-      this.rpc.request(sender, {method:'RAOnotification', params:{RAOsays:'Calling PM.'}});
+      this.rpc.request(sender, {method:'RAOnotification', params:{RAOsays:'Calling PM.'}}).done();
     }
     else {
-      this.rpc.request(sender, {method:'RAOnotification', params:{RAOsays:'Good job.'}});
+      this.rpc.request(sender, {method:'RAOnotification', params:{RAOsays:'Good job.'}}).done();
     }
   }.bind(this), responseDelay);
 
