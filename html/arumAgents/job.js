@@ -44,24 +44,24 @@ Job.prototype.prerequisiteFinished = function(params) {
       break;
     }
   }
-}
+};
 
 Job.prototype.watchingPrerequisite = function(preliminaryStats, uuid) {
   for (var i = 0; i < this.prerequisites.length; i++) {
     var prereq = this.prerequisites[i];
     if (prereq.uuid == uuid) {
       prereq.stats.setData(preliminaryStats);
-      this.predictedStartupTime.useHighest(preliminaryStats)
+      this.predictedStartupTime.useHighest(preliminaryStats);
       break;
     }
   }
-}
+};
 
 Job.prototype.finalizePrerequisites = function() {
   for (var i = 0; i < this.prerequisites.length; i++) {
     this.startupTime.useHighest(this.prerequisites[i].times);
   }
-}
+};
 
 Job.prototype.finish = function(time) {
   this.finished = true;
@@ -70,7 +70,7 @@ Job.prototype.finish = function(time) {
   this.finalizePrerequisites();
 
   this.duration.calculateDuration(time, this.timeStart, this.elapsedTime, this.elapsedTimeWithPause, this.startupTime);
-}
+};
 
 Job.prototype.pause = function(time, endOfDay) {
   // if this is the endOfDay AND the job is paused, count the pause time and set the endOfDay pause to true
@@ -90,7 +90,7 @@ Job.prototype.pause = function(time, endOfDay) {
     this.timePaused = time;
     this.paused = true;
   }
-}
+};
 
 Job.prototype.resume = function(time, startOfDay) {
   // if the job was paused because of the endOfDay, resume it and set the timeResumed to now
@@ -111,6 +111,6 @@ Job.prototype.resume = function(time, startOfDay) {
   }
 
 
-}
+};
 
 

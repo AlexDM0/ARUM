@@ -58,7 +58,7 @@ JobAgent.prototype.expandPrerequisites = function(prerequisites) {
     }
   }
   return expanded;
-}
+};
 /**
  * Create new Job for agent
  * @param params
@@ -143,7 +143,7 @@ JobAgent.prototype.rpcFunctions.finish = function(params) {
     elapsedTime: this.closedJobs[agentId][jobId].elapsedTime,
     elapsedTimeWithPause: this.closedJobs[agentId][jobId].elapsedTimeWithPause,
     duration: this.closedJobs[agentId][jobId].duration.getData(),
-    prediction: this.globalStats.getData(),
+    prediction: this.globalStats.getData()
   };
 };
 
@@ -356,7 +356,7 @@ JobAgent.prototype.updatePredictedStartup = function(jobId, prediction) {
   jobPrediction.std = Math.sqrt(Math.pow(jobPrediction.std,2) + Math.pow(prediction.std,2));
 
   this.allJobs[jobId].prerequisitesCount += 1;
-}
+};
 
 
 /**
@@ -427,8 +427,8 @@ JobAgent.prototype.collectStatsIn = function(collection, field) {
   else {
     return {mean: 0, std: 0, min: 0, max: 0};
   }
-}
+};
 
 JobAgent.prototype.hasJob = function(params) {
   return this.allJobs[params.jobId] !== undefined;
-}
+};

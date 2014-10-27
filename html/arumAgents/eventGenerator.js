@@ -27,11 +27,11 @@ EventGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
     this.agentList[params.agentId] = new GenericAgent(params.agentId, params.type);
   }
   this.rpc.request(params.agentId, {method:"newEvent", params:params}).done();
-}
+};
 
 EventGenerator.prototype.start = function() {
   this.makeMachineEvent();
-}
+};
 
 EventGenerator.prototype.makeMachineEvent = function () {
   this.eventID = (Math.random()*1e15).toString(32);
@@ -46,7 +46,7 @@ EventGenerator.prototype.makeMachineEvent = function () {
   };
   this.rpc.request("agentGenerator",{method:'receiveEvent',params:event}).done();
   setTimeout(this.pauseMachineEvent.bind(this), Math.random() * 2000 + 500);
-}
+};
 
 EventGenerator.prototype.pauseMachineEvent = function () {
   var event = {
@@ -61,7 +61,7 @@ EventGenerator.prototype.pauseMachineEvent = function () {
 
   this.rpc.request("agentGenerator",{method:'receiveEvent',params:event}).done();
   setTimeout(this.resumeMachineEvent.bind(this), Math.random() * 1000 + 500);
-}
+};
 
 EventGenerator.prototype.resumeMachineEvent = function () {
   var event = {
@@ -76,7 +76,7 @@ EventGenerator.prototype.resumeMachineEvent = function () {
 
   this.rpc.request("agentGenerator",{method:'receiveEvent',params:event}).done();
   setTimeout(this.finishMachineEvent.bind(this), Math.random() * 1000 + 500);
-}
+};
 
 EventGenerator.prototype.finishMachineEvent = function () {
   var event = {
@@ -91,7 +91,7 @@ EventGenerator.prototype.finishMachineEvent = function () {
 
   this.rpc.request("agentGenerator",{method:'receiveEvent',params:event}).done();
   setTimeout(this.start.bind(this), Math.random() * 1000 + 1000);
-}
+};
 
 
 if (typeof window === 'undefined') {

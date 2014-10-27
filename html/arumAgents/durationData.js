@@ -13,7 +13,7 @@ DurationData.prototype.setData = function(otherData) {
   for (var i = 0; i < this.fields.length; i++) {
     this[this.fields[i]] = otherData[this.fields[i]];
   }
-}
+};
 
 DurationData.prototype.getData = function() {
   var dataObj = {};
@@ -21,7 +21,7 @@ DurationData.prototype.getData = function() {
     dataObj[this.fields[i]] = this[this.fields[i]];
   }
   return dataObj;
-}
+};
 
 DurationData.prototype.useHighest = function(otherData) {
   for (var i = 0; i < this.fields.length; i++) {
@@ -30,11 +30,11 @@ DurationData.prototype.useHighest = function(otherData) {
       this[field] = otherData[field];
     }
   }
-}
+};
 
 DurationData.prototype.calculateDuration = function(time, timeStart, elapsedTime, elapsedTimeWithPause, startupTime) {
   this.duration            = elapsedTime;
   this.durationWithPause   = elapsedTimeWithPause;
   this.durationWithStartup = elapsedTime + startupTime.durationWithStartup;
   this.durationWithBoth    = elapsedTimeWithPause + startupTime.durationWithBoth;
-}
+};

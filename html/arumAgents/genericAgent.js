@@ -41,12 +41,12 @@ GenericAgent.prototype.allocateSubgroup = function(type) {
       break;
     }
   }
-}
+};
 
 GenericAgent.prototype.freeSubgroup = function(type) {
   this.freeSubgroups[this.usedSubgroups[type]] = true;
   delete this.usedSubgroups[type];
-}
+};
 
 GenericAgent.prototype.newAssignment = function(id, type, time, prerequisites) {
   this.allocateSubgroup(type);

@@ -40,6 +40,52 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
   //console.log("event:",this.eventNumber, this.amountOfEvents, params);
 
   // setup timeline
+
+
+  if (params.performedBy == "global") {
+    this.imposeWorkingHours(params);
+  }
+  else {
+    if (agentList[params.performedBy] === undefined) {
+      agentList[params.performedBy] = new GenericAgent(params.performedBy, params.type);
+    }
+    this.rpc.request(params.performedBy, {method: "newEvent", params: params});
+  }
+
+  // check if we need to get another event, its done here to avoid raceconditions
+  if (this.eventsToFire != 0) {
+    this.eventNumber += 1;
+    eventCounter.innerHTML = this.eventNumber +""; // make string so it works
+    this.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}}).done();
+    this.eventsToFire -= 1;
+  }
+};
+
+AgentGenerator.prototype.getEvents = function (count, delay) {
+  if (this.eventNumber + count > this.amountOfEvents) {
+    count = this.amountOfEvents - this.eventNumber;
+  }
+  if (count != 0) {
+    this.eventsToFire = count;
+    this.rpc.request(JAVA_EVENTS_URL, {method: 'nextEvent', params: {}}).done();
+    this.eventNumber += 1;
+    eventCounter.innerHTML = this.eventNumber + ""; // make string so it works
+    this.eventsToFire -= 1;
+  }
+};
+
+AgentGenerator.prototype.rpcFunctions.updateOpenJobs = function(params) {
+  var skipJob = params.jobId;
+  var time = params.time;
+  this.moveTimeline(params);
+  for (var agentId in agentList) {
+    if (agentList.hasOwnProperty(agentId)) {
+      agentList[agentId].jobs.updateJobs(time, skipJob);
+    }
+  }
+};
+
+AgentGenerator.prototype.moveTimeline = function(params) {
   timeline.setCustomTime(params.time);
   var range = timeline.getWindow();
   var duration = range.end - range.start;
@@ -95,49 +141,7 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
   }
 
   timeline.setWindow(newStart, newEnd, {animate:false});
-
-  if (params.performedBy == "global") {
-    this.imposeWorkingHours(params);
-  }
-  else {
-    if (agentList[params.performedBy] === undefined) {
-      agentList[params.performedBy] = new GenericAgent(params.performedBy, params.type);
-    }
-    this.rpc.request(params.performedBy, {method: "newEvent", params: params});
-  }
-
-  // check if we need to get another event, its done here to avoid raceconditions
-  if (this.eventsToFire != 0) {
-    this.eventNumber += 1;
-    eventCounter.innerHTML = this.eventNumber +""; // make string so it works
-    this.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}}).done();
-    this.eventsToFire -= 1;
-  }
-}
-
-AgentGenerator.prototype.getEvents = function (count, delay) {
-  if (this.eventNumber + count > this.amountOfEvents) {
-    count = this.amountOfEvents - this.eventNumber;
-  }
-  if (count != 0) {
-    this.eventsToFire = count;
-    this.rpc.request(JAVA_EVENTS_URL, {method: 'nextEvent', params: {}}).done();
-    this.eventNumber += 1;
-    eventCounter.innerHTML = this.eventNumber + ""; // make string so it works
-    this.eventsToFire -= 1;
-  }
-}
-
-AgentGenerator.prototype.rpcFunctions.updateOpenJobs = function(params) {
-  var skipJob = params.jobId;
-  var time = params.time;
-
-  for (var agentId in agentList) {
-    if (agentList.hasOwnProperty(agentId)) {
-      agentList[agentId].jobs.updateJobs(time, skipJob);
-    }
-  }
-}
+};
 
 AgentGenerator.prototype.imposeWorkingHours = function(params) {
   var time = params.time;
@@ -172,4 +176,4 @@ AgentGenerator.prototype.imposeWorkingHours = function(params) {
   }
 
 
-}
+};

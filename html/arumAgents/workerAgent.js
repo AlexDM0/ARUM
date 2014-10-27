@@ -33,7 +33,7 @@ WorkerAgent.prototype.rpcFunctions.jobNotification = function(params) {
 
 WorkerAgent.prototype.rpcFunctions.gatherStatistics = function(params) {
 
-}
+};
 
 WorkerAgent.prototype.rpcFunctions.RAOnotification = function(params) {
   switch (params.RAOsays) {

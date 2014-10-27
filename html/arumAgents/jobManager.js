@@ -27,7 +27,8 @@ JobManager.prototype.add = function(id, type, time, prerequisites) {
     elapsedTimeWithPause: 0,
     pauseCount: 0,
     endOfDay: false,
-    paused: false
+    paused: false,
+    pauseAreaID: ""
   };
 
   // assign agent to job.
@@ -210,7 +211,18 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
   }
   else {
     this.jobs.id[id].pauseCount += 1;
-
+    this.jobs.id[id].pauseAreaID = this.agent.id + "_" + "_pauseArea_" + eventId;
+    var shadedPauseArea = {
+      id: this.jobs.id[id].pauseAreaID,
+      start: time,
+      end: time,
+      content: '',
+      group: this.agent.id,
+      subgroup: this.agent.usedSubgroups[type],
+      className: 'pausedArea',
+      title: 'Job paused.'
+    };
+    updateQuery.push(shadedPauseArea);
   }
 
   var field = 'duration';
@@ -231,6 +243,8 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
     className: 'pause',
     title: 'Calling RAO for possible NC.'
   };
+
+
   if (this.agent.id == "Paolo") {
     imageUpdate.title = "Going to inspect possible NC.";
   }
@@ -273,6 +287,8 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
     flagId = id + "startOfDayNotifier_" + eventId;
   }
   else {
+    updateQuery.push({id: this.jobs.id[id].pauseAreaID, end: time, content: '', type: 'range'});
+    this.jobs.id[id].pauseAreaID = "";
     this.jobs.id[id].pauseCount += 1;
   }
 
@@ -314,6 +330,7 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
   if (operation != 'startOfDay'){
     this.jobs.id[id].paused = false;
   }
+  console.log("updateq",updateQuery);
   this.agent.timelineDataset.update(updateQuery);
   this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
 };
@@ -336,21 +353,24 @@ JobManager.prototype.updateJobs = function(time, skipId) {
       var predictedTimeLeft = 0;
       // never been paused before
       if (this.jobs.id[jobId].pauseCount == 0) {
-        if (prediction.duration !== null) {
+        if (prediction !== null && prediction.duration !== null) {
           predictedTimeLeft = prediction.duration.mean - this.jobs.id[jobId].elapsedTime;
         }
       }
       else {
-        if (prediction.duration !== null) {
+        if (prediction !== null && prediction.durationWithPause !== null) {
           predictedTimeLeft = prediction.durationWithPause.mean - this.jobs.id[jobId].elapsedTimeWithPause;
         }
       }
       updateQuery.push({id: jobId, end: time, content: type, type: 'range'});
+      if (this.openJobs[jobId].paused == true) {
+        updateQuery.push({id: this.openJobs[jobId].pauseAreaID, end: time});
+      }
     }
   }
 
   this.agent.timelineDataset.update(updateQuery);
-}
+};
 
 
 JobManager.prototype.generateColors = function(predictedTime, elapsedTime) {
@@ -364,7 +384,7 @@ JobManager.prototype.generateColors = function(predictedTime, elapsedTime) {
     var rgb = HSVToRGB(40/360,(1-(2*ratio))*0.6 + 0.1 ,1);
   }
   return "rgb(" + rgb.r + "," + rgb.g + "," + rgb.b + ")";
-}
+};
 
 function HSVToRGB(h, s, v) {
   var r, g, b;
@@ -385,8 +405,7 @@ function HSVToRGB(h, s, v) {
   }
 
   return {r:Math.floor(r * 255), g:Math.floor(g * 255), b:Math.floor(b * 255) };
-};
-
+}
 function RGBToHSV (red,green,blue) {
   red=red/255; green=green/255; blue=blue/255;
   var minRGB = Math.min(red,Math.min(green,blue));
@@ -404,4 +423,4 @@ function RGBToHSV (red,green,blue) {
   var saturation = (maxRGB - minRGB)/maxRGB;
   var value = maxRGB;
   return {h:hue,s:saturation,v:value};
-};
+}

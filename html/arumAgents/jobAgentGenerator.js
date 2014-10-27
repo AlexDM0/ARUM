@@ -142,7 +142,7 @@ JobAgentGenerator.prototype.rpcFunctions.createJob = function(params) {
     graph2d.setOptions({groups:{visible:visibilityUpdate}});
     refreshJobs();
   }
-}
+};
 
 JobAgentGenerator.prototype.rpcFunctions.returnJobAddress = function(params) {
   var instanceId = params.instanceId;
@@ -152,12 +152,11 @@ JobAgentGenerator.prototype.rpcFunctions.returnJobAddress = function(params) {
       hasJob = jobList[jobAgentName].hasJob(instanceId);
       if (hasJob == true) {
         return jobAgentName;
-        break;
       }
     }
   }
   return "doesNotExist";
-}
+};
 
 JobAgentGenerator.prototype.getAllJobNames = function() {
   var list = [];
@@ -167,4 +166,4 @@ JobAgentGenerator.prototype.getAllJobNames = function() {
     }
   }
   return list;
-}
+};
