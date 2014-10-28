@@ -9,6 +9,7 @@ function AgentGenerator(id) {
   this.eventNumber = 0;
   this.eventsToFire = 0;
   this.lastEndOfDayTime = null;
+  this.events = [];
 
   conn = this.connect(eve.system.transports.getAll());
   conn[0].connect(JAVA_EVENTS_URL)
@@ -40,7 +41,7 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
   //console.log("event:",this.eventNumber, this.amountOfEvents, params);
 
   // setup timeline
-
+  this.events.push(params);
 
   if (params.performedBy == "global") {
     this.imposeWorkingHours(params);
@@ -177,3 +178,33 @@ AgentGenerator.prototype.imposeWorkingHours = function(params) {
 
 
 };
+
+AgentGenerator.prototype.printEvents = function() {
+  var str = "";
+  str += "[";
+  for (var i = 0; i < this.events.length; i++) {
+    str += "{";
+    var first = true;
+    for (var eventField in this.events[i]) {
+      if (this.events[i].hasOwnProperty(eventField)) {
+        if (first == false) {
+          str += ","
+        }
+        first = false;
+        if (eventField == "time") {
+          str += eventField + ": '" + new Date(this.events[i][eventField]).valueOf() + "'";
+        }
+        else if(eventField == 'prerequisites') {}
+        else {
+          str += eventField + ": '" + this.events[i][eventField] + "'";
+        }
+      }
+    }
+    str += "}";
+    if (i < this.events.length -1) {
+      str += ",";
+    }
+  }
+  str += "]";
+  console.log(str);
+}

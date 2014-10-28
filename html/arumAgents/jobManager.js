@@ -330,7 +330,6 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
   if (operation != 'startOfDay'){
     this.jobs.id[id].paused = false;
   }
-  console.log("updateq",updateQuery);
   this.agent.timelineDataset.update(updateQuery);
   this.agent.rpc.request("agentGenerator", {method: 'updateOpenJobs', params:{jobId: id, time: time}})
 };
