@@ -198,6 +198,7 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
   var updateQuery = [];
   var image = '<img src="./images/control_pause.png" class="icon"/>';
   var flagId = id + "_pauseNotifier" + eventId;
+  var title = 'Calling RAO for possible NC';
 
   // this causes there to be only one flag for the end of day as well as a moon icon
   if (operation == 'endOfDay') {
@@ -208,6 +209,7 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
     this.jobs.id[id].endOfDay = true;
     image = '<img src="./images/moon.png" class="icon"/>';
     flagId = id + "endOfDayNotifier" + eventId;
+    title = "End of working day"
   }
   else {
     this.jobs.id[id].pauseCount += 1;
@@ -241,7 +243,7 @@ JobManager.prototype.updateDataSetsPause = function(id, type, time, operation, p
     group: this.agent.id,
     subgroup: this.agent.usedSubgroups[type],
     className: 'pause',
-    title: 'Calling RAO for possible NC.'
+    title: title
   };
 
 
@@ -307,7 +309,8 @@ JobManager.prototype.updateDataSetsResume = function(id, type, time, operation, 
     content: image,
     group: this.agent.id,
     subgroup: this.agent.usedSubgroups[type],
-    className: 'pause'
+    className: 'pause',
+    title: 'Resuming job'
   });
 
   var predictedTimeLeft = prediction[field].mean - elapsedTime;

@@ -43,8 +43,8 @@ function draw() {
       {start: '2013-10-26 00:00:00', end: '2013-10-28 00:00:00', repeat: 'weekly'}, // daily weekly monthly yearly
       {start: '2013-03-29 18:30:00', end: '2013-03-30 08:00:00', repeat: 'daily'} // daily weekly monthly yearly
     ],
-    start: '2014-09-18',
-    end: '2014-09-23',
+    start: TIMELINE_START,
+    end: TIMELINE_END,
     autoResize: false,
     showCustomTime: true,
     showCurrentTime: false,
