@@ -4,6 +4,9 @@ body {
     min-width:980px;
 }
 
+div.group {
+    background-color: rgba(0, 0, 0, 0.005);
+}
 
 /*.vis.timeline .item.background {*/
 /*background-color: rgba(40, 148, 255, 0.20) !important;*/
@@ -11,7 +14,7 @@ body {
 /*}*/
 .vis.timeline .item.range.prediction {
     border: 1px solid rgba(0, 164, 255, 0.50) !important;
-    background-color: rgba(0, 164, 255, 0.10) !important;
+    background-color: rgba(28, 183, 255, 0.10) !important;
     box-shadow: rgba(0, 83, 128, 0.15) 0px 0px 10px !important;
     z-index:-1 !important;
     height:34px !important;
@@ -65,12 +68,14 @@ body {
     border-color: #7d807d !important;
     background-color: #ffffff !important;
     /*background-color: #c4e0ff !important;*/
+
 }
 .vis.timeline .item.box {
     height:22px !important;
     border-radius: 0px !important;
     border-color: #7d807d !important;
     background-color: #ffffff !important;
+    box-shadow: rgba(0, 0, 0, 0.52) 0px 0px 12px 0px;
 }
 
 img.icon{

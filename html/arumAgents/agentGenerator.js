@@ -62,6 +62,9 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
       me.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}}).done();
       me.eventsToFire -= 1;
     },EVENT_DELAY);
+    if (INCREASE_SPEED == true) {
+      EVENT_DELAY = Math.max(0, 1000 - (1000 * (me.eventNumber / 205)));
+    }
   }
 };
 
@@ -144,7 +147,7 @@ AgentGenerator.prototype.moveTimeline = function(params) {
     newEnd = endDate + (requiredEndDuration - elapsedDuration);
   }
 
-  timeline.setWindow(newStart, newEnd, {animate:false});
+  timeline.setWindow(newStart, newEnd, {animate:Math.min(100,EVENT_DELAY)});
 };
 
 AgentGenerator.prototype.imposeWorkingHours = function(params) {
