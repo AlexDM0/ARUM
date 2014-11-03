@@ -77,8 +77,6 @@ function draw() {
   graph2d = new vis.Graph2d(graph2dContainer, graph2DItems, graph2dGroups, graph2dOptions);
 }
 
-var JAVA_EVENTS_URL = 'ws://localhost:8082/ws/events';
-var AMOUNT_OF_INITIAL_EVENTS = 1;
 var conn;
 
 eve.system.init({

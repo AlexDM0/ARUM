@@ -55,10 +55,13 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
 
   // check if we need to get another event, its done here to avoid raceconditions
   if (this.eventsToFire != 0) {
-    this.eventNumber += 1;
-    eventCounter.innerHTML = this.eventNumber +""; // make string so it works
-    this.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}}).done();
-    this.eventsToFire -= 1;
+    var me = this;
+    setTimeout(function() {
+      me.eventNumber += 1;
+      eventCounter.innerHTML = me.eventNumber +""; // make string so it works
+      me.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}}).done();
+      me.eventsToFire -= 1;
+    },EVENT_DELAY);
   }
 };
 
