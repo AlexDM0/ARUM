@@ -77,6 +77,11 @@ function draw() {
   graph2d = new vis.Graph2d(graph2dContainer, graph2DItems, graph2dGroups, graph2dOptions);
 }
 
+window.onresize = function () {
+  timeline.redraw();
+  graph2d.redraw();
+}
+
 var conn;
 
 eve.system.init({
