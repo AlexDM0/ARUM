@@ -23,6 +23,12 @@ function getAllEvents() {
   agentGen.getEvents(agentGen.amountOfEvents);
 }
 
+function getAllEventsQuickly() {
+  INCREASE_SPEED = false;
+  EVENT_DELAY = 0;
+  agentGen.getEvents(agentGen.amountOfEvents);
+}
+
 function refreshJobs() {
   var multiSelect = document.getElementById("multiselect");
   while (multiSelect.firstChild) {
