@@ -84,10 +84,22 @@ window.onresize = function () {
 
 var conn;
 
-eve.system.init({
-  transports: [
-    {
-      type: 'ws'
-    }
-  ]
-});
+if (ONLINE_ONLY == true) {
+  eve.system.init({
+    transports: [
+      {
+        type: 'local'
+      }
+    ]
+  });
+}
+else {
+  eve.system.init({
+    transports: [
+      {
+        type: 'ws'
+      }
+    ]
+  });
+}
+

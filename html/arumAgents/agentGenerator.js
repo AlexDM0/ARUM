@@ -12,21 +12,41 @@ function AgentGenerator(id) {
   this.events = [];
 
   conn = this.connect(eve.system.transports.getAll());
-  conn[0].connect(JAVA_EVENTS_URL)
-    .then(function () {
-      console.log('Connected to the JAVA_EVENTS');
-      me.rpc.request(JAVA_EVENTS_URL,{method:"loadEvents", params:{filename:"events.csv", actuallySend: true}}).done(function (reply) {
+
+  // connect to websocket if not online only
+  if (conn[0].connect !== undefined) {
+    conn[0].connect(EVENTS_AGENT_ADDRESS)
+      .then(function () {
+        console.log('Connected to ', EVENTS_AGENT_ADDRESS);
+        me.rpc.request(EVENTS_AGENT_ADDRESS, {
+          method: "loadEvents",
+          params: {filename: "events.csv", actuallySend: true}
+        }).done(function (reply) {
+          me.amountOfEvents = reply;
+          me.getEvents(AMOUNT_OF_INITIAL_EVENTS);
+        });
+      })
+      .catch(function (err) {
+        console.log('Error: Failed to connect to the conductor agent');
+        console.log(err);
+
+        // keep trying until the conductor agent is online
+        setTimeout(connect, RECONNECT_DELAY);
+      });
+  }
+  //use local connection
+  else {
+    EVENTS_AGENT_ADDRESS = 'eventGenerator';
+    setTimeout(function() {
+      me.rpc.request(EVENTS_AGENT_ADDRESS, {
+        method: "loadEvents",
+        params: {filename: "events.csv", actuallySend: true}
+      }).done(function (reply) {
         me.amountOfEvents = reply;
         me.getEvents(AMOUNT_OF_INITIAL_EVENTS);
       });
-    })
-    .catch(function (err) {
-      console.log('Error: Failed to connect to the conductor agent');
-      console.log(err);
-
-      // keep trying until the conductor agent is online
-      setTimeout(connect, RECONNECT_DELAY);
-    });
+    },40);
+  }
 }
 
 // extend the eve.Agent prototype
@@ -41,7 +61,7 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
   //console.log("event:",this.eventNumber, this.amountOfEvents, params);
 
   // setup timeline
-  this.events.push(params);
+  this.events.push(JSON.stringify(params));
 
   if (params.performedBy == "global") {
     this.imposeWorkingHours(params);
@@ -54,12 +74,13 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
   }
 
   // check if we need to get another event, its done here to avoid raceconditions
+  console.log(this.eventsToFire)
   if (this.eventsToFire != 0) {
     var me = this;
     setTimeout(function() {
       me.eventNumber += 1;
       eventCounter.innerHTML = me.eventNumber +""; // make string so it works
-      me.rpc.request(JAVA_EVENTS_URL, {method:'nextEvent', params:{}}).done();
+      me.rpc.request(EVENTS_AGENT_ADDRESS, {method:'nextEvent', params:{}}).done();
       me.eventsToFire -= 1;
     },EVENT_DELAY);
     if (INCREASE_SPEED == true) {
@@ -68,16 +89,15 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
   }
 };
 
-AgentGenerator.prototype.getEvents = function (count, delay) {
+AgentGenerator.prototype.getEvents = function (count) {
   if (this.eventNumber + count > this.amountOfEvents) {
     count = this.amountOfEvents - this.eventNumber;
   }
   if (count != 0) {
-    this.eventsToFire = count;
-    this.rpc.request(JAVA_EVENTS_URL, {method: 'nextEvent', params: {}}).done();
+    this.eventsToFire = count - 1;
     this.eventNumber += 1;
+    this.rpc.request(EVENTS_AGENT_ADDRESS, {method: 'nextEvent', params: {}}).done();
     eventCounter.innerHTML = this.eventNumber + ""; // make string so it works
-    this.eventsToFire -= 1;
   }
 };
 
@@ -189,26 +209,9 @@ AgentGenerator.prototype.printEvents = function() {
   var str = "";
   str += "[";
   for (var i = 0; i < this.events.length; i++) {
-    str += "{";
-    var first = true;
-    for (var eventField in this.events[i]) {
-      if (this.events[i].hasOwnProperty(eventField)) {
-        if (first == false) {
-          str += ","
-        }
-        first = false;
-        if (eventField == "time") {
-          str += eventField + ": '" + new Date(this.events[i][eventField]).valueOf() + "'";
-        }
-        else if(eventField == 'prerequisites') {}
-        else {
-          str += eventField + ": '" + this.events[i][eventField] + "'";
-        }
-      }
-    }
-    str += "}";
-    if (i < this.events.length -1) {
-      str += ",";
+    str += this.events[i];
+    if (i < this.events.length - 1) {
+      str += ","
     }
   }
   str += "]";

@@ -4,12 +4,13 @@
 
 var agentList = {};
 var jobList = {};
+var eventGen = new EventGenerator("eventGenerator");
 var agentGen = new AgentGenerator("agentGenerator");
 var jobGen = new JobAgentGenerator("jobAgentGenerator");
-var eventGen = new EventGenerator("frank");
 
 
-//        eventGen.start();
+
+// eventGen.start();
 function getNewEvent() {
   agentGen.getEvents(1);
 }
@@ -294,3 +295,41 @@ function populateExternalLegend(groupDataItem, description) {
   legendDiv.appendChild(containerDiv);
 }
 
+
+function printEvents(events) {
+  var str = "";
+  str += "[";
+  for (var i = 0; i < events.length; i++) {
+    str += "{";
+    var first = true;
+    for (var eventField in events[i]) {
+      if (events[i].hasOwnProperty(eventField)) {
+        if (first == false) {
+          str += ","
+        }
+        first = false;
+        if (eventField == "time") {
+          str += eventField + ": '" + new Date(events[i][eventField]).valueOf() + "'";
+        }
+        else if(events[i][eventField] instanceof Array) {
+          str += eventField + ": [";
+          for (var j = 0; j < events[i][eventField].length; j++) {
+            str += "'" + events[i][eventField][j] + "'";
+            if (j != events[i][eventField].length - 1) {
+              str += ",";
+            }
+          }
+        }
+        else {
+          str += eventField + ": '" + events[i][eventField] + "'";
+        }
+      }
+    }
+    str += "}";
+    if (i < events.length -1) {
+      str += ",";
+    }
+  }
+  str += "]";
+  console.log(str);
+}
