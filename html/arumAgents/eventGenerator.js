@@ -2136,7 +2136,7 @@ EventGenerator.prototype.constructor = EventGenerator;
 EventGenerator.prototype.rpcFunctions = {};
 
 EventGenerator.prototype.rpcFunctions.loadEvents = function() {
-  return this.events.length;
+  return this.events.length - 1;
 }
 
 EventGenerator.prototype.rpcFunctions.nextEvent = function() {

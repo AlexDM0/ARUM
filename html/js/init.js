@@ -2,6 +2,7 @@
  * Created by Alex on 10/27/2014.
  */
 
+var GETTING_EVENTS = false;
 var agentList = {};
 var jobList = {};
 var eventGen = new EventGenerator("eventGenerator");
@@ -20,13 +21,21 @@ function getTenNewEvents() {
 }
 
 function getAllEvents() {
-  agentGen.getEvents(agentGen.amountOfEvents);
+  if (GETTING_EVENTS == false) {
+    GETTING_EVENTS = true;
+    agentGen.getEvents(agentGen.amountOfEvents);
+  }
 }
 
 function getAllEventsQuickly() {
   INCREASE_SPEED = false;
   EVENT_DELAY = 0;
-  agentGen.getEvents(agentGen.amountOfEvents);
+  if (GETTING_EVENTS == false) {
+    GETTING_EVENTS = true;
+    agentGen.getEvents(agentGen.amountOfEvents);
+  }
+  else {
+  }
 }
 
 function refreshJobs() {
