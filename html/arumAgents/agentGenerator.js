@@ -91,12 +91,12 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
 
 AgentGenerator.prototype.getEvents = function (count) {
   if (this.eventNumber + count > this.amountOfEvents) {
-    count = this.amountOfEvents - this.eventNumber;
+    count = this.amountOfEvents - this.eventNumber - 1;
   }
   if (count != 0) {
     this.eventsToFire = count - 1;
-    this.eventNumber += 1;
     this.rpc.request(EVENTS_AGENT_ADDRESS, {method: 'nextEvent', params: {}}).done();
+    this.eventNumber += 1;
     eventCounter.innerHTML = this.eventNumber + ""; // make string so it works
   }
 };
