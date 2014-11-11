@@ -58,8 +58,6 @@ AgentGenerator.prototype.constructor = AgentGenerator;
 AgentGenerator.prototype.rpcFunctions = {};
 
 AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
-  //console.log("event:",this.eventNumber, this.amountOfEvents, params);
-
   // setup timeline
   this.events.push(JSON.stringify(params));
 
@@ -74,7 +72,6 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
   }
 
   // check if we need to get another event, its done here to avoid raceconditions
-  console.log(this.eventsToFire)
   if (this.eventsToFire != 0) {
     var me = this;
     setTimeout(function() {

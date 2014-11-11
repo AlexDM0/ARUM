@@ -19,21 +19,7 @@ function EventGenerator(id) {
       "type": "worker",
       "assignment": "Produce Coffeemaker",
       "productId": "7",
-      "operation": "start",
-      "prerequisites": [
-        {
-          "type": "Kitting Coffeemaker"
-        },
-        {
-          "type": "Assemble Coffeemaker"
-        },
-        {
-          "type": "Inspect finished Coffeemaker"
-        },
-        {
-          "type": "Transport to delivery"
-        }
-      ]
+      "operation": "start"
     },
     {
       "jobId": "101",
@@ -87,21 +73,7 @@ function EventGenerator(id) {
       "type": "worker",
       "assignment": "Produce Coffeemaker",
       "productId": "6",
-      "operation": "start",
-      "prerequisites": [
-        {
-          "type": "Kitting Coffeemaker"
-        },
-        {
-          "type": "Assemble Coffeemaker"
-        },
-        {
-          "type": "Inspect finished Coffeemaker"
-        },
-        {
-          "type": "Transport to delivery"
-        }
-      ]
+      "operation": "start"
     },
     {
       "jobId": "82",
@@ -119,21 +91,7 @@ function EventGenerator(id) {
       "type": "worker",
       "assignment": "Produce Coffeemaker",
       "productId": "8",
-      "operation": "start",
-      "prerequisites": [
-        {
-          "type": "Kitting Coffeemaker"
-        },
-        {
-          "type": "Assemble Coffeemaker"
-        },
-        {
-          "type": "Inspect finished Coffeemaker"
-        },
-        {
-          "type": "Transport to delivery"
-        }
-      ]
+      "operation": "start"
     },
     {
       "jobId": "112",
@@ -472,21 +430,7 @@ function EventGenerator(id) {
       "type": "worker",
       "assignment": "Produce Coffeemaker",
       "productId": "5",
-      "operation": "start",
-      "prerequisites": [
-        {
-          "type": "Kitting Coffeemaker"
-        },
-        {
-          "type": "Assemble Coffeemaker"
-        },
-        {
-          "type": "Inspect finished Coffeemaker"
-        },
-        {
-          "type": "Transport to delivery"
-        }
-      ]
+      "operation": "start"
     },
     {
       "jobId": "42",
@@ -851,21 +795,7 @@ function EventGenerator(id) {
       "type": "worker",
       "assignment": "Produce Coffeemaker",
       "productId": "3",
-      "operation": "start",
-      "prerequisites": [
-        {
-          "type": "Kitting Coffeemaker"
-        },
-        {
-          "type": "Assemble Coffeemaker"
-        },
-        {
-          "type": "Inspect finished Coffeemaker"
-        },
-        {
-          "type": "Transport to delivery"
-        }
-      ]
+      "operation": "start"
     },
     {
       "jobId": "32",
@@ -997,21 +927,7 @@ function EventGenerator(id) {
       "type": "worker",
       "assignment": "Produce Coffeemaker",
       "productId": "4",
-      "operation": "start",
-      "prerequisites": [
-        {
-          "type": "Kitting Coffeemaker"
-        },
-        {
-          "type": "Assemble Coffeemaker"
-        },
-        {
-          "type": "Inspect finished Coffeemaker"
-        },
-        {
-          "type": "Transport to delivery"
-        }
-      ]
+      "operation": "start"
     },
     {
       "jobId": "52",
@@ -1281,21 +1197,7 @@ function EventGenerator(id) {
       "type": "worker",
       "assignment": "Produce Coffeemaker",
       "productId": "2",
-      "operation": "start",
-      "prerequisites": [
-        {
-          "type": "Kitting Coffeemaker"
-        },
-        {
-          "type": "Assemble Coffeemaker"
-        },
-        {
-          "type": "Inspect finished Coffeemaker"
-        },
-        {
-          "type": "Transport to delivery"
-        }
-      ]
+      "operation": "start"
     },
     {
       "jobId": "22",
@@ -1569,21 +1471,7 @@ function EventGenerator(id) {
       "type": "worker",
       "assignment": "Produce Coffeemaker",
       "productId": "1",
-      "operation": "start",
-      "prerequisites": [
-        {
-          "type": "Kitting Coffeemaker"
-        },
-        {
-          "type": "Assemble Coffeemaker"
-        },
-        {
-          "type": "Inspect finished Coffeemaker"
-        },
-        {
-          "type": "Transport to delivery"
-        }
-      ]
+      "operation": "start"
     },
     {
       "jobId": "2",
