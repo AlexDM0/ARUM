@@ -5,13 +5,16 @@
 function DurationStats() {
   this.fields = ['duration','durationWithPause','durationWithStartup','durationWithBoth'];
   for (var i = 0; i < this.fields.length; i++) {
-    this[this.fields[i]] = {mean: 0, std: 0};
+    this[this.fields[i]] = {median: 0, mean: 0, std: 0, prevMedian: 0, prevMean:0, prevStd:0, valueArray:[]};
   }
 }
 
 DurationStats.prototype.clearStats = function() {
   for (var i = 0; i < this.fields.length; i++) {
     var field = this.fields[i];
+    this[field].valueArray = [];
+    this[field].prevMean = this[field].mean;
+    this[field].prevStd = this[field].std;
     this[field].mean = 0;
     this[field].std  = 0;
   }
@@ -21,6 +24,7 @@ DurationStats.prototype.sumStats = function(otherData) {
   for (var i = 0; i < this.fields.length; i++) {
     var field = this.fields[i];
     this[field].mean += otherData[field].mean;
+    this[field].valueArray.concat(otherData[field].valueArray);
     this[field].std  += Math.pow(otherData[field].std,2);
   }
 };

@@ -10,6 +10,7 @@ function JobAgent(id) {
 
   this.id = id;
   this.type = this.id.replace('job_','');
+  this.averageWindowSize = 10;
   this.globalStats = new DurationStats();
   this.globalStats.getFakeStats(id);
 
@@ -350,14 +351,6 @@ JobAgent.prototype.addWatchers = function(parentJobId, prerequisites) {
   }
 };
 
-JobAgent.prototype.updatePredictedStartup = function(jobId, prediction) {
-  var jobPrediction = this.allJobs[jobId].predictedStartupTime;
-  jobPrediction.mean = Math.max(jobPrediction.mean, prediction.mean);
-  jobPrediction.std = Math.sqrt(Math.pow(jobPrediction.std,2) + Math.pow(prediction.std,2));
-
-  this.allJobs[jobId].prerequisitesCount += 1;
-};
-
 
 /**
  * Update all statistics
@@ -399,21 +392,25 @@ JobAgent.prototype.collectStatsIn = function(collection, field) {
   var total  = 0;
   var mean   = 0;
   var std    = 0;
-  var minVal = 1e16;
-  var maxVal = 0;
+  var median = 0;
+  //var minVal = 1e16;
+  //var maxVal = 0;
   var count  = 0;
 
+  var sortedArray = [];
   for (var jobId in collection) {
     if (collection.hasOwnProperty(jobId)) {
       var value = collection[jobId].duration[field];
-      maxVal = value > maxVal ? value : maxVal;
-      minVal = value < minVal ? value : minVal;
-
-      total += collection[jobId].duration[field];
+      //maxVal = value > maxVal ? value : maxVal;
+      //minVal = value < minVal ? value : minVal;
+      sortedArray.push(value);
+      total += value
       count += 1;
     }
   }
   if (count > 0) {
+    sortedArray.sort();
+    median = sortedArray[Math.ceil(sortedArray.length * 0.5) - 1];
     mean = total / count;
     for (var jobId in collection) {
       if (collection.hasOwnProperty(jobId)) {
@@ -422,11 +419,9 @@ JobAgent.prototype.collectStatsIn = function(collection, field) {
     }
 
     std = Math.sqrt(std/count);
-    return {mean: mean, std: std, min: minVal, max: maxVal};
+    //return {mean: mean, std: std, min: minVal, max: maxVal};
   }
-  else {
-    return {mean: 0, std: 0, min: 0, max: 0};
-  }
+  return {mean: mean, std: std, sortedArray: sortedArray, median: median};
 };
 
 JobAgent.prototype.hasJob = function(params) {
