@@ -130,7 +130,7 @@ DurationStats.prototype.getFakeStats = function(type) {
       this.generateData([a,a,a,a]);
       break;
     default:
-      console.log("CANNOT MATCH", type);
+     // console.log("CANNOT MATCH", type);
       break;
 
   }

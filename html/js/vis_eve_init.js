@@ -40,8 +40,8 @@ function draw() {
   var timelineContainer = document.getElementById('timeline');
   var timelineOptions = {
     hiddenDates: [
-      {start: '2013-10-26 00:00:00', end: '2013-10-28 00:00:00', repeat: 'weekly'}, // daily weekly monthly yearly
-      {start: '2013-03-29 18:30:00', end: '2013-03-30 08:00:00', repeat: 'daily'} // daily weekly monthly yearly
+      //{start: '2013-10-26 00:00:00', end: '2013-10-28 00:00:00', repeat: 'weekly'}, // daily weekly monthly yearly
+      //{start: '2013-03-29 23:00:00', end: '2013-03-30 04:00:00', repeat: 'daily'} // daily weekly monthly yearly
     ],
     start: TIMELINE_START,
     end: TIMELINE_END,
@@ -66,6 +66,9 @@ function draw() {
     showMinorLabels: false,
     graphHeight:'450px',
     dataAxis: {
+      title: {
+        left:{text:'hours'}
+      },
       customRange: {
         left: {
           min:-0.5

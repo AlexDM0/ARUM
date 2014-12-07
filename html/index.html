@@ -4,14 +4,17 @@
     <title>ARUM - MIDAS</title>
     <link href="./css/global.css" rel="stylesheet" type="text/css" />
     <link href="./css/vis.css" rel="stylesheet" type="text/css" />
+    <link href="./css/timeline.css" rel="stylesheet" type="text/css" />
 
     <script language="javascript">
-        var EVENT_DELAY = 1000;
+        var EVENT_DELAY = 500;
         var EVENTS_AGENT_ADDRESS = 'ws://localhost:8082/ws/events';
-        var AMOUNT_OF_INITIAL_EVENTS = 1;
-        var TIMELINE_START = '2014-09-18 10:00:00';
-        var TIMELINE_END = '2014-09-19 18:00:00';
-        var INCREASE_SPEED = true;
+        var AMOUNT_OF_INITIAL_EVENTS = 216;
+        var TIMELINE_START = '2014-8-18 06:00:00';
+        var TIMELINE_END = '2014-08-18 06:30:00';
+        var INCREASE_SPEED = false;
+        var INCREASE_SPEED_AFTER_INIT = false;
+        var EVENT_DELAY_AFTER_INIT = 500;
         var ONLINE_ONLY = true;
     </script>
 
@@ -33,7 +36,7 @@
 
 </head>
 <body onload="draw()">
-<img src="./images/midas_nhs.png"><br>
+<div style="width:100%; height: 60px;"><img src="./images/midas_nhs.png" style="float:right;"></div>
 <div class="typeButton selected" onclick="showTimelineBtn()" id="showTimeline">Show by Timeline</div>
 <div class="typeButton" onclick="showGraphBtn()" id="showGraph">Show by Job</div>
 <div id="timelineWrapper">

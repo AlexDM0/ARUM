@@ -1,0 +1,68 @@
+
+.vis.timeline .item.range.prediction {
+    border: 1px solid rgba(0, 164, 255, 0.50) !important;
+    background-color: rgba(28, 183, 255, 0.10) !important;
+    box-shadow: rgba(0, 83, 128, 0.15) 0px 0px 10px !important;
+    z-index:-1 !important;
+    height:34px !important;
+}
+.vis.timeline .item.background.night {
+    background-color: rgba(60, 60, 60, 0.3) !important;
+    z-index:9999 !important;
+}
+.vis.timeline .labelset .timelineGroup .inner {
+    /*height:100px !important;*/
+    width:140px !important;
+}
+.vis.timeline .labelset .timelineGroup.porter{
+    background-color: #ffffff;
+}
+.vis.timeline .labelset .timelineGroup.nurse{
+    background-color: #f5f5f5;
+}
+.vis.timeline .labelset .timelineGroup.anaesthetist{
+    background-color: #dfeaf2;
+}
+.vis.timeline .labelset .timelineGroup.ODP{
+    background-color: #b8d6e6;
+}
+.vis.timeline .labelset .timelineGroup.timer{
+    background-color: #a5c8e6;
+}
+
+.vis.timeline .item.range {
+    height:34px !important;
+}
+
+.vis.timeline .item.range.pause{
+    height:34px !important;
+    width:26px !important;
+    box-shadow: rgba(0,0,0,0.2) 0px 0px 10px !important;
+    padding:3px !important;
+    z-index:999999;
+    background-color: #ffffff !important
+}
+
+.vis.timeline .item.range.pausedArea{
+    height:34px !important;
+    padding:3px !important;
+    z-index:999950;
+    border-width: 0px !important;
+    background: url('../images/shaded.png');
+    background-color: rgba(0,0,0,0) !important;
+}
+
+.vis.timeline .item {
+    border-radius: 0px !important;
+    border-color: #7d807d !important;
+    background-color: #ffffff !important;
+    /*background-color: #c4e0ff !important;*/
+
+}
+.vis.timeline .item.box {
+    height:22px !important;
+    border-radius: 0px !important;
+    border-color: #7d807d !important;
+    background-color: #ffffff !important;
+    box-shadow: rgba(0, 0, 0, 0.52) 0px 0px 12px 0px;
+}

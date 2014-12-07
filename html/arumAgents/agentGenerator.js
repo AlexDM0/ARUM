@@ -42,6 +42,8 @@ function AgentGenerator(id) {
         method: "loadEvents",
         params: {filename: "events.csv", actuallySend: true}
       }).done(function (reply) {
+        INCREASE_SPEED = false;
+        EVENT_DELAY = 0;
         me.amountOfEvents = reply;
         me.getEvents(AMOUNT_OF_INITIAL_EVENTS);
       });
@@ -81,8 +83,12 @@ AgentGenerator.prototype.rpcFunctions.receiveEvent = function(params) {
       me.eventsToFire -= 1;
     },EVENT_DELAY);
     if (INCREASE_SPEED == true) {
-      EVENT_DELAY = Math.max(0, 1000 - (1000 * (me.eventNumber / 205)));
+      EVENT_DELAY = Math.max(0, 1000 - (1000 * (me.eventNumber / 240)));
     }
+  }
+  else {
+    INCREASE_SPEED = INCREASE_SPEED_AFTER_INIT;
+    EVENT_DELAY = EVENT_DELAY_AFTER_INIT;
   }
 };
 
@@ -117,9 +123,10 @@ AgentGenerator.prototype.moveTimeline = function(params) {
   var DateUtil = vis.timeline.DateUtil;
   var hiddenDuration = DateUtil.getHiddenDurationBetween(hiddenDates, range.start, range.end);
   var visibleDuration = duration - hiddenDuration;
+  var startDate = params.time;
+  var endDate = params.time;
 
-
-  var fraction = 0.15;
+  var fraction = 0.25;
   var requiredStartDuration = (1-fraction) * visibleDuration;
   var requiredEndDuration = fraction * visibleDuration;
   var convertedTime = new Date(params.time).getTime();
@@ -129,8 +136,8 @@ AgentGenerator.prototype.moveTimeline = function(params) {
   var elapsedDuration = 0;
   var previousPoint = convertedTime;
   for (var i = hiddenDates.length-1; i > 0; i--) {
-    var startDate = hiddenDates[i].start;
-    var endDate = hiddenDates[i].end;
+    startDate = hiddenDates[i].start;
+    endDate = hiddenDates[i].end;
     // if time after the cutout, and the
     if (endDate <= convertedTime) {
       elapsedDuration += previousPoint - endDate;
@@ -148,8 +155,8 @@ AgentGenerator.prototype.moveTimeline = function(params) {
   elapsedDuration = 0;
   previousPoint = convertedTime;
   for (var i = 0; i < hiddenDates.length; i++) {
-    var startDate = hiddenDates[i].start;
-    var endDate = hiddenDates[i].end;
+    startDate = hiddenDates[i].start;
+    endDate = hiddenDates[i].end;
     // if time after the cutout, and the
     if (startDate >= convertedTime) {
       elapsedDuration += startDate - previousPoint;
