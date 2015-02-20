@@ -12,14 +12,14 @@ var graph2DItems = new vis.DataSet();
 var graph2dGroups = new vis.DataSet();
 graph2dGroups.add({
   id: 'differencePositive', content: 'differencePositive', className: "differencePositive", options: {
-    drawPoints: false,
+    drawPoints: true,
     style: 'bar',
     barChart: {width: 50, align: 'center'} // align: left, center, right
   }
 });
 graph2dGroups.add({
   id: 'differenceNegative', content: 'differenceNegative', className: "differenceNegative", options: {
-    drawPoints: false,
+    drawPoints: true,
     style: 'bar',
     barChart: {width: 50, align: 'center'} // align: left, center, right
   }
@@ -72,7 +72,7 @@ function draw() {
         }
       }
     },
-    drawPoints:false //{style:'circle'}
+    drawPoints:true //{style:'circle'}
   };
   graph2d = new vis.Graph2d(graph2dContainer, graph2DItems, graph2dGroups, graph2dOptions);
 }

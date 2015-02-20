@@ -108,6 +108,7 @@ function updateGraph() {
       item.y = durationValues[i].y;
       item.type = durationValues[i].type;
       item.y -= originalPredictionValues[i].y;
+      item.label = {}
       var group = 'differenceNegative';
       if (item.y < 0) {
         item.y *= -1;
@@ -130,6 +131,7 @@ function updateGraph() {
       durationItem.y = durationValues[i].y;
       durationItem.type = durationValues[i].type;
       durationItem.group = durationValues[i].group;
+      durationItem.label = {content: durationValues[i].x, className:'rotLabel'}
       filteredValues.push(durationItem);
       if (showPrediction == true) {
         var predItem = {};
@@ -137,6 +139,7 @@ function updateGraph() {
         predItem.y = predictionValues[i].y;
         predItem.type = predictionValues[i].type;
         predItem.group = predictionValues[i].group;
+
         filteredValues.push(predItem);
 
         var originalPred = {};
